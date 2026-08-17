@@ -39,11 +39,46 @@
     background: transparent;
     border: 0;
     color: inherit;
-    flex: 1 1 0;
     font: inherit;
     min-width: 0;
     outline: 0;
     padding: .16rem .18rem;
+}
+
+.datetime-neo__natural-field {
+    display: grid;
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.datetime-neo__natural-field > * {
+    grid-area: 1 / 1;
+}
+
+.datetime-neo__natural-ghost {
+    align-items: center;
+    color: color-mix(in srgb, currentColor 70%, transparent);
+    display: flex;
+    font: inherit;
+    min-width: 0;
+    overflow: hidden;
+    padding: .16rem .18rem;
+    pointer-events: none;
+    white-space: pre;
+}
+
+.datetime-neo__natural-ghost-typed {
+    color: transparent;
+}
+
+.datetime-neo__natural-ghost kbd {
+    border: 1px solid currentColor;
+    border-radius: .2rem;
+    font: inherit;
+    font-size: .7em;
+    margin-left: .45em;
+    opacity: .5;
+    padding: 0 .25em;
 }
 
 .datetime-neo__natural-input::placeholder {

@@ -104,6 +104,74 @@ describe('DateTimeLocal', () => {
     dispose!()
   })
 
+  it('accepts the active natural-language completion with Tab', async () => {
+    let dispose: (() => void) | undefined
+    const control = createRoot(rootDispose => {
+      dispose = rootDispose
+      return (<DateTimeLocal referenceTime={referenceTime} />) as HTMLSpanElement
+    })
+    document.body.append(control)
+    control.querySelector<HTMLButtonElement>('[aria-label="Enter date and time naturally"]')!.click()
+    await nextRender()
+    const input = control.querySelector<HTMLInputElement>('.datetime-neo__natural-input')!
+    input.value = 'tom'
+    input.dispatchEvent(new InputEvent('input', { bubbles: true }))
+    await nextRender()
+    expect(control.querySelector('.datetime-neo__natural-ghost')?.textContent).toContain('orrow')
+    key(input, 'Tab')
+    await nextRender()
+    expect(input.value).toBe('tomorrow')
+    expect(document.activeElement).toBe(input)
+    control.remove()
+    dispose!()
+  })
+
+  it('cycles natural completions and leaves focus traversal to Shift+Tab', async () => {
+    let dispose: (() => void) | undefined
+    const control = createRoot(rootDispose => {
+      dispose = rootDispose
+      return (<DateTimeLocal referenceTime={referenceTime} />) as HTMLSpanElement
+    })
+    document.body.append(control)
+    control.querySelector<HTMLButtonElement>('[aria-label="Enter date and time naturally"]')!.click()
+    await nextRender()
+    const input = control.querySelector<HTMLInputElement>('.datetime-neo__natural-input')!
+    input.value = 'next '
+    input.dispatchEvent(new InputEvent('input', { bubbles: true }))
+    await nextRender()
+    expect(control.querySelector('.datetime-neo__natural-ghost')?.textContent).toContain('monday')
+    key(input, 'ArrowDown')
+    expect(control.querySelector('.datetime-neo__natural-ghost')?.textContent).toContain('tuesday')
+    const event = new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true })
+    input.dispatchEvent(event)
+    expect(event.defaultPrevented).toBe(false)
+    expect(input.value).toBe('next ')
+    control.remove()
+    dispose!()
+  })
+
+  it('exits natural-language entry with Escape even when a completion is active', async () => {
+    let dispose: (() => void) | undefined
+    const control = createRoot(rootDispose => {
+      dispose = rootDispose
+      return (<DateTimeLocal referenceTime={referenceTime} />) as HTMLSpanElement
+    })
+    document.body.append(control)
+    control.querySelector<HTMLButtonElement>('[aria-label="Enter date and time naturally"]')!.click()
+    await nextRender()
+    const input = control.querySelector<HTMLInputElement>('.datetime-neo__natural-input')!
+    input.value = 'fri'
+    input.dispatchEvent(new InputEvent('input', { bubbles: true }))
+    await nextRender()
+    expect(control.querySelector('.datetime-neo__natural-ghost')).not.toBeNull()
+    key(input, 'Escape')
+    await nextRender()
+    expect(control.querySelector('.datetime-neo__natural-input')).toBeNull()
+    expect(control.querySelector('[aria-label="Enter date and time naturally"]')).not.toBeNull()
+    control.remove()
+    dispose!()
+  })
+
   it('restores cleared segments from a native picker change event', () =>
     createRoot(dispose => {
       const onValueChange = vi.fn()

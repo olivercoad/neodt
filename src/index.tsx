@@ -1,6 +1,7 @@
 import { createMemo, createSignal, Index, splitProps, type JSX } from 'solid-js'
-import * as chrono from 'chrono-node'
 import { DateTime } from 'luxon'
+import { getNaturalDateCompletions } from './natural-completion'
+import { parseNaturalDate } from './natural-parser'
 import './styles.css'
 
 export type DateTimeLocalValue = `${number}-${number}-${number}T${number}:${number}` | ''
@@ -109,19 +110,6 @@ function CancelIcon(): JSX.Element {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
 }
 
-function parseNaturalDate(value: string, referenceTime: DateTime): DateTime | undefined {
-  const parsed = chrono.parseDate(value, referenceTime.toJSDate())
-  if (!parsed) return undefined
-  const date = DateTime.fromObject({
-    year: parsed.getFullYear(),
-    month: parsed.getMonth() + 1,
-    day: parsed.getDate(),
-    hour: parsed.getHours(),
-    minute: parsed.getMinutes(),
-  }, { zone: 'utc' })
-  return date.isValid ? date : undefined
-}
-
 /** A locale-aware, keyboard-editable local date and time control for Solid SPAs. */
 export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
   const [local, rest] = splitProps(props, [
@@ -131,6 +119,7 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
   const [selected, setSelected] = createSignal(0)
   const [typed, setTyped] = createSignal<{ index: number; digits: string } | undefined>()
   const [naturalText, setNaturalText] = createSignal('')
+  const [naturalSuggestion, setNaturalSuggestion] = createSignal(0)
   const [naturalMode, setNaturalMode] = createSignal(false)
   const value = () => local.value ?? uncontrolledValue()
   const [draftDate, setDraftDate] = createSignal((parseLocal(value()) ?? local.referenceTime.toUTC()).startOf('minute'))
@@ -141,7 +130,9 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
   const segmentButtons: HTMLButtonElement[] = []
   let nativeInput: HTMLInputElement | undefined
   let naturalInput: HTMLInputElement | undefined
-  const naturalDate = createMemo(() => parseNaturalDate(naturalText(), local.referenceTime))
+  const naturalDate = createMemo(() => parseNaturalDate(naturalText(), { referenceTime: local.referenceTime, zone: local.referenceTime.zoneName ?? undefined, locale: local.locale }))
+  const naturalCompletions = createMemo(() => getNaturalDateCompletions(naturalText()))
+  const activeNaturalCompletion = createMemo(() => naturalCompletions()[naturalSuggestion()])
 
   const emitValue = (next: DateTimeLocalValue) => {
     if (local.value === undefined) setUncontrolledValue(next)
@@ -239,6 +230,7 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
   const openNaturalInput = () => {
     if (local.disabled || local.readonly) return
     setNaturalText('')
+    setNaturalSuggestion(0)
     setNaturalMode(true)
     queueMicrotask(() => naturalInput?.focus())
   }
@@ -255,7 +247,30 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
 
   const closeNaturalInput = () => {
     setNaturalText('')
+    setNaturalSuggestion(0)
     setNaturalMode(false)
+  }
+
+  const updateNaturalText = (next: string) => {
+    setNaturalText(next)
+    setNaturalSuggestion(0)
+  }
+
+  const acceptNaturalCompletion = () => {
+    const completion = activeNaturalCompletion()
+    if (!completion) return false
+    updateNaturalText(completion.insertText)
+    queueMicrotask(() => {
+      naturalInput?.focus()
+      naturalInput?.setSelectionRange(completion.insertText.length, completion.insertText.length)
+    })
+    return true
+  }
+
+  const cycleNaturalCompletion = (direction: 1 | -1) => {
+    const completions = naturalCompletions()
+    if (!completions.length) return
+    setNaturalSuggestion(current => (current + direction + completions.length) % completions.length)
   }
 
   const updateFromNativeInput = (next: string) => {
@@ -303,19 +318,25 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
     <span {...rest} class={`datetime-neo ${local.class ?? ''}`} classList={local.classList} data-disabled={local.disabled ? '' : undefined}>
       <span class="datetime-neo__editor" role="group" aria-label={local['aria-label'] ?? 'Date and time'}>
         {naturalMode() ? <>
-          <input
-            ref={element => (naturalInput = element)}
-            class="datetime-neo__natural-input"
-            type="text"
-            value={naturalText()}
-            placeholder="Type Anything"
-            disabled={local.disabled}
-            onInput={event => setNaturalText(event.currentTarget.value)}
-            onKeyDown={event => {
-              if (event.key === 'Enter') { event.preventDefault(); confirmNaturalInput() }
-              if (event.key === 'Escape') { event.preventDefault(); closeNaturalInput() }
-            }}
-          />
+          <span class="datetime-neo__natural-field">
+            <input
+              ref={element => (naturalInput = element)}
+              class="datetime-neo__natural-input"
+              type="text"
+              value={naturalText()}
+              placeholder="Type Anything"
+              disabled={local.disabled}
+              onInput={event => updateNaturalText(event.currentTarget.value)}
+              onKeyDown={event => {
+                if (event.key === 'ArrowDown') { event.preventDefault(); cycleNaturalCompletion(1); return }
+                if (event.key === 'ArrowUp') { event.preventDefault(); cycleNaturalCompletion(-1); return }
+                if (event.key === 'Tab' && !event.shiftKey && event.currentTarget.selectionStart === event.currentTarget.value.length && acceptNaturalCompletion()) { event.preventDefault(); return }
+                if (event.key === 'Enter') { event.preventDefault(); confirmNaturalInput(); return }
+                if (event.key === 'Escape') { event.preventDefault(); closeNaturalInput(); return }
+              }}
+            />
+            {activeNaturalCompletion() && <span class="datetime-neo__natural-ghost" aria-hidden="true"><span class="datetime-neo__natural-ghost-typed">{naturalText()}</span>{activeNaturalCompletion()!.insertText.slice(naturalText().length)}<kbd>Tab</kbd></span>}
+          </span>
           <span class="datetime-neo__natural-preview" aria-live="polite">
             {naturalDate() ? naturalPreview(naturalDate()!, local.locale, local.formatOptions) : ''}
           </span>
@@ -367,3 +388,5 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
 }
 
 export { DateTimeLocal as DateTimeNeo }
+export { getNaturalDateCompletions } from './natural-completion'
+export { parseNaturalDate } from './natural-parser'

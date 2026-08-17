@@ -239,6 +239,13 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
     queueMicrotask(() => naturalInput?.focus())
   }
 
+  const exitNaturalInput = () => {
+    setNaturalText('')
+    setNaturalSuggestion(0)
+    setNaturalMode(false)
+    queueMicrotask(() => selectSegment(0, true))
+  }
+
   const confirmNaturalInput = () => {
     const date = naturalDate()
     if (!date || local.disabled || local.readonly) return
@@ -246,13 +253,11 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
     setCleared(new Set<SegmentName>())
     setTyped(undefined)
     emitValue(date)
-    setNaturalMode(false)
+    exitNaturalInput()
   }
 
   const closeNaturalInput = () => {
-    setNaturalText('')
-    setNaturalSuggestion(0)
-    setNaturalMode(false)
+    exitNaturalInput()
   }
 
   const updateNaturalText = (next: string) => {
@@ -294,6 +299,7 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
 
   const onSegmentKeyDown = (event: KeyboardEvent, index: number, segment: Segment) => {
     if (event.key === ' ') { event.preventDefault(); openPicker(); return }
+    if (event.key === '@') { event.preventDefault(); openNaturalInput(); return }
     if (event.key === 'ArrowLeft') { event.preventDefault(); selectSegment(index - 1, true); return }
     if (event.key === 'ArrowRight') { event.preventDefault(); selectSegment(index + 1, true); return }
     if (event.key === 'ArrowUp') { event.preventDefault(); changeSegment(segment.type, 1); return }

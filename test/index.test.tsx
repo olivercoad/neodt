@@ -89,8 +89,28 @@ describe('DateTimeLocal', () => {
     await nextRender()
     expect(control.querySelector('.datetime-neo__natural-preview')?.textContent).toBe('18/08/2026, 09:00')
     control.querySelector<HTMLButtonElement>('[aria-label="Confirm natural-language date"]')!.click()
+    await nextRender()
     expect(localValue(onValueChange.mock.calls[0]?.[0])).toBe('2026-08-18T09:00')
     expect(control.querySelector('.datetime-neo__natural-input')).toBeNull()
+    expect(document.activeElement).toBe(control.querySelector('.datetime-neo__segment'))
+    control.remove()
+    dispose!()
+  })
+
+  it('opens natural-language entry with the @ key', async () => {
+    let dispose: (() => void) | undefined
+    const control = createRoot(rootDispose => {
+      dispose = rootDispose
+      return (<DateTimeLocal referenceTime={referenceTime} />) as HTMLSpanElement
+    })
+    document.body.append(control)
+    const segment = control.querySelector<HTMLButtonElement>('.datetime-neo__segment')!
+    const event = new KeyboardEvent('keydown', { key: '@', bubbles: true, cancelable: true })
+    segment.dispatchEvent(event)
+    await nextRender()
+    expect(event.defaultPrevented).toBe(true)
+    expect(control.querySelector('.datetime-neo__natural-input')).not.toBeNull()
+    expect(document.activeElement).toBe(control.querySelector('.datetime-neo__natural-input'))
     control.remove()
     dispose!()
   })
@@ -148,6 +168,7 @@ describe('DateTimeLocal', () => {
     control.querySelector<HTMLButtonElement>('[aria-label="Cancel natural-language date"]')!.click()
     await nextRender()
     expect(control.querySelector('.datetime-neo__natural-input')).toBeNull()
+    expect(document.activeElement).toBe(control.querySelector('.datetime-neo__segment'))
     control.remove()
     dispose!()
   })

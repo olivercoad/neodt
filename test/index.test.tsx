@@ -336,6 +336,33 @@ describe('DateTimeLocal', () => {
       })
     })))
 
+  it('advances when a following static separator key is pressed', async () =>
+    await new Promise<void>(resolve => createRoot(dispose => {
+      const control = (<DateTimeLocal referenceTime={referenceTime} locale="en-GB" value={date('2026-08-17T15:30')} />) as HTMLSpanElement
+      document.body.append(control)
+      const segments = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')
+      segments[0]!.focus()
+      key(segments[0]!, '/')
+      nextRender().then(() => {
+        expect(document.activeElement).toBe(segments[1])
+        key(segments[1]!, '/')
+        nextRender().then(() => {
+          expect(document.activeElement).toBe(segments[2])
+          key(segments[2]!, ',')
+          nextRender().then(() => {
+            expect(document.activeElement).toBe(segments[3])
+            key(segments[3]!, ':')
+            nextRender().then(() => {
+              expect(document.activeElement).toBe(segments[4])
+              control.remove()
+              dispose()
+              resolve()
+            })
+          })
+        })
+      })
+    })))
+
   it('focuses the first segment when the empty editor area is clicked', async () =>
     await new Promise<void>(resolve => createRoot(dispose => {
       const control = (<DateTimeLocal referenceTime={referenceTime} value={date('2026-08-17T15:30')} />) as HTMLSpanElement

@@ -297,6 +297,20 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
     setTyped(undefined)
   }
 
+  const matchesFollowingSeparator = (index: number, key: string) => {
+    if (key.length !== 1) return false
+    let editableIndex = -1
+    for (const part of segments()) {
+      if (part.editable) {
+        editableIndex += 1
+        if (editableIndex > index) return false
+        continue
+      }
+      if (editableIndex === index && part.value.includes(key)) return true
+    }
+    return false
+  }
+
   const onSegmentKeyDown = (event: KeyboardEvent, index: number, segment: Segment) => {
     if (event.key === ' ') { event.preventDefault(); openPicker(); return }
     if (event.key === '@') { event.preventDefault(); openNaturalInput(); return }
@@ -307,6 +321,7 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
     if (event.key === 'Home') { event.preventDefault(); selectSegment(0, true); return }
     if (event.key === 'End') { event.preventDefault(); selectSegment(editableSegments().length - 1, true); return }
     if (event.key === 'Backspace' || event.key === 'Delete') { event.preventDefault(); clearSegment(segment.type); return }
+    if (matchesFollowingSeparator(index, event.key)) { event.preventDefault(); selectSegment(index + 1, true); return }
     if (segment.type === 'dayPeriod' && /^(a|p)$/i.test(event.key)) {
       event.preventDefault()
       setDayPeriod(event.key.toLowerCase() === 'a')

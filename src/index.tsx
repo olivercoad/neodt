@@ -317,9 +317,14 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
     }
   }
 
+  const onEditorClick = (event: MouseEvent) => {
+    if (event.target !== event.currentTarget || naturalMode()) return
+    selectSegment(0, true)
+  }
+
   return (
     <span {...rest} class={`datetime-neo ${local.class ?? ''}`} classList={local.classList} data-disabled={local.disabled ? '' : undefined}>
-      <span class="datetime-neo__editor" role="group" aria-label={local['aria-label'] ?? 'Date and time'}>
+      <span class="datetime-neo__editor" role="group" aria-label={local['aria-label'] ?? 'Date and time'} onClick={onEditorClick}>
         {naturalMode() ? <>
           <span class="datetime-neo__natural-field">
             <input

@@ -315,6 +315,21 @@ describe('DateTimeLocal', () => {
       })
     })))
 
+  it('focuses the first segment when the empty editor area is clicked', async () =>
+    await new Promise<void>(resolve => createRoot(dispose => {
+      const control = (<DateTimeLocal referenceTime={referenceTime} value={date('2026-08-17T15:30')} />) as HTMLSpanElement
+      document.body.append(control)
+      const editor = control.querySelector<HTMLSpanElement>('.datetime-neo__editor')!
+      const firstSegment = control.querySelector<HTMLButtonElement>('.datetime-neo__segment')!
+      editor.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      nextRender().then(() => {
+        expect(document.activeElement).toBe(firstSegment)
+        control.remove()
+        dispose()
+        resolve()
+      })
+    })))
+
   it('increments and decrements the selected locale segment', () =>
     createRoot(dispose => {
       const onValueChange = vi.fn()

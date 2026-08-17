@@ -22,13 +22,76 @@ describe('environment', () => {
 })
 
 describe('DateTimeLocal', () => {
-  it('renders locale-ordered editable segments without a native input or picker button', () =>
+  it('renders locale-ordered editable segments with a hidden native input and picker button', () =>
     createRoot(() => {
       const control = (<DateTimeLocal referenceTime={referenceTime} locale="en-GB" value="2026-08-17T15:30" />) as HTMLSpanElement
       expect(control.querySelectorAll('.datetime-neo__segment')[0]?.textContent).toBe('17')
-      expect(control.querySelector('input')).toBeNull()
-      expect(control.querySelector('.datetime-neo__trigger')).toBeNull()
+      expect(control.querySelector<HTMLInputElement>('input[type="datetime-local"]')?.value).toBe('2026-08-17T15:30')
+      expect(control.querySelector('.datetime-neo__trigger')).not.toBeNull()
     }))
+
+  it('opens the native picker from the trigger or Space key', () =>
+    createRoot(dispose => {
+      const showPicker = vi.fn()
+      const control = (<DateTimeLocal referenceTime={referenceTime} value="2026-08-17T15:30" />) as HTMLSpanElement
+      const input = control.querySelector<HTMLInputElement>('input')!
+      const trigger = control.querySelector<HTMLButtonElement>('.datetime-neo__trigger')!
+      Object.defineProperty(input, 'showPicker', { value: showPicker })
+      document.body.append(control)
+      trigger.click()
+      key(control.querySelector<HTMLButtonElement>('.datetime-neo__segment')!, ' ')
+      expect(showPicker).toHaveBeenCalledTimes(2)
+      control.remove()
+      dispose()
+    }))
+
+  it('uses a custom calendar icon and updates from native input changes', () =>
+    createRoot(dispose => {
+      const onValueChange = vi.fn()
+      const control = (<DateTimeLocal referenceTime={referenceTime} calendarIcon={<span>Choose</span>} onValueChange={onValueChange} />) as HTMLSpanElement
+      const input = control.querySelector<HTMLInputElement>('input')!
+      document.body.append(control)
+      expect(control.querySelector('.datetime-neo__trigger')?.textContent).toBe('Choose')
+      input.value = '2026-09-01T08:45'
+      input.dispatchEvent(new InputEvent('input', { bubbles: true }))
+      expect(onValueChange).toHaveBeenCalledWith('2026-09-01T08:45')
+      control.remove()
+      dispose()
+    }))
+
+  it('restores cleared segments from a native picker change event', () =>
+    createRoot(dispose => {
+      const onValueChange = vi.fn()
+      const control = (<DateTimeLocal referenceTime={referenceTime} value="2026-08-17T15:30" onValueChange={onValueChange} />) as HTMLSpanElement
+      document.body.append(control)
+      const year = control.querySelector<HTMLButtonElement>('[aria-label="year"]')!
+      key(year, 'Backspace')
+      const input = control.querySelector<HTMLInputElement>('input')!
+      expect(input.value).toBe('2026-08-17T15:30')
+      input.value = '2026-09-01T08:45'
+      input.dispatchEvent(new Event('change', { bubbles: true }))
+      expect(onValueChange).toHaveBeenLastCalledWith('2026-09-01T08:45')
+      expect(control.querySelector<HTMLButtonElement>('[aria-label="year"]')?.textContent).toBe('2026')
+      control.remove()
+      dispose()
+    }))
+
+  it('clears every segment when the native picker is cleared', async () =>
+    await new Promise<void>(resolve => createRoot(dispose => {
+      const onValueChange = vi.fn()
+      const control = (<DateTimeLocal referenceTime={referenceTime} value="2026-08-17T15:30" onValueChange={onValueChange} />) as HTMLSpanElement
+      document.body.append(control)
+      const input = control.querySelector<HTMLInputElement>('input')!
+      input.value = ''
+      input.dispatchEvent(new Event('change', { bubbles: true }))
+      expect(onValueChange).toHaveBeenCalledWith('')
+      nextRender().then(() => {
+        expect(control.querySelectorAll('.datetime-neo__placeholder')).toHaveLength(6)
+        control.remove()
+        dispose()
+        resolve()
+      })
+    })))
 
   it('uses the locale default width for hours and minutes', () =>
     createRoot(() => {

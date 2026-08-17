@@ -14,6 +14,6 @@ describe('DateTimeLocal', () => {
   it('renders a segmented editor on the server', () => {
     const html = renderToString(() => <DateTimeLocal referenceTime={DateTime.fromISO('2026-08-17T15:30:00Z')} locale="en-GB" value="2026-08-17T15:30" />)
     expect(html).toContain('datetime-neo__segment')
-    expect(html).not.toContain('datetime-local')
+    expect(html).toContain('type="datetime-local"')
   })
 })

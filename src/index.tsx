@@ -18,6 +18,8 @@ export interface DateTimeLocalProps extends JSX.HTMLAttributes<HTMLSpanElement> 
   locale?: Intl.LocalesArgument
   /** Options affecting the visible locale formatting, such as `hour12` or `hourCycle`. */
   formatOptions?: Intl.DateTimeFormatOptions
+  /** Icon displayed in the button that opens the browser's native date and time picker. */
+  calendarIcon?: JSX.Element
   /** Prevents editing while retaining the displayed value. */
   readonly?: boolean
   /** Prevents focus and editing. */
@@ -80,20 +82,28 @@ function closestYear(twoDigitYear: string, referenceTime: DateTime): number {
   return candidate
 }
 
+function CalendarIcon(): JSX.Element {
+  return <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M7 2v3m10-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />
+  </svg>
+}
+
 /** A locale-aware, keyboard-editable local date and time control for Solid SPAs. */
 export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
   const [local, rest] = splitProps(props, [
-    'referenceTime', 'value', 'defaultValue', 'locale', 'formatOptions', 'onValueChange', 'readonly', 'class', 'classList', 'disabled', 'aria-label',
+    'referenceTime', 'value', 'defaultValue', 'locale', 'formatOptions', 'calendarIcon', 'onValueChange', 'readonly', 'class', 'classList', 'disabled', 'aria-label',
   ])
   const [uncontrolledValue, setUncontrolledValue] = createSignal<DateTimeLocalValue>(local.defaultValue ?? '')
   const [selected, setSelected] = createSignal(0)
   const [typed, setTyped] = createSignal<{ index: number; digits: string } | undefined>()
   const value = () => local.value ?? uncontrolledValue()
   const [draftDate, setDraftDate] = createSignal((parseLocal(value()) ?? local.referenceTime.toUTC()).startOf('minute'))
+  const nativeValue = () => toLocalValue(parseLocal(value()) ?? draftDate())
   const [cleared, setCleared] = createSignal<Set<SegmentName>>(new Set(value() ? [] : ['year', 'month', 'day', 'hour', 'minute', 'dayPeriod']))
   const segments = createMemo(() => partsFor(cleared().size ? toLocalValue(draftDate()) : value(), local.locale, local.formatOptions))
   const editableSegments = createMemo(() => segments().filter((part): part is Segment => part.editable))
   const segmentButtons: HTMLButtonElement[] = []
+  let nativeInput: HTMLInputElement | undefined
 
   const emitValue = (next: DateTimeLocalValue) => {
     if (local.value === undefined) setUncontrolledValue(next)
@@ -183,7 +193,29 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
     emitValue(hasClearedSegment(nextCleared) ? '' : toLocalValue(date))
   }
 
+  const openPicker = () => {
+    if (local.disabled || local.readonly) return
+    nativeInput?.showPicker()
+  }
+
+  const updateFromNativeInput = (next: string) => {
+    if (!next) {
+      setCleared(new Set<SegmentName>(['year', 'month', 'day', 'hour', 'minute', 'dayPeriod']))
+      setTyped(undefined)
+      emitValue('')
+      return
+    }
+    const date = parseLocal(next)
+    if (!date) return
+    const localValue = toLocalValue(date)
+    setDraftDate(date.startOf('minute'))
+    emitValue(localValue)
+    setCleared(new Set<SegmentName>())
+    setTyped(undefined)
+  }
+
   const onSegmentKeyDown = (event: KeyboardEvent, index: number, segment: Segment) => {
+    if (event.key === ' ') { event.preventDefault(); openPicker(); return }
     if (event.key === 'ArrowLeft') { event.preventDefault(); selectSegment(index - 1, true); return }
     if (event.key === 'ArrowRight') { event.preventDefault(); selectSegment(index + 1, true); return }
     if (event.key === 'ArrowUp') { event.preventDefault(); changeSegment(segment.type, 1); return }
@@ -227,6 +259,21 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
           >{isCleared(segment().type) ? <span class="datetime-neo__placeholder">{placeholderFor(segment().type)}</span> : segment().value}</button>
         })() : <span class="datetime-neo__separator" aria-hidden="true">{part().value}</span>}</Index>
       </span>
+      <button class="datetime-neo__trigger" type="button" disabled={local.disabled} aria-label="Open date and time picker" onClick={openPicker}>
+        {local.calendarIcon ?? <CalendarIcon />}
+      </button>
+      <input
+        ref={element => (nativeInput = element)}
+        class="datetime-neo__native-input"
+        type="datetime-local"
+        value={nativeValue()}
+        disabled={local.disabled}
+        readonly={local.readonly}
+        tabindex={-1}
+        aria-hidden="true"
+        onInput={event => updateFromNativeInput(event.currentTarget.value)}
+        onChange={event => updateFromNativeInput(event.currentTarget.value)}
+      />
     </span>
   )
 }

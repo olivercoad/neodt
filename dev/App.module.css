@@ -1,0 +1,571 @@
+.page {
+    --ink: #162218;
+    --paper: #f4f0e6;
+    --acid: #c7ef4e;
+    --orange: #fa6a31;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.nav {
+    align-items: center;
+    border-bottom: 1px solid #c9c2b3;
+    display: flex;
+    gap: 1.5rem;
+    justify-content: flex-end;
+    margin: 0 auto;
+    max-width: 78rem;
+    padding: 1.15rem 2rem;
+}
+
+.nav a {
+    color: inherit;
+    font-size: .82rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+.nav .brand {
+    align-items: center;
+    display: flex;
+    font-size: 1rem;
+    letter-spacing: -.04em;
+    margin-right: auto;
+    text-transform: none;
+}
+
+.brandMark {
+    align-items: center;
+    background: var(--ink);
+    border-radius: 50%;
+    color: var(--acid);
+    display: inline-flex;
+    font-family: ui-monospace, monospace;
+    font-size: .66rem;
+    height: 1.8rem;
+    justify-content: center;
+    letter-spacing: -.08em;
+    margin-right: .55rem;
+    width: 1.8rem;
+}
+
+.github {
+    border: 1px solid var(--ink);
+    border-radius: 99px;
+    padding: .55rem .85rem;
+}
+
+.hero {
+    border-bottom: 1px solid #c9c2b3;
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(19rem, .9fr);
+    margin: 0 auto;
+    max-width: 78rem;
+    min-height: 36rem;
+    padding: 4.8rem 2rem;
+}
+
+.heroCopy {
+    align-self: center;
+    max-width: 43rem;
+}
+
+.eyebrow {
+    color: #63705d;
+    font-family: ui-monospace, monospace;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    margin: 0 0 1rem;
+}
+
+h1,
+h2,
+h3,
+p {
+    margin-top: 0;
+}
+
+h1 {
+    font-size: clamp(3.5rem, 7vw, 6.8rem);
+    font-weight: 500;
+    letter-spacing: -.08em;
+    line-height: .9;
+    margin-bottom: 1.8rem;
+}
+
+h1 em {
+    color: var(--orange);
+    font-family: Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -.11em;
+}
+
+.intro {
+    font-size: 1.08rem;
+    line-height: 1.55;
+    max-width: 34rem;
+}
+
+code,
+pre {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.heroActions {
+    align-items: center;
+    display: flex;
+    gap: 1.4rem;
+    margin-top: 2rem;
+}
+
+.primaryLink,
+.bookingCard button {
+    background: var(--ink);
+    border: 1px solid var(--ink);
+    color: var(--paper);
+    font-size: .82rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+    padding: .85rem 1rem;
+    text-decoration: none;
+}
+
+.textLink {
+    color: inherit;
+    font-size: .88rem;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: .25rem;
+}
+
+.heroArt {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    position: relative;
+}
+
+.heroArt>p {
+    color: var(--orange);
+    font-size: clamp(3.8rem, 7vw, 6.2rem);
+    font-weight: 700;
+    letter-spacing: -.09em;
+    line-height: .75;
+    margin: 0;
+    opacity: .95;
+    position: absolute;
+    right: 0;
+    text-align: right;
+    top: 3rem;
+    z-index: 1;
+}
+
+.clockFace {
+    align-items: center;
+    background: var(--acid);
+    border: 1px solid var(--ink);
+    border-radius: 50%;
+    display: flex;
+    font-family: ui-monospace, monospace;
+    font-size: .8rem;
+    height: 16rem;
+    justify-content: center;
+    position: relative;
+    transform: rotate(-10deg);
+    width: 16rem;
+    z-index: 2;
+}
+
+.clockFace span {
+    position: absolute;
+}
+
+.clockFace span:nth-child(1) {
+    top: 1.1rem
+}
+
+.clockFace span:nth-child(2) {
+    right: 1.3rem
+}
+
+.clockFace span:nth-child(3) {
+    bottom: 1.1rem
+}
+
+.clockFace span:nth-child(4) {
+    left: 1.3rem
+}
+
+.clockFace i,
+.clockFace b {
+    background: var(--ink);
+    height: 1px;
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform-origin: left;
+    width: 4.5rem;
+}
+
+.clockFace i {
+    transform: rotate(-45deg);
+}
+
+.clockFace b {
+    transform: rotate(65deg);
+    width: 3rem;
+}
+
+.orbit {
+    border: 1px dashed var(--ink);
+    border-radius: 50%;
+    height: 19rem;
+    position: absolute;
+    transform: rotate(20deg);
+    width: 19rem;
+}
+
+.section,
+.usageSection,
+.themeSection {
+    margin: 0 auto;
+    max-width: 78rem;
+    padding: 7rem 2rem;
+}
+
+.sectionHeading {
+    max-width: 39rem;
+}
+
+.sectionHeading h2,
+.usageIntro h2,
+.themeSection h2 {
+    font-size: clamp(2.4rem, 4.8vw, 4.5rem);
+    font-weight: 500;
+    letter-spacing: -.065em;
+    line-height: .95;
+    margin-bottom: 1rem;
+}
+
+.sectionHeading>p:last-child {
+    color: #546050;
+    line-height: 1.5;
+}
+
+.playground {
+    background: #e5dfd1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin-top: 2.75rem;
+}
+
+.controls {
+    min-height: 19rem;
+    padding: 2.2rem;
+}
+
+.selectLabel {
+    display: block;
+    font-family: ui-monospace, monospace;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+}
+
+.selectLabel select {
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--ink);
+    color: inherit;
+    display: block;
+    font: inherit;
+    margin: .7rem 0 2.6rem;
+    outline: 0;
+    padding: .3rem 0;
+    width: 100%;
+}
+
+.demoInput {
+    --datetime-neo-background: #fffdf7;
+    --datetime-neo-border: #848a79;
+    --datetime-neo-focus: #e9582e;
+    width: 100%;
+}
+
+.demoInput :global(.datetime-neo__display) {
+    min-width: 0;
+    width: 100%;
+}
+
+.valueReadout {
+    border-top: 1px solid #b9b1a3;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1.3rem;
+    padding-top: .8rem;
+}
+
+.valueReadout span {
+    color: #63705d;
+    font-size: .75rem;
+}
+
+.valueReadout code {
+    font-size: .8rem;
+}
+
+.codePanel {
+    background: var(--ink);
+    color: #dce6d3;
+    min-height: 19rem;
+    padding: 1.2rem;
+}
+
+.codeTop {
+    border-bottom: 1px solid #425044;
+    display: flex;
+    font-family: ui-monospace, monospace;
+    font-size: .68rem;
+    justify-content: space-between;
+    padding-bottom: .85rem;
+}
+
+.codeTop span:last-child {
+    color: var(--acid);
+}
+
+pre {
+    font-size: .85rem;
+    line-height: 1.8;
+    margin: 1.5rem 0;
+    white-space: pre-wrap;
+}
+
+.featureGrid {
+    border-bottom: 1px solid #c9c2b3;
+    border-top: 1px solid #c9c2b3;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.featureGrid article {
+    min-height: 15rem;
+    padding: 2rem;
+}
+
+.featureGrid article+article {
+    border-left: 1px solid #c9c2b3;
+}
+
+.number {
+    color: var(--orange);
+    font-family: ui-monospace, monospace;
+    font-size: .75rem;
+}
+
+.featureGrid h3 {
+    font-size: 1.45rem;
+    font-weight: 500;
+    letter-spacing: -.045em;
+    margin: 3.3rem 0 .6rem;
+}
+
+.featureGrid p {
+    color: #546050;
+    line-height: 1.45;
+    max-width: 17rem;
+}
+
+.usageSection {
+    align-items: start;
+    display: grid;
+    gap: 5rem;
+    grid-template-columns: 1fr 1fr;
+}
+
+.usageIntro {
+    max-width: 30rem;
+}
+
+.usageIntro>p:last-child {
+    color: #546050;
+    line-height: 1.5;
+}
+
+.bookingCard {
+    background: var(--orange);
+    box-shadow: .75rem .75rem 0 var(--ink);
+    padding: 1.7rem;
+}
+
+.cardTop {
+    border-bottom: 1px solid var(--ink);
+    display: flex;
+    font-family: ui-monospace, monospace;
+    font-size: .68rem;
+    justify-content: space-between;
+    margin-bottom: 2.5rem;
+    padding-bottom: .8rem;
+    text-transform: uppercase;
+}
+
+.bookingCard label {
+    display: block;
+    font-size: .85rem;
+    font-weight: 700;
+    margin-bottom: .6rem;
+}
+
+.bookingCard :global(.datetime-neo) {
+    --datetime-neo-background: #fff8e8;
+    --datetime-neo-border: var(--ink);
+    --datetime-neo-focus: var(--ink);
+    --datetime-neo-focus-ring: #ffe5bc;
+    --datetime-neo-highlight: var(--ink);
+    --datetime-neo-highlight-foreground: #fff8e8;
+    --datetime-neo-hover: #ffd397;
+    width: 100%;
+}
+
+.bookingCard :global(.datetime-neo__display) {
+    min-width: 0;
+    width: 100%;
+}
+
+.bookingCard button {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    width: 100%;
+}
+
+.submitResult {
+    font-size: .78rem;
+    margin: 1rem 0 0;
+    min-height: 1.2em;
+}
+
+.themeSection {
+    align-items: center;
+    border-top: 1px solid #c9c2b3;
+    display: grid;
+    gap: 3rem;
+    grid-template-columns: 1fr 1fr;
+}
+
+.darkExample {
+    --datetime-neo-background: #263b2b;
+    --datetime-neo-foreground: #f4f0e6;
+    --datetime-neo-border: #6a8171;
+    --datetime-neo-focus: #e6ff73;
+    background: #263b2b;
+    padding: 2rem;
+}
+
+.darkExample :global(.datetime-neo) {
+    width: 100%;
+}
+
+.darkExample :global(.datetime-neo__display) {
+    min-width: 0;
+    width: 100%;
+}
+
+.darkExample code {
+    color: var(--acid);
+    display: block;
+    font-size: .72rem;
+    margin-top: 1rem;
+}
+
+.footer {
+    border-top: 1px solid #c9c2b3;
+    color: #63705d;
+    display: flex;
+    font-family: ui-monospace, monospace;
+    font-size: .7rem;
+    justify-content: space-between;
+    padding: 1.3rem 2rem;
+    text-transform: uppercase;
+}
+
+@media (max-width: 700px) {
+    .nav {
+        gap: .8rem;
+        padding: 1rem;
+    }
+
+    .nav>a:not(.brand):not(.github) {
+        display: none;
+    }
+
+    .hero {
+        display: block;
+        min-height: auto;
+        padding: 4rem 1.25rem 3rem;
+    }
+
+    .heroArt {
+        height: 16rem;
+        margin-top: 3rem;
+    }
+
+    .heroArt>p {
+        right: 1rem;
+    }
+
+    .clockFace {
+        height: 13rem;
+        width: 13rem;
+    }
+
+    .orbit {
+        height: 16rem;
+        width: 16rem;
+    }
+
+    .section,
+    .usageSection,
+    .themeSection {
+        padding: 4.5rem 1.25rem;
+    }
+
+    .playground,
+    .usageSection,
+    .themeSection {
+        grid-template-columns: 1fr;
+    }
+
+    .featureGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .featureGrid article+article {
+        border-left: 0;
+        border-top: 1px solid #c9c2b3;
+    }
+
+    .featureGrid article {
+        min-height: auto;
+        padding: 1.5rem 1.25rem;
+    }
+
+    .featureGrid h3 {
+        margin-top: 2rem;
+    }
+
+    .usageSection {
+        gap: 2.5rem;
+    }
+
+    .footer {
+        padding: 1.25rem;
+    }
+}

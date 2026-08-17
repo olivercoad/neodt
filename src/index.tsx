@@ -56,6 +56,13 @@ function digitLimit(segment: SegmentName): number {
   return segment === 'year' ? 4 : segment === 'dayPeriod' ? 0 : 2
 }
 
+function placeholderFor(segment: SegmentName): string {
+  if (segment === 'year') return 'yyyy'
+  if (segment === 'month') return 'mm'
+  if (segment === 'day') return 'dd'
+  return '--'
+}
+
 function isCompleteSegment(segment: SegmentName, digits: string, hour12: boolean): boolean {
   if (digits.length === digitLimit(segment)) return true
   const maximum = segment === 'month' ? 12
@@ -82,13 +89,26 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
   const [selected, setSelected] = createSignal(0)
   const [typed, setTyped] = createSignal<{ index: number; digits: string } | undefined>()
   const value = () => local.value ?? uncontrolledValue()
-  const segments = createMemo(() => partsFor(value(), local.locale, local.formatOptions))
+  const [draftDate, setDraftDate] = createSignal((parseLocal(value()) ?? local.referenceTime.toUTC()).startOf('minute'))
+  const [cleared, setCleared] = createSignal<Set<SegmentName>>(new Set(value() ? [] : ['year', 'month', 'day', 'hour', 'minute', 'dayPeriod']))
+  const segments = createMemo(() => partsFor(cleared().size ? toLocalValue(draftDate()) : value(), local.locale, local.formatOptions))
   const editableSegments = createMemo(() => segments().filter((part): part is Segment => part.editable))
   const segmentButtons: HTMLButtonElement[] = []
 
   const emitValue = (next: DateTimeLocalValue) => {
     if (local.value === undefined) setUncontrolledValue(next)
     local.onValueChange?.(next)
+  }
+
+  const isCleared = (segment: SegmentName) => cleared().has(segment)
+  const hasClearedSegment = (segmentsToCheck = cleared()) => editableSegments().some(segment => segmentsToCheck.has(segment.type))
+
+  const clearSegment = (segment: SegmentName) => {
+    if (local.disabled || local.readonly) return
+    setTyped(undefined)
+    if (value()) setDraftDate(parseLocal(value())!.startOf('minute'))
+    setCleared(previous => new Set(previous).add(segment))
+    emitValue('')
   }
 
   const selectSegment = (index: number, focus = false) => {
@@ -104,7 +124,7 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
 
   const changeSegment = (segment: SegmentName, amount: number) => {
     if (local.disabled || local.readonly) return
-    let date = (parseLocal(value()) ?? local.referenceTime.toUTC()).startOf('minute')
+    let date = (parseLocal(value()) ?? draftDate()).startOf('minute')
     switch (segment) {
       case 'year': date = date.plus({ years: amount }); break
       case 'month': date = date.plus({ months: amount }); break
@@ -113,14 +133,33 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
       case 'minute': date = date.plus({ minutes: amount }); break
       case 'dayPeriod': date = date.plus({ hours: date.hour < 12 ? 12 : -12 }); break
     }
-    emitValue(toLocalValue(date))
+    setDraftDate(date)
+    if (cleared().size === 0) { emitValue(toLocalValue(date)); return }
+    const nextCleared = new Set(cleared())
+    nextCleared.delete(segment)
+    setCleared(nextCleared)
+    emitValue(hasClearedSegment(nextCleared) ? '' : toLocalValue(date))
+  }
+
+  const setDayPeriod = (morning: boolean) => {
+    if (local.disabled || local.readonly) return
+    const date = (parseLocal(value()) ?? draftDate()).startOf('minute')
+    if ((date.hour < 12) !== morning) {
+      changeSegment('dayPeriod', 1)
+      return
+    }
+    if (!isCleared('dayPeriod')) return
+    const nextCleared = new Set(cleared())
+    nextCleared.delete('dayPeriod')
+    setCleared(nextCleared)
+    emitValue(hasClearedSegment(nextCleared) ? '' : toLocalValue(date))
   }
 
   const setSegment = (segment: SegmentName, digits: string) => {
     if (local.disabled || local.readonly || segment === 'dayPeriod') return
     const number = Number(digits)
     if (!Number.isFinite(number)) return
-    let date = (parseLocal(value()) ?? local.referenceTime.toUTC()).startOf('minute')
+    let date = (parseLocal(value()) ?? draftDate()).startOf('minute')
     if (segment === 'year' && number >= 1) date = date.set({ year: number })
     if (segment === 'month' && number >= 1 && number <= 12) date = date.set({ month: number })
     if (segment === 'day' && number >= 1 && number <= 31) date = date.set({ day: number })
@@ -130,7 +169,12 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
       if (!hour12 && number >= 0 && number <= 23) date = date.set({ hour: number })
     }
     if (segment === 'minute' && number >= 0 && number <= 59) date = date.set({ minute: number })
-    emitValue(toLocalValue(date))
+    setDraftDate(date)
+    if (cleared().size === 0) { emitValue(toLocalValue(date)); return }
+    const nextCleared = new Set(cleared())
+    nextCleared.delete(segment)
+    setCleared(nextCleared)
+    emitValue(hasClearedSegment(nextCleared) ? '' : toLocalValue(date))
   }
 
   const onSegmentKeyDown = (event: KeyboardEvent, index: number, segment: Segment) => {
@@ -140,10 +184,10 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
     if (event.key === 'ArrowDown') { event.preventDefault(); changeSegment(segment.type, -1); return }
     if (event.key === 'Home') { event.preventDefault(); selectSegment(0, true); return }
     if (event.key === 'End') { event.preventDefault(); selectSegment(editableSegments().length - 1, true); return }
+    if (event.key === 'Backspace' || event.key === 'Delete') { event.preventDefault(); clearSegment(segment.type); return }
     if (segment.type === 'dayPeriod' && /^(a|p)$/i.test(event.key)) {
       event.preventDefault()
-      const isMorning = (parseLocal(value())?.hour ?? 0) < 12
-      if ((event.key.toLowerCase() === 'a') !== isMorning) changeSegment(segment.type, 1)
+      setDayPeriod(event.key.toLowerCase() === 'a')
       return
     }
     if (/^\d$/.test(event.key)) {
@@ -161,7 +205,8 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
     <span {...rest} class={`datetime-neo ${local.class ?? ''}`} classList={local.classList} data-disabled={local.disabled ? '' : undefined}>
       <span class="datetime-neo__editor" role="group" aria-label={local['aria-label'] ?? 'Date and time'}>
         <Index each={segments()}>{part => part().editable ? (() => {
-          const index = () => editableSegments().findIndex(segment => segment.type === part().type)
+          const segment = () => part() as Segment
+          const index = () => editableSegments().findIndex(candidate => candidate.type === segment().type)
           return <button
              ref={element => (segmentButtons[index()] = element)}
              class="datetime-neo__segment"
@@ -172,8 +217,8 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
             aria-selected={selected() === index()}
             onFocus={() => selectSegment(index())}
             onClick={() => selectSegment(index())}
-            onKeyDown={event => onSegmentKeyDown(event, index(), part() as Segment)}
-          >{value() ? part().value : '--'}</button>
+            onKeyDown={event => onSegmentKeyDown(event, index(), segment())}
+          >{isCleared(segment().type) ? <span class="datetime-neo__placeholder">{placeholderFor(segment().type)}</span> : segment().value}</button>
         })() : <span class="datetime-neo__separator" aria-hidden="true">{part().value}</span>}</Index>
       </span>
     </span>

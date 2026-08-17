@@ -62,6 +62,15 @@
     cursor: not-allowed;
 }
 
+.datetime-neo__placeholder {
+    color: color-mix(in srgb, currentColor 52%, transparent);
+}
+
+.datetime-neo:focus-within .datetime-neo__segment--selected .datetime-neo__placeholder,
+.datetime-neo__segment:focus-visible .datetime-neo__placeholder {
+    color: inherit;
+}
+
 .datetime-neo__separator {
     user-select: none;
 }

@@ -160,12 +160,17 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
     const number = Number(digits)
     if (!Number.isFinite(number)) return
     let date = (parseLocal(value()) ?? draftDate()).startOf('minute')
+    let setDayPeriodToPm = false
     if (segment === 'year' && number >= 1) date = date.set({ year: number })
     if (segment === 'month' && number >= 1 && number <= 12) date = date.set({ month: number })
     if (segment === 'day' && number >= 1 && number <= 31) date = date.set({ day: number })
     if (segment === 'hour') {
       const hour12 = new Intl.DateTimeFormat(local.locale, { hour: 'numeric', ...local.formatOptions }).resolvedOptions().hour12
       if (hour12 && number >= 1 && number <= 12) date = date.set({ hour: (date.hour >= 12 ? 12 : 0) + (number % 12) })
+      if (hour12 && number >= 13 && number <= 23) {
+        date = date.set({ hour: number })
+        setDayPeriodToPm = true
+      }
       if (!hour12 && number >= 0 && number <= 23) date = date.set({ hour: number })
     }
     if (segment === 'minute' && number >= 0 && number <= 59) date = date.set({ minute: number })
@@ -173,6 +178,7 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
     if (cleared().size === 0) { emitValue(toLocalValue(date)); return }
     const nextCleared = new Set(cleared())
     nextCleared.delete(segment)
+    if (setDayPeriodToPm) nextCleared.delete('dayPeriod')
     setCleared(nextCleared)
     emitValue(hasClearedSegment(nextCleared) ? '' : toLocalValue(date))
   }

@@ -229,6 +229,63 @@ describe('DateTimeLocal', () => {
       })
     })))
 
+  it('sets PM when a 12-hour entry exceeds 12', async () =>
+    await new Promise<void>(resolve => createRoot(dispose => {
+      const [value, setValue] = createSignal<DateTimeLocalValue>('2026-08-17T05:30')
+      const control = (<DateTimeLocal referenceTime={referenceTime} locale="en-US" formatOptions={{ hour12: true }} value={value()} onValueChange={setValue} />) as HTMLSpanElement
+      document.body.append(control)
+      const hour = control.querySelector<HTMLButtonElement>('[aria-label="hour"]')!
+      key(hour, '1')
+      key(hour, '5')
+      nextRender().then(() => {
+        expect(value()).toBe('2026-08-17T15:30')
+        expect(control.querySelector<HTMLButtonElement>('[aria-label="hour"]')?.textContent).toBe('3')
+        expect(control.querySelector<HTMLButtonElement>('[aria-label="dayPeriod"]')?.textContent).toBe('PM')
+        control.remove()
+        dispose()
+        resolve()
+      })
+    })))
+
+  it('keeps a 24-hour entry unchanged when it exceeds 12', async () =>
+    await new Promise<void>(resolve => createRoot(dispose => {
+      const [value, setValue] = createSignal<DateTimeLocalValue>('2026-08-17T05:30')
+      const control = (<DateTimeLocal referenceTime={referenceTime} locale="en-AU" formatOptions={{ hourCycle: 'h23' }} value={value()} onValueChange={setValue} />) as HTMLSpanElement
+      document.body.append(control)
+      const hour = control.querySelector<HTMLButtonElement>('[aria-label="hour"]')!
+      key(hour, '1')
+      key(hour, '5')
+      nextRender().then(() => {
+        expect(value()).toBe('2026-08-17T15:30')
+        expect(control.querySelector<HTMLButtonElement>('[aria-label="hour"]')?.textContent).toBe('15')
+        expect(control.querySelector('[aria-label="dayPeriod"]')).toBeNull()
+        control.remove()
+        dispose()
+        resolve()
+      })
+    })))
+
+  it('sets the draft day period to PM when the year is cleared', async () =>
+    await new Promise<void>(resolve => createRoot(dispose => {
+      const [value, setValue] = createSignal<DateTimeLocalValue>('2026-08-17T05:30')
+      const control = (<DateTimeLocal referenceTime={referenceTime} locale="en-US" formatOptions={{ hour12: true }} value={value()} onValueChange={setValue} />) as HTMLSpanElement
+      document.body.append(control)
+      const year = control.querySelector<HTMLButtonElement>('[aria-label="year"]')!
+      key(year, 'Backspace')
+      const hour = control.querySelector<HTMLButtonElement>('[aria-label="hour"]')!
+      key(hour, '1')
+      key(hour, '5')
+      nextRender().then(() => {
+        expect(value()).toBe('')
+        expect(control.querySelector<HTMLButtonElement>('[aria-label="year"]')?.textContent).toBe('yyyy')
+        expect(control.querySelector<HTMLButtonElement>('[aria-label="hour"]')?.textContent).toBe('3')
+        expect(control.querySelector<HTMLButtonElement>('[aria-label="dayPeriod"]')?.textContent).toBe('PM')
+        control.remove()
+        dispose()
+        resolve()
+      })
+    })))
+
   it('clears individual segments with backspace or delete and renders contextual placeholders', async () =>
     await new Promise<void>(resolve => createRoot(dispose => {
       const [value, setValue] = createSignal<DateTimeLocalValue>('2026-08-17T15:30')

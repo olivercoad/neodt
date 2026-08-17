@@ -1,4 +1,5 @@
 import { createMemo, createSignal, Index, splitProps, type JSX } from 'solid-js'
+import * as chrono from 'chrono-node'
 import { DateTime } from 'luxon'
 import './styles.css'
 
@@ -20,6 +21,8 @@ export interface DateTimeLocalProps extends JSX.HTMLAttributes<HTMLSpanElement> 
   formatOptions?: Intl.DateTimeFormatOptions
   /** Icon displayed in the button that opens the browser's native date and time picker. */
   calendarIcon?: JSX.Element
+  /** Icon displayed in the button that opens natural-language date entry. */
+  magicIcon?: JSX.Element
   /** Prevents editing while retaining the displayed value. */
   readonly?: boolean
   /** Prevents focus and editing. */
@@ -52,6 +55,10 @@ function partsFor(value: string, locale: Intl.LocalesArgument | undefined, optio
       ? { type: part.type as SegmentName, value: part.value, editable: true }
       : { type: part.type, value: part.value, editable: false },
   )
+}
+
+function naturalPreview(date: DateTime, locale: Intl.LocalesArgument | undefined, options: Intl.DateTimeFormatOptions | undefined): string {
+  return partsFor(toLocalValue(date), locale, options).map(part => part.value).join('')
 }
 
 function digitLimit(segment: SegmentName): number {
@@ -88,14 +95,43 @@ function CalendarIcon(): JSX.Element {
   </svg>
 }
 
+function MagicIcon(): JSX.Element {
+  return <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="m12 3 .9 4.1L17 8l-4.1.9L12 13l-.9-4.1L7 8l4.1-.9L12 3Zm6.5 10 .5 2.5 2.5.5-2.5.5-.5 2.5-.5-2.5-2.5-.5 2.5-.5.5-2.5ZM5.5 14l.7 3.3 3.3.7-3.3.7-.7 3.3-.7-3.3-3.3-.7 3.3-.7.7-3.3Z" />
+  </svg>
+}
+
+function ConfirmIcon(): JSX.Element {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7" /></svg>
+}
+
+function CancelIcon(): JSX.Element {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+}
+
+function parseNaturalDate(value: string, referenceTime: DateTime): DateTime | undefined {
+  const parsed = chrono.parseDate(value, referenceTime.toJSDate())
+  if (!parsed) return undefined
+  const date = DateTime.fromObject({
+    year: parsed.getFullYear(),
+    month: parsed.getMonth() + 1,
+    day: parsed.getDate(),
+    hour: parsed.getHours(),
+    minute: parsed.getMinutes(),
+  }, { zone: 'utc' })
+  return date.isValid ? date : undefined
+}
+
 /** A locale-aware, keyboard-editable local date and time control for Solid SPAs. */
 export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
   const [local, rest] = splitProps(props, [
-    'referenceTime', 'value', 'defaultValue', 'locale', 'formatOptions', 'calendarIcon', 'onValueChange', 'readonly', 'class', 'classList', 'disabled', 'aria-label',
+    'referenceTime', 'value', 'defaultValue', 'locale', 'formatOptions', 'calendarIcon', 'magicIcon', 'onValueChange', 'readonly', 'class', 'classList', 'disabled', 'aria-label',
   ])
   const [uncontrolledValue, setUncontrolledValue] = createSignal<DateTimeLocalValue>(local.defaultValue ?? '')
   const [selected, setSelected] = createSignal(0)
   const [typed, setTyped] = createSignal<{ index: number; digits: string } | undefined>()
+  const [naturalText, setNaturalText] = createSignal('')
+  const [naturalMode, setNaturalMode] = createSignal(false)
   const value = () => local.value ?? uncontrolledValue()
   const [draftDate, setDraftDate] = createSignal((parseLocal(value()) ?? local.referenceTime.toUTC()).startOf('minute'))
   const nativeValue = () => toLocalValue(parseLocal(value()) ?? draftDate())
@@ -104,6 +140,8 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
   const editableSegments = createMemo(() => segments().filter((part): part is Segment => part.editable))
   const segmentButtons: HTMLButtonElement[] = []
   let nativeInput: HTMLInputElement | undefined
+  let naturalInput: HTMLInputElement | undefined
+  const naturalDate = createMemo(() => parseNaturalDate(naturalText(), local.referenceTime))
 
   const emitValue = (next: DateTimeLocalValue) => {
     if (local.value === undefined) setUncontrolledValue(next)
@@ -198,6 +236,28 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
     nativeInput?.showPicker()
   }
 
+  const openNaturalInput = () => {
+    if (local.disabled || local.readonly) return
+    setNaturalText('')
+    setNaturalMode(true)
+    queueMicrotask(() => naturalInput?.focus())
+  }
+
+  const confirmNaturalInput = () => {
+    const date = naturalDate()
+    if (!date || local.disabled || local.readonly) return
+    setDraftDate(date)
+    setCleared(new Set<SegmentName>())
+    setTyped(undefined)
+    emitValue(toLocalValue(date))
+    setNaturalMode(false)
+  }
+
+  const closeNaturalInput = () => {
+    setNaturalText('')
+    setNaturalMode(false)
+  }
+
   const updateFromNativeInput = (next: string) => {
     if (!next) {
       setCleared(new Set<SegmentName>(['year', 'month', 'day', 'hour', 'minute', 'dayPeriod']))
@@ -242,7 +302,24 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
   return (
     <span {...rest} class={`datetime-neo ${local.class ?? ''}`} classList={local.classList} data-disabled={local.disabled ? '' : undefined}>
       <span class="datetime-neo__editor" role="group" aria-label={local['aria-label'] ?? 'Date and time'}>
-        <Index each={segments()}>{part => part().editable ? (() => {
+        {naturalMode() ? <>
+          <input
+            ref={element => (naturalInput = element)}
+            class="datetime-neo__natural-input"
+            type="text"
+            value={naturalText()}
+            placeholder="Type Anything"
+            disabled={local.disabled}
+            onInput={event => setNaturalText(event.currentTarget.value)}
+            onKeyDown={event => {
+              if (event.key === 'Enter') { event.preventDefault(); confirmNaturalInput() }
+              if (event.key === 'Escape') { event.preventDefault(); closeNaturalInput() }
+            }}
+          />
+          <span class="datetime-neo__natural-preview" aria-live="polite">
+            {naturalDate() ? naturalPreview(naturalDate()!, local.locale, local.formatOptions) : ''}
+          </span>
+        </> : <Index each={segments()}>{part => part().editable ? (() => {
           const segment = () => part() as Segment
           const index = () => editableSegments().findIndex(candidate => candidate.type === segment().type)
           return <button
@@ -257,11 +334,22 @@ export function DateTimeLocal(props: DateTimeLocalProps): JSX.Element {
             onClick={() => selectSegment(index())}
             onKeyDown={event => onSegmentKeyDown(event, index(), segment())}
           >{isCleared(segment().type) ? <span class="datetime-neo__placeholder">{placeholderFor(segment().type)}</span> : segment().value}</button>
-        })() : <span class="datetime-neo__separator" aria-hidden="true">{part().value}</span>}</Index>
+        })() : <span class="datetime-neo__separator" aria-hidden="true">{part().value}</span>}</Index>}
       </span>
-      <button class="datetime-neo__trigger" type="button" disabled={local.disabled} aria-label="Open date and time picker" onClick={openPicker}>
-        {local.calendarIcon ?? <CalendarIcon />}
-      </button>
+      <span class="datetime-neo__actions">
+        <button
+          class="datetime-neo__trigger"
+          type="button"
+          disabled={local.disabled}
+          aria-label={naturalMode() ? naturalDate() ? 'Confirm natural-language date' : 'Cancel natural-language date' : 'Enter date and time naturally'}
+          onClick={() => naturalMode() ? naturalDate() ? confirmNaturalInput() : closeNaturalInput() : openNaturalInput()}
+        >
+          {naturalMode() ? naturalDate() ? <ConfirmIcon /> : <CancelIcon /> : local.magicIcon ?? <MagicIcon />}
+        </button>
+        <button class="datetime-neo__trigger" type="button" disabled={local.disabled} aria-label="Open date and time picker" onClick={openPicker}>
+          {local.calendarIcon ?? <CalendarIcon />}
+        </button>
+      </span>
       <input
         ref={element => (nativeInput = element)}
         class="datetime-neo__native-input"

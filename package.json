@@ -91,6 +91,7 @@
     "pnpm": ">=9.0.0"
   },
   "dependencies": {
+    "chrono-node": "^2.10.1",
     "luxon": "^3.7.2"
   }
 }

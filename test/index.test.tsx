@@ -35,7 +35,7 @@ describe('DateTimeLocal', () => {
       const showPicker = vi.fn()
       const control = (<DateTimeLocal referenceTime={referenceTime} value="2026-08-17T15:30" />) as HTMLSpanElement
       const input = control.querySelector<HTMLInputElement>('input')!
-      const trigger = control.querySelector<HTMLButtonElement>('.datetime-neo__trigger')!
+      const trigger = control.querySelector<HTMLButtonElement>('[aria-label="Open date and time picker"]')!
       Object.defineProperty(input, 'showPicker', { value: showPicker })
       document.body.append(control)
       trigger.click()
@@ -51,13 +51,58 @@ describe('DateTimeLocal', () => {
       const control = (<DateTimeLocal referenceTime={referenceTime} calendarIcon={<span>Choose</span>} onValueChange={onValueChange} />) as HTMLSpanElement
       const input = control.querySelector<HTMLInputElement>('input')!
       document.body.append(control)
-      expect(control.querySelector('.datetime-neo__trigger')?.textContent).toBe('Choose')
+      expect(control.querySelector('[aria-label="Open date and time picker"]')?.textContent).toBe('Choose')
       input.value = '2026-09-01T08:45'
       input.dispatchEvent(new InputEvent('input', { bubbles: true }))
       expect(onValueChange).toHaveBeenCalledWith('2026-09-01T08:45')
       control.remove()
       dispose()
     }))
+
+  it('parses and confirms a natural-language date from the magic input', async () => {
+    let dispose: (() => void) | undefined
+    const onValueChange = vi.fn()
+    const control = createRoot(rootDispose => {
+      dispose = rootDispose
+      return (<DateTimeLocal referenceTime={referenceTime} locale="en-GB" formatOptions={{ hour12: false }} magicIcon={<span>Magic</span>} onValueChange={onValueChange} />) as HTMLSpanElement
+    })
+    document.body.append(control)
+    const magicButton = control.querySelector<HTMLButtonElement>('[aria-label="Enter date and time naturally"]')!
+    expect(magicButton.textContent).toBe('Magic')
+    magicButton.click()
+    await nextRender()
+    const input = control.querySelector<HTMLInputElement>('.datetime-neo__natural-input')!
+    expect(input.placeholder).toBe('Type Anything')
+    expect(control.querySelector('[aria-label="Cancel natural-language date"]')).not.toBeNull()
+    input.value = 'August 18, 2026 at 9am'
+    input.dispatchEvent(new InputEvent('input', { bubbles: true }))
+    await nextRender()
+    expect(control.querySelector('.datetime-neo__natural-preview')?.textContent).toBe('18/08/2026, 09:00')
+    control.querySelector<HTMLButtonElement>('[aria-label="Confirm natural-language date"]')!.click()
+    expect(onValueChange).toHaveBeenCalledWith('2026-08-18T09:00')
+    expect(control.querySelector('.datetime-neo__natural-input')).toBeNull()
+    control.remove()
+    dispose!()
+  })
+
+  it('cancels natural-language entry when no date can be parsed', async () => {
+    let dispose: (() => void) | undefined
+    const control = createRoot(rootDispose => {
+      dispose = rootDispose
+      return (<DateTimeLocal referenceTime={referenceTime} />) as HTMLSpanElement
+    })
+    document.body.append(control)
+    control.querySelector<HTMLButtonElement>('[aria-label="Enter date and time naturally"]')!.click()
+    await nextRender()
+    control.querySelector<HTMLInputElement>('.datetime-neo__natural-input')!.value = 'not a date'
+    control.querySelector<HTMLInputElement>('.datetime-neo__natural-input')!.dispatchEvent(new InputEvent('input', { bubbles: true }))
+    await nextRender()
+    control.querySelector<HTMLButtonElement>('[aria-label="Cancel natural-language date"]')!.click()
+    await nextRender()
+    expect(control.querySelector('.datetime-neo__natural-input')).toBeNull()
+    control.remove()
+    dispose!()
+  })
 
   it('restores cleared segments from a native picker change event', () =>
     createRoot(dispose => {

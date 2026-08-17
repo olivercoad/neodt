@@ -1,20 +1,22 @@
 import { createSignal, For, type Component } from 'solid-js'
 import { DateTime } from 'luxon'
-import { DateTimeLocal, type DateTimeLocalValue } from 'src'
+import { DateTimeLocal } from 'src'
 import styles from './App.module.css'
 
 const locales = [
   ['en-US', 'English (United States)'],
   ['en-GB', 'English (United Kingdom)'],
+  ['en-AU', 'English (Australia)'],
   ['de-DE', 'Deutsch (Deutschland)'],
   ['ja-JP', 'Japanese (Japan)'],
+  ['zh-CN', 'Chinese (China)'],
 ] as const
 
-const referenceTime = DateTime.fromISO('2026-08-17T12:00:00Z')
+const referenceTime = DateTime.fromISO('2023-04-04T12:00:00Z')
 
 const App: Component = () => {
   const [locale, setLocale] = createSignal<Intl.LocalesArgument>('en-US')
-  const [appointment, setAppointment] = createSignal<DateTimeLocalValue>('2026-08-24T14:30')
+  const [appointment, setAppointment] = createSignal<DateTime | null>(DateTime.fromISO('2026-08-24T14:30:00Z'))
 
   return (
     <main class={styles.page}>
@@ -54,7 +56,7 @@ const App: Component = () => {
         <div class={styles.sectionHeading}>
           <p class={styles.eyebrow}>INTERACTIVE PLAYGROUND</p>
           <h2>Make the browser speak your language.</h2>
-          <p>The application value remains an ISO local date-time. Only the presentation changes.</p>
+            <p>The application value remains a Luxon DateTime. Only the presentation changes.</p>
         </div>
         <div class={styles.playground}>
           <div class={styles.controls}>
@@ -73,7 +75,7 @@ const App: Component = () => {
             />
             <div class={styles.valueReadout}>
               <span>Native value</span>
-              <code>{appointment()}</code>
+              <code>{appointment()?.toISO({ precision: "minutes" }) ?? 'null'}</code>
             </div>
           </div>
           <div class={styles.codePanel}>
@@ -100,12 +102,12 @@ const App: Component = () => {
         <div class={styles.usageIntro}>
           <p class={styles.eyebrow}>CONTROLLED STATE</p>
           <h2>It belongs in your state.</h2>
-          <p>The component emits a local ISO date-time, making it direct to integrate with Solid signals and SPA data models.</p>
+          <p>The component emits Luxon DateTime values, making it direct to integrate with Solid signals and SPA data models.</p>
         </div>
         <div class={styles.bookingCard}>
           <div class={styles.cardTop}><span>Studio booking</span><span>UTC not applied</span></div>
           <label>Choose a local start time</label>
-          <DateTimeLocal referenceTime={referenceTime} defaultValue="2026-09-04T10:00" locale="en-GB" />
+          <DateTimeLocal referenceTime={referenceTime} defaultValue={DateTime.fromISO('2026-09-04T10:00:00Z')} locale="en-GB" />
           <p class={styles.submitResult}>Use arrow keys to adjust the selected part.</p>
         </div>
       </section>
@@ -113,7 +115,7 @@ const App: Component = () => {
       <section class={styles.themeSection}>
         <div><p class={styles.eyebrow}>YOUR DESIGN SYSTEM</p><h2>Not a browser default in disguise.</h2></div>
         <div class={styles.darkExample}>
-          <DateTimeLocal referenceTime={referenceTime} defaultValue="2026-10-15T18:45" locale="de-DE" />
+          <DateTimeLocal referenceTime={referenceTime} defaultValue={DateTime.fromISO('2026-10-15T18:45:00Z')} locale="de-DE" />
           <code>--datetime-neo-focus: #e6ff73;</code>
         </div>
       </section>

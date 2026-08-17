@@ -89,6 +89,15 @@
     color: color-mix(in srgb, currentColor 70%, transparent);
     flex: 0 1 auto;
     font-variant-numeric: tabular-nums;
+    padding: .16rem .18rem;
+    text-align: right;
+}
+
+.datetime-neo__timezone {
+    color: color-mix(in srgb, currentColor 52%, transparent);
+    flex: 0 0 auto;
+    font-size: .82em;
+    font-variant-numeric: tabular-nums;
     margin-left: auto;
     padding: .16rem .18rem;
     text-align: right;

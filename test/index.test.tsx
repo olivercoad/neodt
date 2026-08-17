@@ -2,9 +2,11 @@ import { createRoot, createSignal } from 'solid-js'
 import { isServer } from 'solid-js/web'
 import { DateTime } from 'luxon'
 import { describe, expect, it, vi } from 'vitest'
-import { DateTimeLocal, type DateTimeLocalValue } from '../src'
+import { DateTimeLocal } from '../src'
 
 const referenceTime = DateTime.fromISO('2026-08-17T15:30:00Z')
+const date = (value: string) => DateTime.fromISO(value, { zone: referenceTime.zoneName ?? 'utc' })
+const localValue = (value: DateTime | null | undefined) => value?.toFormat("yyyy-MM-dd'T'HH:mm") ?? ''
 
 function key(element: HTMLElement, keyName: string) {
   element.dispatchEvent(new KeyboardEvent('keydown', { key: keyName, bubbles: true }))
@@ -24,16 +26,24 @@ describe('environment', () => {
 describe('DateTimeLocal', () => {
   it('renders locale-ordered editable segments with a hidden native input and picker button', () =>
     createRoot(() => {
-      const control = (<DateTimeLocal referenceTime={referenceTime} locale="en-GB" value="2026-08-17T15:30" />) as HTMLSpanElement
+      const control = (<DateTimeLocal referenceTime={referenceTime} locale="en-GB" value={date('2026-08-17T15:30')} />) as HTMLSpanElement
       expect(control.querySelectorAll('.datetime-neo__segment')[0]?.textContent).toBe('17')
       expect(control.querySelector<HTMLInputElement>('input[type="datetime-local"]')?.value).toBe('2026-08-17T15:30')
       expect(control.querySelector('.datetime-neo__trigger')).not.toBeNull()
     }))
 
+  it('uses the reference timezone for editing and shows its offset in normal mode', () =>
+    createRoot(() => {
+      const sydneyReference = DateTime.fromISO('2026-08-17T15:30:00', { zone: 'Australia/Sydney' })
+      const control = (<DateTimeLocal referenceTime={sydneyReference} locale="en-GB" value={date('2026-08-17T15:30')} />) as HTMLSpanElement
+      expect(control.querySelector('.datetime-neo__segment')?.textContent).toBe('17')
+      expect(control.querySelector('.datetime-neo__timezone')?.textContent).toBe('+10:00')
+    }))
+
   it('opens the native picker from the trigger or Space key', () =>
     createRoot(dispose => {
       const showPicker = vi.fn()
-      const control = (<DateTimeLocal referenceTime={referenceTime} value="2026-08-17T15:30" />) as HTMLSpanElement
+      const control = (<DateTimeLocal referenceTime={referenceTime} value={date('2026-08-17T15:30')} />) as HTMLSpanElement
       const input = control.querySelector<HTMLInputElement>('input')!
       const trigger = control.querySelector<HTMLButtonElement>('[aria-label="Open date and time picker"]')!
       Object.defineProperty(input, 'showPicker', { value: showPicker })
@@ -54,7 +64,7 @@ describe('DateTimeLocal', () => {
       expect(control.querySelector('[aria-label="Open date and time picker"]')?.textContent).toBe('Choose')
       input.value = '2026-09-01T08:45'
       input.dispatchEvent(new InputEvent('input', { bubbles: true }))
-      expect(onValueChange).toHaveBeenCalledWith('2026-09-01T08:45')
+      expect(localValue(onValueChange.mock.calls[0]?.[0])).toBe('2026-09-01T08:45')
       control.remove()
       dispose()
     }))
@@ -79,8 +89,46 @@ describe('DateTimeLocal', () => {
     await nextRender()
     expect(control.querySelector('.datetime-neo__natural-preview')?.textContent).toBe('18/08/2026, 09:00')
     control.querySelector<HTMLButtonElement>('[aria-label="Confirm natural-language date"]')!.click()
-    expect(onValueChange).toHaveBeenCalledWith('2026-08-18T09:00')
+    expect(localValue(onValueChange.mock.calls[0]?.[0])).toBe('2026-08-18T09:00')
     expect(control.querySelector('.datetime-neo__natural-input')).toBeNull()
+    control.remove()
+    dispose!()
+  })
+
+  it('shows the parsed date offset in natural-language mode', async () => {
+    let dispose: (() => void) | undefined
+    const sydneyReference = DateTime.fromISO('2026-08-17T15:30:00', { zone: 'Australia/Sydney' })
+    const control = createRoot(rootDispose => {
+      dispose = rootDispose
+      return (<DateTimeLocal referenceTime={sydneyReference} />) as HTMLSpanElement
+    })
+    document.body.append(control)
+    control.querySelector<HTMLButtonElement>('[aria-label="Enter date and time naturally"]')!.click()
+    await nextRender()
+    const input = control.querySelector<HTMLInputElement>('.datetime-neo__natural-input')!
+    input.value = 'January 1, 2027 at 9am'
+    input.dispatchEvent(new InputEvent('input', { bubbles: true }))
+    await nextRender()
+    expect(control.querySelector('.datetime-neo__timezone')?.textContent).toBe('+11:00')
+    control.remove()
+    dispose!()
+  })
+
+  it('renders the magic-mode offset only once when format options include a timezone name', async () => {
+    let dispose: (() => void) | undefined
+    const control = createRoot(rootDispose => {
+      dispose = rootDispose
+      return (<DateTimeLocal referenceTime={referenceTime} formatOptions={{ timeZoneName: 'shortOffset' }} />) as HTMLSpanElement
+    })
+    document.body.append(control)
+    control.querySelector<HTMLButtonElement>('[aria-label="Enter date and time naturally"]')!.click()
+    await nextRender()
+    const input = control.querySelector<HTMLInputElement>('.datetime-neo__natural-input')!
+    input.value = 'August 18, 2026 at 9am'
+    input.dispatchEvent(new InputEvent('input', { bubbles: true }))
+    await nextRender()
+    expect(control.querySelector('.datetime-neo__natural-preview')?.textContent).not.toContain('GMT')
+    expect(control.querySelectorAll('.datetime-neo__timezone')).toHaveLength(1)
     control.remove()
     dispose!()
   })
@@ -175,7 +223,7 @@ describe('DateTimeLocal', () => {
   it('restores cleared segments from a native picker change event', () =>
     createRoot(dispose => {
       const onValueChange = vi.fn()
-      const control = (<DateTimeLocal referenceTime={referenceTime} value="2026-08-17T15:30" onValueChange={onValueChange} />) as HTMLSpanElement
+      const control = (<DateTimeLocal referenceTime={referenceTime} value={date('2026-08-17T15:30')} onValueChange={onValueChange} />) as HTMLSpanElement
       document.body.append(control)
       const year = control.querySelector<HTMLButtonElement>('[aria-label="year"]')!
       key(year, 'Backspace')
@@ -183,7 +231,7 @@ describe('DateTimeLocal', () => {
       expect(input.value).toBe('2026-08-17T15:30')
       input.value = '2026-09-01T08:45'
       input.dispatchEvent(new Event('change', { bubbles: true }))
-      expect(onValueChange).toHaveBeenLastCalledWith('2026-09-01T08:45')
+      expect(localValue(onValueChange.mock.calls.at(-1)?.[0])).toBe('2026-09-01T08:45')
       expect(control.querySelector<HTMLButtonElement>('[aria-label="year"]')?.textContent).toBe('2026')
       control.remove()
       dispose()
@@ -192,12 +240,12 @@ describe('DateTimeLocal', () => {
   it('clears every segment when the native picker is cleared', async () =>
     await new Promise<void>(resolve => createRoot(dispose => {
       const onValueChange = vi.fn()
-      const control = (<DateTimeLocal referenceTime={referenceTime} value="2026-08-17T15:30" onValueChange={onValueChange} />) as HTMLSpanElement
+      const control = (<DateTimeLocal referenceTime={referenceTime} value={date('2026-08-17T15:30')} onValueChange={onValueChange} />) as HTMLSpanElement
       document.body.append(control)
       const input = control.querySelector<HTMLInputElement>('input')!
       input.value = ''
       input.dispatchEvent(new Event('change', { bubbles: true }))
-      expect(onValueChange).toHaveBeenCalledWith('')
+      expect(onValueChange).toHaveBeenCalledWith(null)
       nextRender().then(() => {
         expect(control.querySelectorAll('.datetime-neo__placeholder')).toHaveLength(6)
         control.remove()
@@ -208,7 +256,7 @@ describe('DateTimeLocal', () => {
 
   it('uses the locale default width for hours and minutes', () =>
     createRoot(() => {
-      const control = (<DateTimeLocal referenceTime={referenceTime} locale="en-US" value="2026-08-17T05:03" />) as HTMLSpanElement
+      const control = (<DateTimeLocal referenceTime={referenceTime} locale="en-US" value={date('2026-08-17T05:03')} />) as HTMLSpanElement
       const segments = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')
       expect(segments[3]?.textContent).toBe('5')
       expect(segments[4]?.textContent).toBe('03')
@@ -216,7 +264,7 @@ describe('DateTimeLocal', () => {
 
   it('renders every segment as a placeholder for an initially empty value', () =>
     createRoot(() => {
-      const control = (<DateTimeLocal referenceTime={referenceTime} locale="en-US" formatOptions={{ hour12: true }} value="" />) as HTMLSpanElement
+      const control = (<DateTimeLocal referenceTime={referenceTime} locale="en-US" formatOptions={{ hour12: true }} value={null} />) as HTMLSpanElement
       const segments = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')
       expect(segments[5]?.textContent).toBe('--')
       expect(control.querySelectorAll('.datetime-neo__placeholder')).toHaveLength(6)
@@ -224,7 +272,7 @@ describe('DateTimeLocal', () => {
 
   it('sets the draft day period directly with a and p keys', async () =>
     await new Promise<void>(resolve => createRoot(dispose => {
-      const control = (<DateTimeLocal referenceTime={referenceTime} locale="en-US" formatOptions={{ hour12: true }} value="" />) as HTMLSpanElement
+      const control = (<DateTimeLocal referenceTime={referenceTime} locale="en-US" formatOptions={{ hour12: true }} value={null} />) as HTMLSpanElement
       document.body.append(control)
       const dayPeriod = () => control.querySelector<HTMLButtonElement>('[aria-label="dayPeriod"]')!
       key(dayPeriod(), 'p')
@@ -246,7 +294,7 @@ describe('DateTimeLocal', () => {
 
   it('selects focused segments and moves focus with left and right arrows', async () =>
     await new Promise<void>(resolve => createRoot(dispose => {
-      const control = (<DateTimeLocal referenceTime={referenceTime} value="2026-08-17T15:30" />) as HTMLSpanElement
+      const control = (<DateTimeLocal referenceTime={referenceTime} value={date('2026-08-17T15:30')} />) as HTMLSpanElement
       document.body.append(control)
       const segments = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')
       segments[1]?.focus()
@@ -270,21 +318,21 @@ describe('DateTimeLocal', () => {
   it('increments and decrements the selected locale segment', () =>
     createRoot(dispose => {
       const onValueChange = vi.fn()
-      const control = (<DateTimeLocal referenceTime={referenceTime} value="2026-08-17T15:30" onValueChange={onValueChange} />) as HTMLSpanElement
+      const control = (<DateTimeLocal referenceTime={referenceTime} value={date('2026-08-17T15:30')} onValueChange={onValueChange} />) as HTMLSpanElement
       document.body.append(control)
       const month = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')[0]!
       month.focus()
       key(month, 'ArrowUp')
       key(month, 'ArrowDown')
-      expect(onValueChange).toHaveBeenNthCalledWith(1, '2026-09-17T15:30')
-      expect(onValueChange).toHaveBeenNthCalledWith(2, '2026-07-17T15:30')
+      expect(localValue(onValueChange.mock.calls[0]?.[0])).toBe('2026-09-17T15:30')
+      expect(localValue(onValueChange.mock.calls[1]?.[0])).toBe('2026-07-17T15:30')
       control.remove()
       dispose()
     }))
 
   it('keeps focus while repeatedly adjusting a segment', async () =>
     await new Promise<void>(resolve => createRoot(dispose => {
-      const [value, setValue] = createSignal<'2026-08-17T15:30' | '2026-09-17T15:30' | '2026-10-17T15:30'>('2026-08-17T15:30')
+      const [value, setValue] = createSignal<DateTime>(date('2026-08-17T15:30'))
       const control = (<DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />) as HTMLSpanElement
       document.body.append(control)
       const month = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')[0]!
@@ -296,7 +344,7 @@ describe('DateTimeLocal', () => {
         expect(document.activeElement).toBe(updatedMonth)
         key(updatedMonth, 'ArrowUp')
         nextRender().then(() => {
-          expect(value()).toBe('2026-10-17T15:30')
+          expect(localValue(value())).toBe('2026-10-17T15:30')
           expect(control.querySelectorAll('.datetime-neo__segment')[0]).toBe(month)
           expect(document.activeElement).toBe(month)
           control.remove()
@@ -308,7 +356,7 @@ describe('DateTimeLocal', () => {
 
   it('accepts numeric entry and advances after a complete segment', async () =>
     await new Promise<void>(resolve => createRoot(dispose => {
-      const [value, setValue] = createSignal<'2026-08-17T15:30' | '2026-12-17T15:30'>('2026-08-17T15:30')
+      const [value, setValue] = createSignal<DateTime>(date('2026-08-17T15:30'))
       const control = (<DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />) as HTMLSpanElement
       document.body.append(control)
       const month = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')[0]!
@@ -316,7 +364,7 @@ describe('DateTimeLocal', () => {
       key(month, '1')
       key(month, '2')
       nextRender().then(() => {
-        expect(value()).toBe('2026-12-17T15:30')
+        expect(localValue(value())).toBe('2026-12-17T15:30')
         nextRender().then(() => {
           expect(document.activeElement).toBe(control.querySelectorAll('.datetime-neo__segment')[1])
           control.remove()
@@ -328,7 +376,7 @@ describe('DateTimeLocal', () => {
 
   it('updates the displayed year after controlled numeric entry', async () =>
     await new Promise<void>(resolve => createRoot(dispose => {
-      const [value, setValue] = createSignal<DateTimeLocalValue>('2026-08-17T15:30')
+      const [value, setValue] = createSignal<DateTime | null>(date('2026-08-17T15:30'))
       const control = (<DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />) as HTMLSpanElement
       document.body.append(control)
       const year = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')[2]!
@@ -338,7 +386,7 @@ describe('DateTimeLocal', () => {
       key(year, '1')
       key(year, '5')
       nextRender().then(() => {
-        expect(value()).toBe('2015-08-17T15:30')
+        expect(localValue(value())).toBe('2015-08-17T15:30')
         expect(year.textContent).toBe('2015')
         control.remove()
         dispose()
@@ -348,7 +396,7 @@ describe('DateTimeLocal', () => {
 
   it('keeps draft segment values visible while the external value is incomplete', async () =>
     await new Promise<void>(resolve => createRoot(dispose => {
-      const [value, setValue] = createSignal<DateTimeLocalValue>('')
+      const [value, setValue] = createSignal<DateTime | null>(null)
       const control = (<DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />) as HTMLSpanElement
       document.body.append(control)
       const year = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')[2]!
@@ -359,7 +407,7 @@ describe('DateTimeLocal', () => {
       key(year, '5')
       key(year, 'ArrowUp')
       nextRender().then(() => {
-        expect(value()).toBe('')
+        expect(value()).toBeNull()
         expect(year.textContent).toBe('2016')
         control.remove()
         dispose()
@@ -369,7 +417,7 @@ describe('DateTimeLocal', () => {
 
   it('preserves leading zero entry until the segment is complete', async () =>
     await new Promise<void>(resolve => createRoot(dispose => {
-      const [value, setValue] = createSignal<'2026-05-17T15:30' | '2026-08-17T15:30'>('2026-08-17T15:30')
+      const [value, setValue] = createSignal<DateTime>(date('2026-08-17T15:30'))
       const control = (<DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />) as HTMLSpanElement
       document.body.append(control)
       const month = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')[0]!
@@ -378,7 +426,7 @@ describe('DateTimeLocal', () => {
       expect(document.activeElement).toBe(month)
       key(month, '5')
       nextRender().then(() => {
-        expect(value()).toBe('2026-05-17T15:30')
+        expect(localValue(value())).toBe('2026-05-17T15:30')
         expect(document.activeElement).toBe(control.querySelectorAll('.datetime-neo__segment')[1])
         control.remove()
         dispose()
@@ -388,7 +436,7 @@ describe('DateTimeLocal', () => {
 
   it('preserves a leading zero while entering an hour', async () =>
     await new Promise<void>(resolve => createRoot(dispose => {
-      const [value, setValue] = createSignal<'2026-08-17T15:30' | '2026-08-17T17:30'>('2026-08-17T15:30')
+      const [value, setValue] = createSignal<DateTime>(date('2026-08-17T15:30'))
       const control = (<DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} locale="en-US" formatOptions={{ hour12: true }} />) as HTMLSpanElement
       document.body.append(control)
       const hour = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')[3]!
@@ -397,7 +445,7 @@ describe('DateTimeLocal', () => {
       expect(document.activeElement).toBe(hour)
       key(hour, '5')
       nextRender().then(() => {
-        expect(value()).toBe('2026-08-17T17:30')
+        expect(localValue(value())).toBe('2026-08-17T17:30')
         expect(document.activeElement).toBe(control.querySelectorAll('.datetime-neo__segment')[4])
         control.remove()
         dispose()
@@ -407,14 +455,14 @@ describe('DateTimeLocal', () => {
 
   it('sets PM when a 12-hour entry exceeds 12', async () =>
     await new Promise<void>(resolve => createRoot(dispose => {
-      const [value, setValue] = createSignal<DateTimeLocalValue>('2026-08-17T05:30')
+      const [value, setValue] = createSignal<DateTime>(date('2026-08-17T05:30'))
       const control = (<DateTimeLocal referenceTime={referenceTime} locale="en-US" formatOptions={{ hour12: true }} value={value()} onValueChange={setValue} />) as HTMLSpanElement
       document.body.append(control)
       const hour = control.querySelector<HTMLButtonElement>('[aria-label="hour"]')!
       key(hour, '1')
       key(hour, '5')
       nextRender().then(() => {
-        expect(value()).toBe('2026-08-17T15:30')
+        expect(localValue(value())).toBe('2026-08-17T15:30')
         expect(control.querySelector<HTMLButtonElement>('[aria-label="hour"]')?.textContent).toBe('3')
         expect(control.querySelector<HTMLButtonElement>('[aria-label="dayPeriod"]')?.textContent).toBe('PM')
         control.remove()
@@ -425,14 +473,14 @@ describe('DateTimeLocal', () => {
 
   it('keeps a 24-hour entry unchanged when it exceeds 12', async () =>
     await new Promise<void>(resolve => createRoot(dispose => {
-      const [value, setValue] = createSignal<DateTimeLocalValue>('2026-08-17T05:30')
+      const [value, setValue] = createSignal<DateTime>(date('2026-08-17T05:30'))
       const control = (<DateTimeLocal referenceTime={referenceTime} locale="en-AU" formatOptions={{ hourCycle: 'h23' }} value={value()} onValueChange={setValue} />) as HTMLSpanElement
       document.body.append(control)
       const hour = control.querySelector<HTMLButtonElement>('[aria-label="hour"]')!
       key(hour, '1')
       key(hour, '5')
       nextRender().then(() => {
-        expect(value()).toBe('2026-08-17T15:30')
+        expect(localValue(value())).toBe('2026-08-17T15:30')
         expect(control.querySelector<HTMLButtonElement>('[aria-label="hour"]')?.textContent).toBe('15')
         expect(control.querySelector('[aria-label="dayPeriod"]')).toBeNull()
         control.remove()
@@ -443,7 +491,7 @@ describe('DateTimeLocal', () => {
 
   it('sets the draft day period to PM when the year is cleared', async () =>
     await new Promise<void>(resolve => createRoot(dispose => {
-      const [value, setValue] = createSignal<DateTimeLocalValue>('2026-08-17T05:30')
+      const [value, setValue] = createSignal<DateTime | null>(date('2026-08-17T05:30'))
       const control = (<DateTimeLocal referenceTime={referenceTime} locale="en-US" formatOptions={{ hour12: true }} value={value()} onValueChange={setValue} />) as HTMLSpanElement
       document.body.append(control)
       const year = control.querySelector<HTMLButtonElement>('[aria-label="year"]')!
@@ -452,7 +500,7 @@ describe('DateTimeLocal', () => {
       key(hour, '1')
       key(hour, '5')
       nextRender().then(() => {
-        expect(value()).toBe('')
+        expect(value()).toBeNull()
         expect(control.querySelector<HTMLButtonElement>('[aria-label="year"]')?.textContent).toBe('yyyy')
         expect(control.querySelector<HTMLButtonElement>('[aria-label="hour"]')?.textContent).toBe('3')
         expect(control.querySelector<HTMLButtonElement>('[aria-label="dayPeriod"]')?.textContent).toBe('PM')
@@ -464,14 +512,14 @@ describe('DateTimeLocal', () => {
 
   it('clears individual segments with backspace or delete and renders contextual placeholders', async () =>
     await new Promise<void>(resolve => createRoot(dispose => {
-      const [value, setValue] = createSignal<DateTimeLocalValue>('2026-08-17T15:30')
+      const [value, setValue] = createSignal<DateTime | null>(date('2026-08-17T15:30'))
       const control = (<DateTimeLocal referenceTime={referenceTime} locale="en-AU" formatOptions={{ hourCycle: 'h23' }} value={value()} onValueChange={setValue} />) as HTMLSpanElement
       document.body.append(control)
       const segments = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')
       segments[0]!.focus()
       key(segments[0]!, 'Backspace')
       nextRender().then(() => {
-        expect(value()).toBe('')
+        expect(value()).toBeNull()
         expect(segments[0]?.textContent).toBe('dd')
         key(segments[1]!, 'Delete')
         key(segments[2]!, 'Backspace')
@@ -489,14 +537,14 @@ describe('DateTimeLocal', () => {
 
   it('advances once a one-digit segment cannot accept another digit', async () =>
     await new Promise<void>(resolve => createRoot(dispose => {
-      const [value, setValue] = createSignal<'2026-05-17T15:30' | '2026-08-17T15:30'>('2026-08-17T15:30')
+      const [value, setValue] = createSignal<DateTime>(date('2026-08-17T15:30'))
       const control = (<DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />) as HTMLSpanElement
       document.body.append(control)
       const month = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')[0]!
       month.focus()
       key(month, '5')
       nextRender().then(() => {
-        expect(value()).toBe('2026-05-17T15:30')
+        expect(localValue(value())).toBe('2026-05-17T15:30')
         expect(document.activeElement).toBe(control.querySelectorAll('.datetime-neo__segment')[1])
         control.remove()
         dispose()
@@ -507,7 +555,7 @@ describe('DateTimeLocal', () => {
   it('interprets a partial two-digit year in the closest century when leaving the segment', async () =>
     await new Promise<void>(resolve => createRoot(dispose => {
       const onValueChange = vi.fn()
-      const control = (<DateTimeLocal referenceTime={referenceTime} value="2026-08-17T15:30" onValueChange={onValueChange} />) as HTMLSpanElement
+      const control = (<DateTimeLocal referenceTime={referenceTime} value={date('2026-08-17T15:30')} onValueChange={onValueChange} />) as HTMLSpanElement
       document.body.append(control)
       const year = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')[2]!
       year.focus()
@@ -515,14 +563,14 @@ describe('DateTimeLocal', () => {
       key(year, '8')
       key(year, 'ArrowRight')
       nextRender().then(() => {
-        expect(onValueChange).toHaveBeenLastCalledWith('1988-08-17T15:30')
+        expect(localValue(onValueChange.mock.calls.at(-1)?.[0])).toBe('1988-08-17T15:30')
         const updatedYear = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')[2]!
         updatedYear.focus()
         key(updatedYear, '6')
         key(updatedYear, '3')
         key(updatedYear, 'ArrowRight')
         nextRender().then(() => {
-          expect(onValueChange).toHaveBeenLastCalledWith('2063-08-17T15:30')
+          expect(localValue(onValueChange.mock.calls.at(-1)?.[0])).toBe('2063-08-17T15:30')
           control.remove()
           dispose()
           resolve()
@@ -532,9 +580,9 @@ describe('DateTimeLocal', () => {
 
   it('updates an uncontrolled value and honors readonly and disabled states', async () =>
     await new Promise<void>(resolve => createRoot(dispose => {
-      const control = (<DateTimeLocal referenceTime={referenceTime} defaultValue="2026-08-17T15:30" />) as HTMLSpanElement
-      const readonly = (<DateTimeLocal referenceTime={referenceTime} value="2026-08-17T15:30" readonly />) as HTMLSpanElement
-      const disabled = (<DateTimeLocal referenceTime={referenceTime} value="2026-08-17T15:30" disabled />) as HTMLSpanElement
+      const control = (<DateTimeLocal referenceTime={referenceTime} defaultValue={date('2026-08-17T15:30')} />) as HTMLSpanElement
+      const readonly = (<DateTimeLocal referenceTime={referenceTime} value={date('2026-08-17T15:30')} readonly />) as HTMLSpanElement
+      const disabled = (<DateTimeLocal referenceTime={referenceTime} value={date('2026-08-17T15:30')} disabled />) as HTMLSpanElement
       document.body.append(control, readonly, disabled)
       const month = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')[0]!
       month.focus()

@@ -23,7 +23,7 @@ const App: Component = () => {
       <nav class={styles.nav} aria-label="Main navigation">
         <a class={styles.brand} href="#top">
           <span class={styles.brandMark}>dt</span>
-          datetime-neo
+          neodt
         </a>
         <a href="#playground">Playground</a>
         <a href="#usage">Usage</a>
@@ -120,7 +120,7 @@ const App: Component = () => {
         </div>
       </section>
 
-      <footer class={styles.footer}><span>datetime-neo / SolidJS</span><span>Built for local time.</span></footer>
+      <footer class={styles.footer}><span>neodt / SolidJS</span><span>Built for local time.</span></footer>
     </main>
   )
 }

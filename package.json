@@ -1,5 +1,5 @@
 {
-  "name": "datetime-neo",
+  "name": "neodt",
   "version": "0.0.0",
   "description": "A configurable, locale-aware datetime-local input for Solid.",
   "license": "MIT",

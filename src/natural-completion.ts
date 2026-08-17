@@ -13,7 +13,7 @@ const vocabulary = [
   'noon', 'midnight', 'in ', 'ago', 'from ', 'plus ',
 ] as const
 
-/** Builds token and phrase completions for datetime-neo's single-point grammar. */
+/** Builds token and phrase completions for neodt's single-point grammar. */
 export function getNaturalDateCompletions(value: string, maximum = 5): NaturalDateCompletion[] {
   if (!value.trim() || maximum < 1) return []
   const normalized = value.toLowerCase()

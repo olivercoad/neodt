@@ -21,6 +21,16 @@ function paste(element: HTMLElement, text: string) {
   element.dispatchEvent(event)
 }
 
+function copy(element: HTMLElement) {
+  let text = ''
+  const event = new Event('copy', { bubbles: true, cancelable: true })
+  Object.defineProperty(event, 'clipboardData', {
+    value: { setData: (_type: string, value: string) => (text = value) },
+  })
+  element.dispatchEvent(event)
+  return { prevented: event.defaultPrevented, text }
+}
+
 function nextRender() {
   return new Promise<void>(resolve => queueMicrotask(resolve))
 }
@@ -63,41 +73,41 @@ describe('Neodt', () => {
       expect(value.textContent).not.toContain('@')
     }))
 
-  it('copies all date and time text with Ctrl+A without newlines', () =>
-    createRoot(dispose => {
-      const control = (
+  it('copies all formatted date and time text with Ctrl+C', async () => {
+    let dispose: (() => void) | undefined
+    const control = createRoot(rootDispose => {
+      dispose = rootDispose
+      return (
         <DateTimeLocal
           referenceTime={referenceTime}
           locale="en-GB"
           value={date('2026-08-17T15:30')}
         />
       ) as HTMLSpanElement
-      document.body.append(control)
-      const editor = control.querySelector<HTMLSpanElement>('.datetime-neo__editor')!
-      const value = control.querySelector<HTMLSpanElement>('.datetime-neo__value')!
-      const expected = '17/08/2026, 15:30'
-      key(control.querySelector<HTMLButtonElement>('.datetime-neo__segment')!, 'a')
-      expect(window.getSelection()?.toString()).not.toBe(editor.textContent)
-      control
-        .querySelector<HTMLButtonElement>('.datetime-neo__segment')!
-        .dispatchEvent(new KeyboardEvent('keydown', { key: 'a', ctrlKey: true, bubbles: true }))
-      expect(value.textContent).toBe(expected)
-      expect(window.getSelection()?.toString()).toBe(expected)
-      expect(window.getSelection()?.toString()).not.toContain('\n')
-      expect(control.querySelector('.datetime-neo__timezone')).toBeNull()
-      let copiedText = ''
-      document.addEventListener(
-        'copy',
-        () => {
-          copiedText = window.getSelection()?.toString() ?? ''
-        },
-        { once: true },
-      )
-      document.dispatchEvent(new Event('copy'))
-      expect(copiedText).toBe(expected)
-      control.remove()
-      dispose()
-    }))
+    })
+    document.body.append(control)
+    const editor = control.querySelector<HTMLSpanElement>('.datetime-neo__editor')!
+    const segments = control.querySelectorAll('.datetime-neo__segment')
+    const expected = '17/08/2026, 15:30'
+    key(control.querySelector<HTMLButtonElement>('.datetime-neo__segment')!, 'a')
+    expect(window.getSelection()?.toString()).not.toBe(editor.textContent)
+    control
+      .querySelector<HTMLButtonElement>('.datetime-neo__segment')!
+      .dispatchEvent(new KeyboardEvent('keydown', { key: 'a', ctrlKey: true, bubbles: true }))
+    await nextRender()
+    expect(window.getSelection()?.toString()).not.toBe(expected)
+    expect(
+      Array.from(segments).every(segment =>
+        segment.classList.contains('datetime-neo__segment--all-selected'),
+      ),
+    ).toBe(true)
+    expect(control.querySelector('.datetime-neo__timezone')).toBeNull()
+    const result = copy(control.querySelector<HTMLButtonElement>('.datetime-neo__segment')!)
+    expect(result.prevented).toBe(true)
+    expect(result.text).toBe(expected)
+    control.remove()
+    dispose!()
+  })
 
   it('uses the reference timezone for editing and hides its offset by default', () =>
     createRoot(() => {
@@ -187,9 +197,7 @@ describe('Neodt', () => {
       ) as HTMLSpanElement
       document.body.append(control)
       const segment = control.querySelector<HTMLButtonElement>('.datetime-neo__segment')!
-      const configuredFormat = Array.from(
-        control.querySelector('.datetime-neo__editor')!.children,
-      )
+      const configuredFormat = Array.from(control.querySelector('.datetime-neo__editor')!.children)
         .filter(element => !element.classList.contains('datetime-neo__timezone'))
         .map(element => element.textContent)
         .join('')
@@ -1144,9 +1152,9 @@ describe('Neodt', () => {
           expect(readonlySegment.getAttribute('tabindex')).toBeNull()
           readonlySegment.focus()
           expect(document.activeElement).not.toBe(readonlySegment)
-          expect(disabled.querySelector('.datetime-neo__segment')?.getAttribute('aria-disabled')).toBe(
-            'true',
-          )
+          expect(
+            disabled.querySelector('.datetime-neo__segment')?.getAttribute('aria-disabled'),
+          ).toBe('true')
           expect(disabled.querySelector('.datetime-neo__actions')).toBeNull()
           expect(disabled.querySelector('.datetime-neo__trigger')).toBeNull()
           const disabledSegment = disabled.querySelector<HTMLElement>('.datetime-neo__segment')!

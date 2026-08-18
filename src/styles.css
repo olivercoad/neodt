@@ -152,6 +152,7 @@
 }
 
 .datetime-neo__editor:focus-within .datetime-neo__segment--selected,
+.datetime-neo__editor:focus-within .datetime-neo__segment--all-selected,
 .datetime-neo__segment:focus-visible {
   background: var(--datetime-neo-highlight);
   color: var(--datetime-neo-highlight-foreground);
@@ -166,6 +167,7 @@
 }
 
 .datetime-neo__editor:focus-within .datetime-neo__segment--selected .datetime-neo__placeholder,
+.datetime-neo__editor:focus-within .datetime-neo__segment--all-selected .datetime-neo__placeholder,
 .datetime-neo__segment:focus-visible .datetime-neo__placeholder {
   color: inherit;
 }

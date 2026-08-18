@@ -1,4 +1,12 @@
-import { createMemo, createSignal, createUniqueId, Index, onCleanup, splitProps, type JSX } from 'solid-js'
+import {
+  createMemo,
+  createSignal,
+  createUniqueId,
+  Index,
+  onCleanup,
+  splitProps,
+  type JSX,
+} from 'solid-js'
 import { DateTime } from 'luxon'
 import { getNaturalDateCompletions } from './natural-completion'
 import { parseNaturalDate } from './natural-parser'
@@ -180,6 +188,7 @@ function Neodt(props: NeodtProps): JSX.Element {
     local.defaultValue,
   )
   const [selected, setSelected] = createSignal(0)
+  const [allSegmentsSelected, setAllSegmentsSelected] = createSignal(false)
   const [typed, setTyped] = createSignal<{ index: number; digits: string } | undefined>()
   const [naturalText, setNaturalText] = createSignal('')
   const [naturalPlaceholder, setNaturalPlaceholder] = createSignal('')
@@ -245,6 +254,7 @@ function Neodt(props: NeodtProps): JSX.Element {
 
   const selectSegment = (index: number, focus = false) => {
     if (local.disabled || local.readonly) return
+    setAllSegmentsSelected(false)
     const next = Math.max(0, Math.min(index, editableSegments().length - 1))
     const pending = typed()
     if (
@@ -444,10 +454,20 @@ function Neodt(props: NeodtProps): JSX.Element {
     })
     if (!date) return
     event.preventDefault()
+    setAllSegmentsSelected(false)
     setDraftDate(date)
     setCleared(new Set<SegmentName>())
     setTyped(undefined)
     emitValue(date)
+  }
+
+  const copyDateTime = (event: ClipboardEvent) => {
+    if (naturalMode()) return
+    const editor = event.currentTarget as HTMLSpanElement
+    const value = editor.querySelector('.datetime-neo__value')
+    if (!value) return
+    event.clipboardData?.setData('text/plain', value.textContent ?? '')
+    event.preventDefault()
   }
 
   const matchesFollowingSeparator = (index: number, key: string) => {
@@ -478,6 +498,12 @@ function Neodt(props: NeodtProps): JSX.Element {
   }
 
   const onSegmentKeyDown = (event: KeyboardEvent, index: number, segment: Segment) => {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
+      event.preventDefault()
+      setAllSegmentsSelected(true)
+      return
+    }
+    if (!(event.ctrlKey || event.metaKey)) setAllSegmentsSelected(false)
     if (event.key === ' ') {
       event.preventDefault()
       openPicker()
@@ -562,18 +588,13 @@ function Neodt(props: NeodtProps): JSX.Element {
         class="datetime-neo__editor"
         role="group"
         aria-label={local['aria-label'] ?? 'Date and time'}
+        onCopy={copyDateTime}
         onPaste={pasteDateTime}
         onKeyDown={event => {
           if (naturalMode() || !(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'a')
             return
-          const value = event.currentTarget.querySelector('.datetime-neo__value')
-          if (!value) return
           event.preventDefault()
-          const range = document.createRange()
-          range.selectNodeContents(value)
-          const selection = window.getSelection()
-          selection?.removeAllRanges()
-          selection?.addRange(range)
+          setAllSegmentsSelected(true)
         }}
       >
         {naturalMode() ? (
@@ -649,7 +670,10 @@ function Neodt(props: NeodtProps): JSX.Element {
                       <span
                         ref={element => (segmentButtons[index()] = element)}
                         class="datetime-neo__segment"
-                        classList={{ 'datetime-neo__segment--selected': selected() === index() }}
+                        classList={{
+                          'datetime-neo__segment--selected': selected() === index(),
+                          'datetime-neo__segment--all-selected': allSegmentsSelected(),
+                        }}
                         role="spinbutton"
                         contenteditable={!local.disabled && !local.readonly ? true : undefined}
                         inputmode={segment().type === 'dayPeriod' ? 'text' : 'decimal'}
@@ -657,8 +681,8 @@ function Neodt(props: NeodtProps): JSX.Element {
                           local.disabled || local.readonly
                             ? undefined
                             : activeItem() === index()
-                              ? 0
-                              : -1
+                            ? 0
+                            : -1
                         }
                         aria-disabled={local.disabled || undefined}
                         aria-label={part().type}
@@ -698,11 +722,7 @@ function Neodt(props: NeodtProps): JSX.Element {
           </span>
         )}
         {!naturalMode() && (
-          <span
-            class="datetime-neo__empty-area"
-            aria-hidden="true"
-            onClick={onEmptyAreaClick}
-          />
+          <span class="datetime-neo__empty-area" aria-hidden="true" onClick={onEmptyAreaClick} />
         )}
         {local.showTimeOffset && (
           <span class="datetime-neo__timezone" aria-hidden="true">

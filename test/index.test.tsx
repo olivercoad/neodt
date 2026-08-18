@@ -700,21 +700,21 @@ describe('Neodt', () => {
       }),
     ))
 
-  it('focuses the first segment when the empty editor area is pressed', async () =>
+  it('focuses the first segment when the empty editor area is clicked', async () =>
     await new Promise<void>(resolve =>
       createRoot(dispose => {
         const control = (
           <DateTimeLocal referenceTime={referenceTime} value={date('2026-08-17T15:30')} />
         ) as HTMLSpanElement
         document.body.append(control)
-        const editor = control.querySelector<HTMLSpanElement>('.datetime-neo__editor')!
+        const emptyArea = control.querySelector<HTMLSpanElement>('.datetime-neo__empty-area')!
         const firstSegment = control.querySelector<HTMLButtonElement>('.datetime-neo__segment')!
         const segments = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')
         segments[segments.length - 1]!.focus()
-        const event = new MouseEvent('mousedown', { bubbles: true, cancelable: true })
-        editor.dispatchEvent(event)
+        const event = new MouseEvent('click', { bubbles: true, cancelable: true })
+        emptyArea.dispatchEvent(event)
         nextRender().then(() => {
-          expect(event.defaultPrevented).toBe(true)
+          expect(event.defaultPrevented).toBe(false)
           expect(document.activeElement).toBe(firstSegment)
           expect(firstSegment.getAttribute('aria-selected')).toBe('true')
           expect(segments[segments.length - 1]?.getAttribute('aria-selected')).toBe('false')
@@ -724,6 +724,27 @@ describe('Neodt', () => {
         })
       }),
     ))
+
+  it('preserves a selection dragged from the empty editor area', () =>
+    createRoot(dispose => {
+      const control = (
+        <DateTimeLocal referenceTime={referenceTime} value={date('2026-08-17T15:30')} />
+      ) as HTMLSpanElement
+      document.body.append(control)
+      const emptyArea = control.querySelector<HTMLSpanElement>('.datetime-neo__empty-area')!
+      const value = control.querySelector<HTMLSpanElement>('.datetime-neo__value')!
+      const firstSegment = control.querySelector<HTMLElement>('.datetime-neo__segment')!
+      const range = document.createRange()
+      range.selectNodeContents(value)
+      const selection = window.getSelection()!
+      selection.removeAllRanges()
+      selection.addRange(range)
+      emptyArea.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+      expect(selection.toString()).toBe(value.textContent)
+      expect(document.activeElement).not.toBe(firstSegment)
+      control.remove()
+      dispose()
+    }))
 
   it('increments and decrements the selected locale segment', () =>
     createRoot(dispose => {
@@ -1118,11 +1139,21 @@ describe('Neodt', () => {
           ).toBe('8')
           expect(readonly.querySelector('.datetime-neo__actions')).toBeNull()
           expect(readonly.querySelector('.datetime-neo__trigger')).toBeNull()
+          const readonlySegment = readonly.querySelector<HTMLElement>('.datetime-neo__segment')!
+          expect(readonlySegment.getAttribute('contenteditable')).toBeNull()
+          expect(readonlySegment.getAttribute('tabindex')).toBeNull()
+          readonlySegment.focus()
+          expect(document.activeElement).not.toBe(readonlySegment)
           expect(disabled.querySelector('.datetime-neo__segment')?.getAttribute('aria-disabled')).toBe(
             'true',
           )
           expect(disabled.querySelector('.datetime-neo__actions')).toBeNull()
           expect(disabled.querySelector('.datetime-neo__trigger')).toBeNull()
+          const disabledSegment = disabled.querySelector<HTMLElement>('.datetime-neo__segment')!
+          expect(disabledSegment.getAttribute('contenteditable')).toBeNull()
+          expect(disabledSegment.getAttribute('tabindex')).toBeNull()
+          disabledSegment.focus()
+          expect(document.activeElement).not.toBe(disabledSegment)
           control.remove()
           readonly.remove()
           disabled.remove()

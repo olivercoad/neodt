@@ -39,6 +39,11 @@
   white-space: nowrap;
 }
 
+.datetime-neo__empty-area {
+  flex: 1 1 0;
+  height: 100%;
+}
+
 .datetime-neo__natural-input {
   background: transparent;
   border: 0;

@@ -244,6 +244,7 @@ function Neodt(props: NeodtProps): JSX.Element {
   }
 
   const selectSegment = (index: number, focus = false) => {
+    if (local.disabled || local.readonly) return
     const next = Math.max(0, Math.min(index, editableSegments().length - 1))
     const pending = typed()
     if (
@@ -543,9 +544,9 @@ function Neodt(props: NeodtProps): JSX.Element {
     }
   }
 
-  const onEditorPointerDown = (event: MouseEvent) => {
-    if (event.target !== event.currentTarget || naturalMode()) return
-    event.preventDefault()
+  const onEmptyAreaClick = () => {
+    if (naturalMode()) return
+    if (!window.getSelection()?.isCollapsed) return
     selectSegment(0, true)
   }
 
@@ -561,7 +562,6 @@ function Neodt(props: NeodtProps): JSX.Element {
         class="datetime-neo__editor"
         role="group"
         aria-label={local['aria-label'] ?? 'Date and time'}
-        onMouseDown={onEditorPointerDown}
         onPaste={pasteDateTime}
         onKeyDown={event => {
           if (naturalMode() || !(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'a')
@@ -651,9 +651,15 @@ function Neodt(props: NeodtProps): JSX.Element {
                         class="datetime-neo__segment"
                         classList={{ 'datetime-neo__segment--selected': selected() === index() }}
                         role="spinbutton"
-                        contenteditable={!local.disabled && !local.readonly}
+                        contenteditable={!local.disabled && !local.readonly ? true : undefined}
                         inputmode={segment().type === 'dayPeriod' ? 'text' : 'decimal'}
-                        tabindex={!local.disabled && activeItem() === index() ? 0 : -1}
+                        tabindex={
+                          local.disabled || local.readonly
+                            ? undefined
+                            : activeItem() === index()
+                              ? 0
+                              : -1
+                        }
                         aria-disabled={local.disabled || undefined}
                         aria-label={part().type}
                         aria-selected={selected() === index()}
@@ -690,6 +696,13 @@ function Neodt(props: NeodtProps): JSX.Element {
               }
             </Index>
           </span>
+        )}
+        {!naturalMode() && (
+          <span
+            class="datetime-neo__empty-area"
+            aria-hidden="true"
+            onClick={onEmptyAreaClick}
+          />
         )}
         {local.showTimeOffset && (
           <span class="datetime-neo__timezone" aria-hidden="true">

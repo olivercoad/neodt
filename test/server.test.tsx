@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { DateTime } from 'luxon'
 import { isServer, renderToString } from 'solid-js/web'
-import { DateTimeLocal } from '../src'
+import Neodt from '../src'
 
 describe('environment', () => {
   it('runs on server', () => {
@@ -10,9 +10,9 @@ describe('environment', () => {
   })
 })
 
-describe('DateTimeLocal', () => {
+describe('Neodt', () => {
   it('renders a segmented editor on the server', () => {
-    const html = renderToString(() => <DateTimeLocal referenceTime={DateTime.fromISO('2026-08-17T15:30:00Z')} locale="en-GB" value={DateTime.fromISO('2026-08-17T15:30:00Z')} />)
+    const html = renderToString(() => <Neodt referenceTime={DateTime.fromISO('2026-08-17T15:30:00Z')} locale="en-GB" value={DateTime.fromISO('2026-08-17T15:30:00Z')} />)
     expect(html).toContain('datetime-neo__segment')
     expect(html).toContain('type="datetime-local"')
   })

@@ -1,6 +1,6 @@
 import { createMemo, createSignal, For, Show, type Component } from 'solid-js'
 import { DateTime } from 'luxon'
-import { DateTimeLocal } from 'src'
+import Neodt from 'src'
 import styles from './App.module.css'
 
 const locales = [
@@ -44,7 +44,7 @@ const App: Component = () => {
       '  value={value()}',
       '  onValueChange={setValue}',
     ].filter(Boolean)
-    return `import { DateTimeLocal } from 'neodt'\n\n<DateTimeLocal\n${optionLines.join('\n')}\n/>`
+    return `import Neodt from 'neodt'\n\n<Neodt\n${optionLines.join('\n')}\n/>`
   })
 
   const reset = () => {
@@ -78,7 +78,7 @@ const App: Component = () => {
           <article class={styles.compareCard}>
             <div class={styles.cardHead}><span class={styles.dot} /> neodt <b>Recommended</b></div>
             <label>Meeting starts</label>
-            <DateTimeLocal class={styles.compareInput} referenceTime={initialReference} defaultValue={initialValue} locale="en-US" />
+            <Neodt class={styles.compareInput} referenceTime={initialReference} defaultValue={initialValue} locale="en-US" />
             <ul><li>Locale-aware order and clock format</li><li>Keyboard-friendly segment editing</li><li>Native picker and natural language entry</li></ul>
           </article>
           <article class={`${styles.compareCard} ${styles.nativeCard}`}>
@@ -99,7 +99,7 @@ const App: Component = () => {
         <div class={styles.playground}>
           <div class={styles.settings}>
             <div class={styles.settingsTop}><span>Input settings</span><button type="button" onClick={reset}>Reset</button></div>
-            <label class={styles.field}><span class={styles.fieldLabel}>Reference time <em>timezone + defaults</em></span><DateTimeLocal class={styles.previewInput} referenceTime={initialReference} value={referenceTime()} onValueChange={next => next && setReferenceTime(next)} /></label>
+            <label class={styles.field}><span class={styles.fieldLabel}>Reference time <em>timezone + defaults</em></span><Neodt class={styles.previewInput} referenceTime={initialReference} value={referenceTime()} onValueChange={next => next && setReferenceTime(next)} /></label>
             <div class={styles.twoFields}>
               <label class={styles.field}><span class={styles.fieldLabel}>Locale</span><select value={locale() as string} onChange={event => setLocale(event.currentTarget.value)}><For each={locales}>{([name, label]) => <option value={name}>{label}</option>}</For></select></label>
               <label class={styles.field}><span class={styles.fieldLabel}>Clock</span><select value={dayPeriod()} onChange={event => setDayPeriod(event.currentTarget.value as DayPeriod)}><option value="locale">Locale dependent</option><option value="12">12 hour / AM PM</option><option value="24">24 hour</option></select></label>
@@ -112,7 +112,7 @@ const App: Component = () => {
           <div class={styles.preview}>
             <div class={styles.previewTop}><span>Preview</span><code>{referenceTime().zoneName}</code></div>
             <label>Appointment time</label>
-            <DateTimeLocal class={styles.previewInput} referenceTime={referenceTime()} value={value()} locale={locale()} formatOptions={formatOptions()} readonly={readonly()} disabled={disabled()} onValueChange={setValue} />
+            <Neodt class={styles.previewInput} referenceTime={referenceTime()} value={value()} locale={locale()} formatOptions={formatOptions()} readonly={readonly()} disabled={disabled()} onValueChange={setValue} />
             <div class={styles.valueLine}><span>Current value</span><code>{iso(value())}</code></div>
           </div>
           <div class={styles.codePanel}>

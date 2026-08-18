@@ -2,7 +2,9 @@ import { createRoot, createSignal } from 'solid-js'
 import { isServer } from 'solid-js/web'
 import { DateTime } from 'luxon'
 import { describe, expect, it, vi } from 'vitest'
-import { DateTimeLocal } from '../src'
+import Neodt from '../src'
+
+const DateTimeLocal = Neodt
 
 const referenceTime = DateTime.fromISO('2026-08-17T15:30:00Z')
 const date = (value: string) => DateTime.fromISO(value, { zone: referenceTime.zoneName ?? 'utc' })
@@ -23,7 +25,7 @@ describe('environment', () => {
   })
 })
 
-describe('DateTimeLocal', () => {
+describe('Neodt', () => {
   it('renders locale-ordered editable segments with a hidden native input and picker button', () =>
     createRoot(() => {
       const control = (<DateTimeLocal referenceTime={referenceTime} locale="en-GB" value={date('2026-08-17T15:30')} />) as HTMLSpanElement
@@ -331,6 +333,40 @@ describe('DateTimeLocal', () => {
             control.remove()
             dispose()
             resolve()
+          })
+        })
+      })
+    })))
+
+  it('uses one tab stop and moves between segments and actions with arrow keys', async () =>
+    await new Promise<void>(resolve => createRoot(dispose => {
+      const control = (<DateTimeLocal referenceTime={referenceTime} value={date('2026-08-17T15:30')} />) as HTMLSpanElement
+      document.body.append(control)
+      const segments = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')
+      const actions = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__trigger')
+      expect(control.querySelectorAll<HTMLButtonElement>('button[tabindex="0"]')).toHaveLength(1)
+      expect(segments[0]?.tabIndex).toBe(0)
+      expect(segments[1]?.tabIndex).toBe(-1)
+      expect(actions[0]?.tabIndex).toBe(-1)
+      expect(actions[1]?.tabIndex).toBe(-1)
+      segments[segments.length - 1]!.focus()
+      key(segments[segments.length - 1]!, 'ArrowRight')
+      nextRender().then(() => {
+        expect(document.activeElement).toBe(actions[0])
+        expect(control.querySelectorAll<HTMLButtonElement>('button[tabindex="0"]')).toHaveLength(1)
+        key(actions[0]!, 'ArrowRight')
+        nextRender().then(() => {
+          expect(document.activeElement).toBe(actions[1])
+          key(actions[1]!, 'ArrowLeft')
+          nextRender().then(() => {
+            expect(document.activeElement).toBe(actions[0])
+            key(actions[0]!, 'ArrowLeft')
+            nextRender().then(() => {
+              expect(document.activeElement).toBe(segments[segments.length - 1])
+              control.remove()
+              dispose()
+              resolve()
+            })
           })
         })
       })

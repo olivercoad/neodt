@@ -12,11 +12,11 @@ pnpm add neodt solid-js
 
 ```tsx
 import { DateTime } from 'luxon'
-import { DateTimeLocal } from 'neodt'
+import Neodt from 'neodt'
 
 function Appointment() {
   return (
-    <DateTimeLocal
+    <Neodt
       referenceTime={DateTime.fromISO('2026-08-17T12:00:00Z')}
       locale="en-GB"
       onValueChange={value => console.log(value)}

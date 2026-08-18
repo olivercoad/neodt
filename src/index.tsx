@@ -7,7 +7,7 @@ import {
   splitProps,
   type JSX,
 } from 'solid-js'
-import { DateTime } from 'luxon'
+import { DateTime, Zone } from 'luxon'
 import { createElementSize } from '@solid-primitives/resize-observer'
 import { getNaturalDateCompletions } from './natural-completion'
 import { parseNaturalDate } from './natural-parser'
@@ -45,7 +45,7 @@ export interface NeodtProps extends JSX.HTMLAttributes<HTMLSpanElement> {
 
 const editableTypes = new Set<SegmentName>(['year', 'month', 'day', 'hour', 'minute', 'dayPeriod'])
 
-function parseLocal(value: string, zone = 'utc'): DateTime | undefined {
+function parseLocal(value: string, zone: Zone): DateTime | undefined {
   if (!value) return undefined
   const date = DateTime.fromISO(value, { zone })
   return date.isValid ? date : undefined
@@ -61,7 +61,7 @@ function localeName(locale: Intl.LocalesArgument | undefined): string | undefine
 
 function partsFor(
   value: string,
-  zone: string,
+  zone: Zone,
   locale: Intl.LocalesArgument | undefined,
   options: Intl.DateTimeFormatOptions | undefined,
 ): DisplayPart[] {
@@ -91,7 +91,7 @@ function naturalPreview(
   locale: Intl.LocalesArgument | undefined,
   options: Intl.DateTimeFormatOptions | undefined,
 ): string {
-  return partsFor(toLocalValue(date), date.zoneName ?? 'utc', locale, options)
+  return partsFor(toLocalValue(date), date.zone, locale, options)
     .map(part => part.value)
     .join('')
 }
@@ -195,13 +195,13 @@ function Neodt(props: NeodtProps): JSX.Element {
   const [naturalPlaceholder, setNaturalPlaceholder] = createSignal('')
   const [naturalSuggestion, setNaturalSuggestion] = createSignal(0)
   const [naturalMode, setNaturalMode] = createSignal(false)
-  const referenceZone = local.referenceTime.zoneName ?? 'utc'
+  const referenceZone = () => local.referenceTime.zone
   const value = () =>
     (local.value === undefined ? uncontrolledValue() : local.value ?? undefined)?.setZone(
-      referenceZone,
+      referenceZone(),
     )
   const [draftDate, setDraftDate] = createSignal(
-    (value() ?? local.referenceTime.setZone(referenceZone)).startOf('minute'),
+    (value() ?? local.referenceTime.setZone(referenceZone())).startOf('minute'),
   )
   const nativeValue = () => toLocalValue(value() ?? draftDate())
   const [cleared, setCleared] = createSignal<Set<SegmentName>>(
@@ -210,7 +210,7 @@ function Neodt(props: NeodtProps): JSX.Element {
   const segments = createMemo(() =>
     partsFor(
       toLocalValue(cleared().size ? draftDate() : value() ?? draftDate()),
-      referenceZone,
+      referenceZone(),
       local.locale,
       local.formatOptions,
     ),
@@ -443,7 +443,7 @@ function Neodt(props: NeodtProps): JSX.Element {
       emitValue(undefined)
       return
     }
-    const date = parseLocal(next, referenceZone)
+    const date = parseLocal(next, referenceZone())
     if (!date) return
     setDraftDate(date.startOf('minute'))
     emitValue(date)
@@ -455,7 +455,7 @@ function Neodt(props: NeodtProps): JSX.Element {
     if (naturalMode() || local.disabled || local.readonly) return
     const date = parseNaturalDate(event.clipboardData?.getData('text') ?? '', {
       referenceTime: local.referenceTime,
-      zone: referenceZone,
+      zone: referenceZone(),
       locale: local.locale,
     })
     if (!date) return

@@ -1,10 +1,10 @@
-import { DateTime, type DurationUnit } from 'luxon'
+import { DateTime, Info, Zone, type DurationUnit } from 'luxon'
 
 export interface NaturalDateParseOptions {
   /** The instant used for relative expressions and omitted years. */
   referenceTime: DateTime
   /** IANA zone in which date-only and wall-clock expressions are interpreted. */
-  zone?: string
+  zone?: Zone
   /** Locale used to disambiguate short numeric dates such as `8/4`. */
   locale?: Intl.LocalesArgument
 }
@@ -95,8 +95,7 @@ export function parseNaturalDate(
   value: string,
   options: NaturalDateParseOptions,
 ): DateTime | undefined {
-  const zone = options.zone ?? options.referenceTime.zoneName ?? undefined
-  if (!zone || !DateTime.now().setZone(zone).isValid) return undefined
+  const zone = options.zone ?? options.referenceTime.zone;
   const now = options.referenceTime.setZone(zone).startOf('minute')
   const input = normalize(value)
   if (!input) return undefined
@@ -109,7 +108,8 @@ export function parseNaturalDate(
     .trim()
     .match(/^(.*?)(?:\s+(America\/[\w-]+|Europe\/[\w-]+|Australia\/[\w-]+|Asia\/[\w-]+|UTC))$/i)
   if (zoned) {
-    const parsed = parseNaturalDate(zoned[1]!, { ...options, zone: zoned[2]! })
+    const zz = Info.normalizeZone(zoned[2]!);
+    const parsed = parseNaturalDate(zoned[1]!, { ...options, zone: zz })
     return parsed?.setZone(zone)
   }
 

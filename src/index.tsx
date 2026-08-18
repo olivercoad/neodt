@@ -685,6 +685,7 @@ function Neodt(props: NeodtProps): JSX.Element {
                         }}
                         role="spinbutton"
                         contenteditable={!local.disabled && !local.readonly ? true : undefined}
+                        spellcheck={false}
                         inputmode={segment().type === 'dayPeriod' ? 'text' : 'decimal'}
                         tabindex={
                           local.disabled || local.readonly

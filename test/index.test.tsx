@@ -63,7 +63,7 @@ describe('Neodt', () => {
       expect(value.textContent).not.toContain('@')
     }))
 
-  it('selects all date and time text with Ctrl+A', () =>
+  it('copies all date and time text with Ctrl+A without newlines', () =>
     createRoot(dispose => {
       const control = (
         <DateTimeLocal
@@ -75,15 +75,28 @@ describe('Neodt', () => {
       document.body.append(control)
       const editor = control.querySelector<HTMLSpanElement>('.datetime-neo__editor')!
       const value = control.querySelector<HTMLSpanElement>('.datetime-neo__value')!
+      const expected = '17/08/2026, 15:30'
       key(control.querySelector<HTMLButtonElement>('.datetime-neo__segment')!, 'a')
       expect(window.getSelection()?.toString()).not.toBe(editor.textContent)
       control
         .querySelector<HTMLButtonElement>('.datetime-neo__segment')!
         .dispatchEvent(new KeyboardEvent('keydown', { key: 'a', ctrlKey: true, bubbles: true }))
-      expect(window.getSelection()?.toString()).toBe(value.textContent)
+      expect(value.textContent).toBe(expected)
+      expect(window.getSelection()?.toString()).toBe(expected)
+      expect(window.getSelection()?.toString()).not.toContain('\n')
       expect(window.getSelection()?.toString()).not.toContain(
         control.querySelector('.datetime-neo__timezone')!.textContent!,
       )
+      let copiedText = ''
+      document.addEventListener(
+        'copy',
+        () => {
+          copiedText = window.getSelection()?.toString() ?? ''
+        },
+        { once: true },
+      )
+      document.dispatchEvent(new Event('copy'))
+      expect(copiedText).toBe(expected)
       control.remove()
       dispose()
     }))

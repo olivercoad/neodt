@@ -548,6 +548,18 @@ function Neodt(props: NeodtProps): JSX.Element {
         aria-label={local['aria-label'] ?? 'Date and time'}
         onClick={onEditorClick}
         onPaste={pasteDateTime}
+        onKeyDown={event => {
+          if (naturalMode() || !(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'a')
+            return
+          const value = event.currentTarget.querySelector('.datetime-neo__value')
+          if (!value) return
+          event.preventDefault()
+          const range = document.createRange()
+          range.selectNodeContents(value)
+          const selection = window.getSelection()
+          selection?.removeAllRanges()
+          selection?.addRange(range)
+        }}
       >
         {naturalMode() ? (
           <>

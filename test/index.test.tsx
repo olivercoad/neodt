@@ -63,6 +63,31 @@ describe('Neodt', () => {
       expect(value.textContent).not.toContain('@')
     }))
 
+  it('selects all date and time text with Ctrl+A', () =>
+    createRoot(dispose => {
+      const control = (
+        <DateTimeLocal
+          referenceTime={referenceTime}
+          locale="en-GB"
+          value={date('2026-08-17T15:30')}
+        />
+      ) as HTMLSpanElement
+      document.body.append(control)
+      const editor = control.querySelector<HTMLSpanElement>('.datetime-neo__editor')!
+      const value = control.querySelector<HTMLSpanElement>('.datetime-neo__value')!
+      key(control.querySelector<HTMLButtonElement>('.datetime-neo__segment')!, 'a')
+      expect(window.getSelection()?.toString()).not.toBe(editor.textContent)
+      control
+        .querySelector<HTMLButtonElement>('.datetime-neo__segment')!
+        .dispatchEvent(new KeyboardEvent('keydown', { key: 'a', ctrlKey: true, bubbles: true }))
+      expect(window.getSelection()?.toString()).toBe(value.textContent)
+      expect(window.getSelection()?.toString()).not.toContain(
+        control.querySelector('.datetime-neo__timezone')!.textContent!,
+      )
+      control.remove()
+      dispose()
+    }))
+
   it('uses the reference timezone for editing and shows its offset in normal mode', () =>
     createRoot(() => {
       const sydneyReference = DateTime.fromISO('2026-08-17T15:30:00', { zone: 'Australia/Sydney' })

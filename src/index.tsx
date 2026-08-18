@@ -430,6 +430,21 @@ function Neodt(props: NeodtProps): JSX.Element {
     setTyped(undefined)
   }
 
+  const pasteDateTime = (event: ClipboardEvent) => {
+    if (naturalMode() || local.disabled || local.readonly) return
+    const date = parseNaturalDate(event.clipboardData?.getData('text') ?? '', {
+      referenceTime: local.referenceTime,
+      zone: referenceZone,
+      locale: local.locale,
+    })
+    if (!date) return
+    event.preventDefault()
+    setDraftDate(date)
+    setCleared(new Set<SegmentName>())
+    setTyped(undefined)
+    emitValue(date)
+  }
+
   const matchesFollowingSeparator = (index: number, key: string) => {
     if (key.length !== 1) return false
     let editableIndex = -1
@@ -532,6 +547,7 @@ function Neodt(props: NeodtProps): JSX.Element {
         role="group"
         aria-label={local['aria-label'] ?? 'Date and time'}
         onClick={onEditorClick}
+        onPaste={pasteDateTime}
       >
         {naturalMode() ? (
           <>
@@ -594,44 +610,46 @@ function Neodt(props: NeodtProps): JSX.Element {
             </span>
           </>
         ) : (
-          <Index each={segments()}>
-            {part =>
-              part().editable ? (
-                (() => {
-                  const segment = () => part() as Segment
-                  const index = () =>
-                    editableSegments().findIndex(candidate => candidate.type === segment().type)
-                  return (
-                    <button
-                      ref={element => (segmentButtons[index()] = element)}
-                      class="datetime-neo__segment"
-                      classList={{ 'datetime-neo__segment--selected': selected() === index() }}
-                      type="button"
-                      tabindex={activeItem() === index() ? 0 : -1}
-                      disabled={local.disabled}
-                      aria-label={part().type}
-                      aria-selected={selected() === index()}
-                      onFocus={() => selectSegment(index())}
-                      onClick={() => selectSegment(index())}
-                      onKeyDown={event => onSegmentKeyDown(event, index(), segment())}
-                    >
-                      {isCleared(segment().type) ? (
-                        <span class="datetime-neo__placeholder">
-                          {placeholderFor(segment().type)}
-                        </span>
-                      ) : (
-                        segment().value
-                      )}
-                    </button>
-                  )
-                })()
-              ) : (
-                <span class="datetime-neo__separator" aria-hidden="true">
-                  {part().value}
-                </span>
-              )
-            }
-          </Index>
+          <span class="datetime-neo__value">
+            <Index each={segments()}>
+              {part =>
+                part().editable ? (
+                  (() => {
+                    const segment = () => part() as Segment
+                    const index = () =>
+                      editableSegments().findIndex(candidate => candidate.type === segment().type)
+                    return (
+                      <button
+                        ref={element => (segmentButtons[index()] = element)}
+                        class="datetime-neo__segment"
+                        classList={{ 'datetime-neo__segment--selected': selected() === index() }}
+                        type="button"
+                        tabindex={activeItem() === index() ? 0 : -1}
+                        disabled={local.disabled}
+                        aria-label={part().type}
+                        aria-selected={selected() === index()}
+                        onFocus={() => selectSegment(index())}
+                        onClick={() => selectSegment(index())}
+                        onKeyDown={event => onSegmentKeyDown(event, index(), segment())}
+                      >
+                        {isCleared(segment().type) ? (
+                          <span class="datetime-neo__placeholder">
+                            {placeholderFor(segment().type)}
+                          </span>
+                        ) : (
+                          segment().value
+                        )}
+                      </button>
+                    )
+                  })()
+                ) : (
+                  <span class="datetime-neo__separator" aria-hidden="true">
+                    {part().value}
+                  </span>
+                )
+              }
+            </Index>
+          </span>
         )}
         <span class="datetime-neo__timezone" aria-hidden="true">
           {timeOffset(

@@ -15,6 +15,12 @@ function key(element: HTMLElement, keyName: string) {
   element.dispatchEvent(new KeyboardEvent('keydown', { key: keyName, bubbles: true }))
 }
 
+function paste(element: HTMLElement, text: string) {
+  const event = new Event('paste', { bubbles: true, cancelable: true })
+  Object.defineProperty(event, 'clipboardData', { value: { getData: () => text } })
+  element.dispatchEvent(event)
+}
+
 function nextRender() {
   return new Promise<void>(resolve => queueMicrotask(resolve))
 }
@@ -41,6 +47,20 @@ describe('Neodt', () => {
         '2026-08-17T15:30',
       )
       expect(control.querySelector('.datetime-neo__trigger')).not.toBeNull()
+    }))
+
+  it('groups copyable date text and excludes action icons from selection', () =>
+    createRoot(() => {
+      const control = (
+        <DateTimeLocal
+          referenceTime={referenceTime}
+          locale="en-GB"
+          value={date('2026-08-17T15:30')}
+        />
+      ) as HTMLSpanElement
+      const value = control.querySelector('.datetime-neo__value')!
+      expect(value.textContent).toBe('17/08/2026, 15:30')
+      expect(value.textContent).not.toContain('@')
     }))
 
   it('uses the reference timezone for editing and shows its offset in normal mode', () =>
@@ -94,6 +114,40 @@ describe('Neodt', () => {
       input.value = '2026-09-01T08:45'
       input.dispatchEvent(new InputEvent('input', { bubbles: true }))
       expect(localValue(onValueChange.mock.calls[0]?.[0])).toBe('2026-09-01T08:45')
+      control.remove()
+      dispose()
+    }))
+
+  it('pastes common datetime formats and the current display format', () =>
+    createRoot(dispose => {
+      const onValueChange = vi.fn()
+      const control = (
+        <DateTimeLocal
+          referenceTime={referenceTime}
+          locale="en-GB"
+          formatOptions={{ hour12: false }}
+          defaultValue={date('2026-09-04T11:20')}
+          onValueChange={onValueChange}
+        />
+      ) as HTMLSpanElement
+      document.body.append(control)
+      const segment = control.querySelector<HTMLButtonElement>('.datetime-neo__segment')!
+      const configuredFormat = Array.from(
+        control.querySelector('.datetime-neo__editor')!.children,
+      )
+        .filter(element => !element.classList.contains('datetime-neo__timezone'))
+        .map(element => element.textContent)
+        .join('')
+      const cases: Array<[string, string]> = [
+        ['2026-09-01T08:45', '2026-09-01T08:45'],
+        ['September 2, 2026 at 9:30 AM', '2026-09-02T09:30'],
+        ['03/09/2026 10:15', '2026-09-03T10:15'],
+        [configuredFormat, '2026-09-04T11:20'],
+      ]
+      for (const [text, expected] of cases) {
+        paste(segment, text)
+        expect(localValue(onValueChange.mock.calls.at(-1)?.[0])).toBe(expected)
+      }
       control.remove()
       dispose()
     }))

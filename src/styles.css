@@ -35,6 +35,10 @@
   white-space: nowrap;
 }
 
+.datetime-neo__value {
+  white-space: nowrap;
+}
+
 .datetime-neo__natural-input {
   background: transparent;
   border: 0;
@@ -160,7 +164,7 @@
 }
 
 .datetime-neo__separator {
-  user-select: none;
+  user-select: text;
 }
 
 .datetime-neo__trigger {
@@ -182,6 +186,7 @@
   display: inline-flex;
   gap: 0.125rem;
   margin: 0.25rem 0.375rem 0.25rem auto;
+  user-select: none;
 }
 
 .datetime-neo__trigger:hover {

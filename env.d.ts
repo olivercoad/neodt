@@ -1,3 +1,5 @@
+declare module '*.css'
+
 declare global {
   interface ImportMeta {
     env: {

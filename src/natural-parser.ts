@@ -4,7 +4,7 @@ export interface NaturalDateParseOptions {
   /** The instant used for relative expressions and omitted years. */
   referenceTime: DateTime
   /** IANA zone in which date-only and wall-clock expressions are interpreted. */
-  zone?: Zone
+  zone: Zone
   /** Locale used to disambiguate short numeric dates such as `8/4`. */
   locale?: Intl.LocalesArgument
 }

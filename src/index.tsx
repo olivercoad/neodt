@@ -57,7 +57,7 @@ function toLocalValue(date: DateTime): string {
 }
 
 function localeName(locale: Intl.LocalesArgument | undefined): string | undefined {
-  return Array.isArray(locale) ? locale[0] : locale
+  return Array.isArray(locale) ? locale[0] : locale?.toString()
 }
 
 function partsFor(
@@ -240,7 +240,7 @@ function Neodt(props: NeodtProps): JSX.Element {
   const naturalDate = createMemo(() =>
     parseNaturalDate(naturalText(), {
       referenceTime: local.referenceTime,
-      zone: local.referenceTime.zoneName ?? undefined,
+      zone: local.referenceTime.zone,
       locale: locale(),
     }),
   )

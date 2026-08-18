@@ -26,6 +26,11 @@
   opacity: 0.55;
 }
 
+.datetime-neo[data-readonly] {
+  --datetime-neo-border: color-mix(in srgb, currentColor 40%, transparent);
+  --datetime-neo-background: color-mix(in srgb, currentColor 5%, transparent);
+}
+
 .datetime-neo__editor {
   align-items: center;
   display: flex;
@@ -149,6 +154,14 @@
 
 .datetime-neo__segment:hover {
   background: var(--datetime-neo-hover);
+}
+
+.datetime-neo[data-readonly] .datetime-neo__segment {
+  cursor: default;
+}
+
+.datetime-neo[data-readonly] .datetime-neo__segment:hover {
+  background: transparent;
 }
 
 .datetime-neo__editor:focus-within .datetime-neo__segment--selected,

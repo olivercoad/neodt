@@ -583,11 +583,13 @@ function Neodt(props: NeodtProps): JSX.Element {
       classList={local.classList}
       data-actions={!local.readonly && !local.disabled ? '' : undefined}
       data-disabled={local.disabled ? '' : undefined}
+      data-readonly={local.readonly ? '' : undefined}
     >
       <span
         class="datetime-neo__editor"
         role="group"
         aria-label={local['aria-label'] ?? 'Date and time'}
+        aria-readonly={local.readonly || undefined}
         onCopy={copyDateTime}
         onPaste={pasteDateTime}
         onKeyDown={event => {

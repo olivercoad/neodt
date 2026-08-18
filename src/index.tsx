@@ -81,7 +81,11 @@ function partsFor(
     })
     .map(part =>
       editableTypes.has(part.type as SegmentName)
-        ? { type: part.type as SegmentName, value: part.value, editable: true }
+        ? {
+            type: part.type as SegmentName,
+            value: part.type === 'year' ? part.value.padStart(4, '0') : part.value,
+            editable: true,
+          }
         : { type: part.type, value: part.value, editable: false },
     )
 }
@@ -247,8 +251,23 @@ function Neodt(props: NeodtProps): JSX.Element {
   }
 
   const isCleared = (segment: SegmentName) => cleared().has(segment)
+  const displaySegmentValue = (index: number, segment: Segment) => {
+    const pending = typed()
+    return segment.type === 'year' && pending?.index === index ? pending.digits : segment.value
+  }
   const hasClearedSegment = (segmentsToCheck = cleared()) =>
     editableSegments().some(segment => segmentsToCheck.has(segment.type))
+
+  const commitTypedYear = () => {
+    const pending = typed()
+    if (
+      pending?.digits.length === 2 &&
+      editableSegments()[pending.index]?.type === 'year'
+    ) {
+      setSegment('year', `${closestYear(pending.digits, local.referenceTime)}`)
+    }
+    setTyped(undefined)
+  }
 
   const clearSegment = (segment: SegmentName) => {
     if (local.disabled || local.readonly) return
@@ -263,16 +282,9 @@ function Neodt(props: NeodtProps): JSX.Element {
     setAllSegmentsSelected(false)
     const next = Math.max(0, Math.min(index, editableSegments().length - 1))
     const pending = typed()
-    if (
-      pending?.digits.length === 2 &&
-      pending.index !== next &&
-      editableSegments()[pending.index]?.type === 'year'
-    ) {
-      setSegment('year', `${closestYear(pending.digits, local.referenceTime)}`)
-    }
+    if (pending?.index !== next) commitTypedYear()
     setSelected(next)
     setActiveItem(next)
-    setTyped(undefined)
     if (focus) segmentButtons[next]?.focus()
   }
 
@@ -698,6 +710,7 @@ function Neodt(props: NeodtProps): JSX.Element {
                         aria-label={part().type}
                         aria-selected={selected() === index()}
                         onFocus={() => selectSegment(index())}
+                        onBlur={commitTypedYear}
                         onClick={() => selectSegment(index())}
                         onKeyDown={event => onSegmentKeyDown(event, index(), segment())}
                         onInput={event => {
@@ -717,7 +730,7 @@ function Neodt(props: NeodtProps): JSX.Element {
                             {placeholderFor(segment().type)}
                           </span>
                         ) : (
-                          segment().value
+                          displaySegmentValue(index(), segment())
                         )}
                       </span>
                     )

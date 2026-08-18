@@ -59,6 +59,20 @@ describe('Neodt', () => {
       expect(control.querySelector('.datetime-neo__trigger')).not.toBeNull()
     }))
 
+  it('formats years with fewer than four digits using leading zeros', () =>
+    createRoot(() => {
+      const control = (
+        <DateTimeLocal
+          referenceTime={referenceTime}
+          locale="en-GB"
+          value={date('0001-08-17T15:30')}
+        />
+      ) as HTMLSpanElement
+      expect(control.querySelector<HTMLButtonElement>('[aria-label="year"]')?.textContent).toBe(
+        '0001',
+      )
+    }))
+
   it('groups copyable date text and excludes action icons from selection', () =>
     createRoot(() => {
       const control = (
@@ -1103,17 +1117,44 @@ describe('Neodt', () => {
         year.focus()
         key(year, '8')
         key(year, '8')
-        key(year, 'ArrowRight')
         nextRender().then(() => {
-          expect(localValue(onValueChange.mock.calls.at(-1)?.[0])).toBe('1988-08-17T15:30')
-          const updatedYear =
-            control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')[2]!
-          updatedYear.focus()
-          key(updatedYear, '6')
-          key(updatedYear, '3')
-          key(updatedYear, 'ArrowRight')
+          expect(year.textContent).toBe('88')
+          key(year, 'ArrowRight')
           nextRender().then(() => {
-            expect(localValue(onValueChange.mock.calls.at(-1)?.[0])).toBe('2063-08-17T15:30')
+            expect(localValue(onValueChange.mock.calls.at(-1)?.[0])).toBe('1988-08-17T15:30')
+            const updatedYear =
+              control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')[2]!
+            updatedYear.focus()
+            key(updatedYear, '6')
+            key(updatedYear, '3')
+            key(updatedYear, 'ArrowRight')
+            nextRender().then(() => {
+              expect(localValue(onValueChange.mock.calls.at(-1)?.[0])).toBe('2063-08-17T15:30')
+              control.remove()
+              dispose()
+              resolve()
+            })
+          })
+        })
+      }),
+    ))
+
+  it('pads a partial year after the segment loses focus', async () =>
+    await new Promise<void>(resolve =>
+      createRoot(dispose => {
+        const control = (
+          <DateTimeLocal referenceTime={referenceTime} value={date('2026-08-17T15:30')} />
+        ) as HTMLSpanElement
+        document.body.append(control)
+        const year = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')[2]!
+        year.focus()
+        key(year, '2')
+        key(year, '6')
+        nextRender().then(() => {
+          expect(year.textContent).toBe('26')
+          control.querySelector<HTMLButtonElement>('[aria-label="Open date and time picker"]')!.focus()
+          nextRender().then(() => {
+            expect(year.textContent).toBe('2026')
             control.remove()
             dispose()
             resolve()

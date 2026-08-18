@@ -3,12 +3,17 @@ import { getNaturalDateCompletions } from '../src/natural-completion'
 
 describe('getNaturalDateCompletions', () => {
   it('returns ordered case-preserving completions for a partial phrase', () => {
-    expect(getNaturalDateCompletions('tom')).toEqual([{ label: 'tomorrow', insertText: 'tomorrow' }])
-    expect(getNaturalDateCompletions('NEXT F')).toEqual([{ label: 'next friday', insertText: 'NEXT Friday' }])
+    expect(getNaturalDateCompletions('tom')).toEqual([
+      { label: 'tomorrow', insertText: 'tomorrow' },
+    ])
+    expect(getNaturalDateCompletions('NEXT F')).toEqual([
+      { label: 'next friday', insertText: 'NEXT Friday' },
+    ])
   })
 
-  it('completes supported holidays and does not offer range grammar', () => {
-    expect(getNaturalDateCompletions('christmas e')).toEqual([{ label: 'christmas eve', insertText: 'christmas eve' }])
+  it('does not offer holidays or range grammar', () => {
+    expect(getNaturalDateCompletions('christmas e')).toEqual([])
+    expect(getNaturalDateCompletions('thank')).toEqual([])
     expect(getNaturalDateCompletions('march 14 to ')).toEqual([])
   })
 

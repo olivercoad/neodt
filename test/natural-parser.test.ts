@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon'
 import { describe, expect, it } from 'vitest'
 import { parseNaturalDate } from '../src/natural-parser'
+import { naturalTextExamples } from '../src/natural-placeholder'
 
 const referenceTime = DateTime.fromISO('2026-04-15T12:00:00Z')
 
@@ -48,16 +49,35 @@ describe('parseNaturalDate', () => {
     for (const [input, expected] of cases) expect(parse(input)).toBe(expected)
   })
 
+  it('parses every rotating placeholder example', () => {
+    for (const input of naturalTextExamples) {
+      expect(parseNaturalDate(input, { referenceTime, zone: 'UTC' })).toBeDefined()
+    }
+  })
+
   it('supports clock-only input and rolls past times to tomorrow', () => {
     expect(parse('5pm')).toBe('2026-04-15T17:00+00:00')
     expect(parse('9:45')).toBe('2026-04-16T09:45+00:00')
     expect(parse('midnight')).toBe('2026-04-16T00:00+00:00')
   })
 
-  it('resolves holidays and common aliases', () => {
-    expect(parse('thanksgiving')).toBe('2026-11-26T00:00+00:00')
-    expect(parse('xmas')).toBe('2026-12-25T00:00+00:00')
-    expect(parse('memorial day')).toBe('2026-05-25T00:00+00:00')
+  it('does not resolve named holidays', () => {
+    for (const input of [
+      'thanksgiving',
+      'thanksgiving day',
+      'labor day',
+      'memorial day',
+      'mothers day',
+      'fathers day',
+      'christmas',
+      'xmas',
+      'new years day',
+      'halloween',
+      'valentines day',
+      'independence day',
+    ]) {
+      expect(parseNaturalDate(input, { referenceTime, zone: 'UTC' })).toBeUndefined()
+    }
   })
 
   it('uses IANA zones and preserves timezone-aware clock values', () => {
@@ -67,7 +87,14 @@ describe('parseNaturalDate', () => {
   })
 
   it('rejects invalid values and all range expressions', () => {
-    for (const input of ['banana spaceship', '99/99/9999', '32/12', 'march 32 2026', 'tomorrow to friday', 'march 14 - march 28']) {
+    for (const input of [
+      'banana spaceship',
+      '99/99/9999',
+      '32/12',
+      'march 32 2026',
+      'tomorrow to friday',
+      'march 14 - march 28',
+    ]) {
       expect(parseNaturalDate(input, { referenceTime, zone: 'UTC' })).toBeUndefined()
     }
   })

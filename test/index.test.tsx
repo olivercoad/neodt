@@ -121,7 +121,7 @@ describe('Neodt', () => {
     magicButton.click()
     await nextRender()
     const input = control.querySelector<HTMLInputElement>('.datetime-neo__natural-input')!
-    expect(input.placeholder).toBe('Type Anything')
+    expect(input.placeholder).toHaveLength(1)
     expect(control.querySelector('[aria-label="Cancel natural-language date"]')).not.toBeNull()
     input.value = 'August 18, 2026 at 9am'
     input.dispatchEvent(new InputEvent('input', { bubbles: true }))
@@ -136,6 +136,34 @@ describe('Neodt', () => {
     expect(localValue(onValueChange.mock.calls[0]?.[0])).toBe('2026-08-18T09:00')
     expect(control.querySelector('.datetime-neo__natural-input')).toBeNull()
     expect(document.activeElement).toBe(control.querySelector('.datetime-neo__segment'))
+    control.remove()
+    dispose!()
+  })
+
+  it('advances the placeholder example when natural entry is reopened', async () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    let dispose: (() => void) | undefined
+    const control = createRoot(rootDispose => {
+      dispose = rootDispose
+      return (<DateTimeLocal referenceTime={referenceTime} />) as HTMLSpanElement
+    })
+    document.body.append(control)
+    const magicButton = control.querySelector<HTMLButtonElement>(
+      '[aria-label="Enter date and time naturally"]',
+    )!
+
+    magicButton.click()
+    await nextRender()
+    expect(
+      control.querySelector<HTMLInputElement>('.datetime-neo__natural-input')?.placeholder,
+    ).toBe('n')
+    control.querySelector<HTMLButtonElement>('[aria-label="Cancel natural-language date"]')!.click()
+    magicButton.click()
+    await nextRender()
+    expect(
+      control.querySelector<HTMLInputElement>('.datetime-neo__natural-input')?.placeholder,
+    ).toBe('t')
+
     control.remove()
     dispose!()
   })

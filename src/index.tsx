@@ -1,7 +1,8 @@
-import { createMemo, createSignal, Index, splitProps, type JSX } from 'solid-js'
+import { createMemo, createSignal, Index, onCleanup, splitProps, type JSX } from 'solid-js'
 import { DateTime } from 'luxon'
 import { getNaturalDateCompletions } from './natural-completion'
 import { parseNaturalDate } from './natural-parser'
+import { createNaturalPlaceholder } from './natural-placeholder'
 import './styles.css'
 
 type SegmentName = 'year' | 'month' | 'day' | 'hour' | 'minute' | 'dayPeriod'
@@ -178,6 +179,7 @@ function Neodt(props: NeodtProps): JSX.Element {
   const [selected, setSelected] = createSignal(0)
   const [typed, setTyped] = createSignal<{ index: number; digits: string } | undefined>()
   const [naturalText, setNaturalText] = createSignal('')
+  const [naturalPlaceholder, setNaturalPlaceholder] = createSignal('')
   const [naturalSuggestion, setNaturalSuggestion] = createSignal(0)
   const [naturalMode, setNaturalMode] = createSignal(false)
   const referenceZone = local.referenceTime.zoneName ?? 'utc'
@@ -208,6 +210,8 @@ function Neodt(props: NeodtProps): JSX.Element {
   const [activeItem, setActiveItem] = createSignal(0)
   let nativeInput: HTMLInputElement | undefined
   let naturalInput: HTMLInputElement | undefined
+  let hasOpenedNaturalInput = false
+  const naturalPlaceholderAnimation = createNaturalPlaceholder(setNaturalPlaceholder)
   const naturalDate = createMemo(() =>
     parseNaturalDate(naturalText(), {
       referenceTime: local.referenceTime,
@@ -356,10 +360,14 @@ function Neodt(props: NeodtProps): JSX.Element {
     setNaturalText('')
     setNaturalSuggestion(0)
     setNaturalMode(true)
+    if (hasOpenedNaturalInput) naturalPlaceholderAnimation.startNext()
+    else naturalPlaceholderAnimation.start()
+    hasOpenedNaturalInput = true
     queueMicrotask(() => naturalInput?.focus())
   }
 
   const exitNaturalInput = () => {
+    naturalPlaceholderAnimation.stop()
     setNaturalText('')
     setNaturalSuggestion(0)
     setNaturalMode(false)
@@ -381,9 +389,14 @@ function Neodt(props: NeodtProps): JSX.Element {
   }
 
   const updateNaturalText = (next: string) => {
+    const hadText = Boolean(naturalText())
     setNaturalText(next)
     setNaturalSuggestion(0)
+    if (next) naturalPlaceholderAnimation.stop()
+    else if (hadText) naturalPlaceholderAnimation.startNext()
   }
+
+  onCleanup(naturalPlaceholderAnimation.stop)
 
   const acceptNaturalCompletion = () => {
     const completion = activeNaturalCompletion()
@@ -531,7 +544,7 @@ function Neodt(props: NeodtProps): JSX.Element {
                 class="datetime-neo__natural-input"
                 type="text"
                 value={naturalText()}
-                placeholder="Type Anything"
+                placeholder={naturalPlaceholder()}
                 disabled={local.disabled}
                 onInput={event => updateNaturalText(event.currentTarget.value)}
                 onKeyDown={event => {

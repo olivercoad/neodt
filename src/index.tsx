@@ -47,18 +47,41 @@ function localeName(locale: Intl.LocalesArgument | undefined): string | undefine
   return Array.isArray(locale) ? locale[0] : locale
 }
 
-function partsFor(value: string, zone: string, locale: Intl.LocalesArgument | undefined, options: Intl.DateTimeFormatOptions | undefined): DisplayPart[] {
-  const date = parseLocal(value, zone) ?? DateTime.fromObject({ year: 2001, month: 2, day: 3, hour: 4, minute: 5 }, { zone })
+function partsFor(
+  value: string,
+  zone: string,
+  locale: Intl.LocalesArgument | undefined,
+  options: Intl.DateTimeFormatOptions | undefined,
+): DisplayPart[] {
+  const date =
+    parseLocal(value, zone) ??
+    DateTime.fromObject({ year: 2001, month: 2, day: 3, hour: 4, minute: 5 }, { zone })
   const localizedDate = localeName(locale) ? date.setLocale(localeName(locale)!) : date
-  return localizedDate.toLocaleParts({ year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', ...options, timeZoneName: undefined }).map(part =>
-    editableTypes.has(part.type as SegmentName)
-      ? { type: part.type as SegmentName, value: part.value, editable: true }
-      : { type: part.type, value: part.value, editable: false },
-  )
+  return localizedDate
+    .toLocaleParts({
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      ...options,
+      timeZoneName: undefined,
+    })
+    .map(part =>
+      editableTypes.has(part.type as SegmentName)
+        ? { type: part.type as SegmentName, value: part.value, editable: true }
+        : { type: part.type, value: part.value, editable: false },
+    )
 }
 
-function naturalPreview(date: DateTime, locale: Intl.LocalesArgument | undefined, options: Intl.DateTimeFormatOptions | undefined): string {
-  return partsFor(toLocalValue(date), date.zoneName ?? 'utc', locale, options).map(part => part.value).join('')
+function naturalPreview(
+  date: DateTime,
+  locale: Intl.LocalesArgument | undefined,
+  options: Intl.DateTimeFormatOptions | undefined,
+): string {
+  return partsFor(toLocalValue(date), date.zoneName ?? 'utc', locale, options)
+    .map(part => part.value)
+    .join('')
 }
 
 function timeOffset(date: DateTime): string {
@@ -78,11 +101,18 @@ function placeholderFor(segment: SegmentName): string {
 
 function isCompleteSegment(segment: SegmentName, digits: string, hour12: boolean): boolean {
   if (digits.length === digitLimit(segment)) return true
-  const maximum = segment === 'month' ? 12
-    : segment === 'day' ? 31
-      : segment === 'hour' ? (hour12 ? 12 : 23)
-        : segment === 'minute' ? 59
-          : undefined
+  const maximum =
+    segment === 'month'
+      ? 12
+      : segment === 'day'
+      ? 31
+      : segment === 'hour'
+      ? hour12
+        ? 12
+        : 23
+      : segment === 'minute'
+      ? 59
+      : undefined
   return maximum !== undefined && Number(digits) * 10 > maximum
 }
 
@@ -94,49 +124,97 @@ function closestYear(twoDigitYear: string, referenceTime: DateTime): number {
 }
 
 function CalendarIcon(): JSX.Element {
-  return <svg viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M7 2v3m10-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />
-  </svg>
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7 2v3m10-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />
+    </svg>
+  )
 }
 
 function MagicIcon(): JSX.Element {
-  return <svg viewBox="0 0 24 24" aria-hidden="true">
-    <path d="m12 3 .9 4.1L17 8l-4.1.9L12 13l-.9-4.1L7 8l4.1-.9L12 3Zm6.5 10 .5 2.5 2.5.5-2.5.5-.5 2.5-.5-2.5-2.5-.5 2.5-.5.5-2.5ZM5.5 14l.7 3.3 3.3.7-3.3.7-.7 3.3-.7-3.3-3.3-.7 3.3-.7.7-3.3Z" />
-  </svg>
+  return (
+    <span class="datetime-neo__magic-icon" aria-hidden="true">
+      @
+    </span>
+  )
 }
 
 function ConfirmIcon(): JSX.Element {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7" /></svg>
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="m5 12 4.5 4.5L19 7" />
+    </svg>
+  )
 }
 
 function CancelIcon(): JSX.Element {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="m6 6 12 12M18 6 6 18" />
+    </svg>
+  )
 }
 
 /** A locale-aware, keyboard-editable local date and time control for Solid SPAs. */
 function Neodt(props: NeodtProps): JSX.Element {
   const [local, rest] = splitProps(props, [
-    'referenceTime', 'value', 'defaultValue', 'locale', 'formatOptions', 'calendarIcon', 'magicIcon', 'onValueChange', 'readonly', 'class', 'classList', 'disabled', 'aria-label',
+    'referenceTime',
+    'value',
+    'defaultValue',
+    'locale',
+    'formatOptions',
+    'calendarIcon',
+    'magicIcon',
+    'onValueChange',
+    'readonly',
+    'class',
+    'classList',
+    'disabled',
+    'aria-label',
   ])
-  const [uncontrolledValue, setUncontrolledValue] = createSignal<DateTime | undefined>(local.defaultValue)
+  const [uncontrolledValue, setUncontrolledValue] = createSignal<DateTime | undefined>(
+    local.defaultValue,
+  )
   const [selected, setSelected] = createSignal(0)
   const [typed, setTyped] = createSignal<{ index: number; digits: string } | undefined>()
   const [naturalText, setNaturalText] = createSignal('')
   const [naturalSuggestion, setNaturalSuggestion] = createSignal(0)
   const [naturalMode, setNaturalMode] = createSignal(false)
   const referenceZone = local.referenceTime.zoneName ?? 'utc'
-  const value = () => (local.value === undefined ? uncontrolledValue() : local.value ?? undefined)?.setZone(referenceZone)
-  const [draftDate, setDraftDate] = createSignal((value() ?? local.referenceTime.setZone(referenceZone)).startOf('minute'))
+  const value = () =>
+    (local.value === undefined ? uncontrolledValue() : local.value ?? undefined)?.setZone(
+      referenceZone,
+    )
+  const [draftDate, setDraftDate] = createSignal(
+    (value() ?? local.referenceTime.setZone(referenceZone)).startOf('minute'),
+  )
   const nativeValue = () => toLocalValue(value() ?? draftDate())
-  const [cleared, setCleared] = createSignal<Set<SegmentName>>(new Set(value() ? [] : ['year', 'month', 'day', 'hour', 'minute', 'dayPeriod']))
-  const segments = createMemo(() => partsFor(toLocalValue(cleared().size ? draftDate() : value() ?? draftDate()), referenceZone, local.locale, local.formatOptions))
-  const editableSegments = createMemo(() => segments().filter((part): part is Segment => part.editable))
+  const [cleared, setCleared] = createSignal<Set<SegmentName>>(
+    new Set(value() ? [] : ['year', 'month', 'day', 'hour', 'minute', 'dayPeriod']),
+  )
+  const segments = createMemo(() =>
+    partsFor(
+      toLocalValue(cleared().size ? draftDate() : value() ?? draftDate()),
+      referenceZone,
+      local.locale,
+      local.formatOptions,
+    ),
+  )
+  const editableSegments = createMemo(() =>
+    segments().filter((part): part is Segment => part.editable),
+  )
   const segmentButtons: HTMLButtonElement[] = []
   const actionButtons: HTMLButtonElement[] = []
   const [activeItem, setActiveItem] = createSignal(0)
   let nativeInput: HTMLInputElement | undefined
   let naturalInput: HTMLInputElement | undefined
-  const naturalDate = createMemo(() => parseNaturalDate(naturalText(), { referenceTime: local.referenceTime, zone: local.referenceTime.zoneName ?? undefined, locale: local.locale }))
+  const naturalDate = createMemo(() =>
+    parseNaturalDate(naturalText(), {
+      referenceTime: local.referenceTime,
+      zone: local.referenceTime.zoneName ?? undefined,
+      locale: local.locale,
+    }),
+  )
   const naturalCompletions = createMemo(() => getNaturalDateCompletions(naturalText()))
   const activeNaturalCompletion = createMemo(() => naturalCompletions()[naturalSuggestion()])
 
@@ -146,7 +224,8 @@ function Neodt(props: NeodtProps): JSX.Element {
   }
 
   const isCleared = (segment: SegmentName) => cleared().has(segment)
-  const hasClearedSegment = (segmentsToCheck = cleared()) => editableSegments().some(segment => segmentsToCheck.has(segment.type))
+  const hasClearedSegment = (segmentsToCheck = cleared()) =>
+    editableSegments().some(segment => segmentsToCheck.has(segment.type))
 
   const clearSegment = (segment: SegmentName) => {
     if (local.disabled || local.readonly) return
@@ -159,7 +238,11 @@ function Neodt(props: NeodtProps): JSX.Element {
   const selectSegment = (index: number, focus = false) => {
     const next = Math.max(0, Math.min(index, editableSegments().length - 1))
     const pending = typed()
-    if (pending?.digits.length === 2 && pending.index !== next && editableSegments()[pending.index]?.type === 'year') {
+    if (
+      pending?.digits.length === 2 &&
+      pending.index !== next &&
+      editableSegments()[pending.index]?.type === 'year'
+    ) {
       setSegment('year', `${closestYear(pending.digits, local.referenceTime)}`)
     }
     setSelected(next)
@@ -184,15 +267,30 @@ function Neodt(props: NeodtProps): JSX.Element {
     if (local.disabled || local.readonly) return
     let date = (value() ?? draftDate()).startOf('minute')
     switch (segment) {
-      case 'year': date = date.plus({ years: amount }); break
-      case 'month': date = date.plus({ months: amount }); break
-      case 'day': date = date.plus({ days: amount }); break
-      case 'hour': date = date.plus({ hours: amount }); break
-      case 'minute': date = date.plus({ minutes: amount }); break
-      case 'dayPeriod': date = date.plus({ hours: date.hour < 12 ? 12 : -12 }); break
+      case 'year':
+        date = date.plus({ years: amount })
+        break
+      case 'month':
+        date = date.plus({ months: amount })
+        break
+      case 'day':
+        date = date.plus({ days: amount })
+        break
+      case 'hour':
+        date = date.plus({ hours: amount })
+        break
+      case 'minute':
+        date = date.plus({ minutes: amount })
+        break
+      case 'dayPeriod':
+        date = date.plus({ hours: date.hour < 12 ? 12 : -12 })
+        break
     }
     setDraftDate(date)
-    if (cleared().size === 0) { emitValue(date); return }
+    if (cleared().size === 0) {
+      emitValue(date)
+      return
+    }
     const nextCleared = new Set(cleared())
     nextCleared.delete(segment)
     setCleared(nextCleared)
@@ -202,7 +300,7 @@ function Neodt(props: NeodtProps): JSX.Element {
   const setDayPeriod = (morning: boolean) => {
     if (local.disabled || local.readonly) return
     const date = (value() ?? draftDate()).startOf('minute')
-    if ((date.hour < 12) !== morning) {
+    if (date.hour < 12 !== morning) {
       changeSegment('dayPeriod', 1)
       return
     }
@@ -223,8 +321,12 @@ function Neodt(props: NeodtProps): JSX.Element {
     if (segment === 'month' && number >= 1 && number <= 12) date = date.set({ month: number })
     if (segment === 'day' && number >= 1 && number <= 31) date = date.set({ day: number })
     if (segment === 'hour') {
-      const hour12 = new Intl.DateTimeFormat(local.locale, { hour: 'numeric', ...local.formatOptions }).resolvedOptions().hour12
-      if (hour12 && number >= 1 && number <= 12) date = date.set({ hour: (date.hour >= 12 ? 12 : 0) + (number % 12) })
+      const hour12 = new Intl.DateTimeFormat(local.locale, {
+        hour: 'numeric',
+        ...local.formatOptions,
+      }).resolvedOptions().hour12
+      if (hour12 && number >= 1 && number <= 12)
+        date = date.set({ hour: (date.hour >= 12 ? 12 : 0) + (number % 12) })
       if (hour12 && number >= 13 && number <= 23) {
         date = date.set({ hour: number })
         setDayPeriodToPm = true
@@ -233,7 +335,10 @@ function Neodt(props: NeodtProps): JSX.Element {
     }
     if (segment === 'minute' && number >= 0 && number <= 59) date = date.set({ minute: number })
     setDraftDate(date)
-    if (cleared().size === 0) { emitValue(date); return }
+    if (cleared().size === 0) {
+      emitValue(date)
+      return
+    }
     const nextCleared = new Set(cleared())
     nextCleared.delete(segment)
     if (setDayPeriodToPm) nextCleared.delete('dayPeriod')
@@ -327,16 +432,56 @@ function Neodt(props: NeodtProps): JSX.Element {
   }
 
   const onSegmentKeyDown = (event: KeyboardEvent, index: number, segment: Segment) => {
-    if (event.key === ' ') { event.preventDefault(); openPicker(); return }
-    if (event.key === '@') { event.preventDefault(); openNaturalInput(); return }
-    if (event.key === 'ArrowLeft') { event.preventDefault(); selectControlItem(index - 1, true); return }
-    if (event.key === 'ArrowRight') { event.preventDefault(); selectControlItem(index + 1, true); return }
-    if (event.key === 'ArrowUp') { event.preventDefault(); changeSegment(segment.type, 1); return }
-    if (event.key === 'ArrowDown') { event.preventDefault(); changeSegment(segment.type, -1); return }
-    if (event.key === 'Home') { event.preventDefault(); selectControlItem(0, true); return }
-    if (event.key === 'End') { event.preventDefault(); selectControlItem(editableSegments().length + actionButtons.length - 1, true); return }
-    if (event.key === 'Backspace' || event.key === 'Delete') { event.preventDefault(); clearSegment(segment.type); return }
-    if (matchesFollowingSeparator(index, event.key)) { event.preventDefault(); selectSegment(index + 1, true); return }
+    if (event.key === ' ') {
+      event.preventDefault()
+      openPicker()
+      return
+    }
+    if (event.key === '@') {
+      event.preventDefault()
+      openNaturalInput()
+      return
+    }
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault()
+      selectControlItem(index - 1, true)
+      return
+    }
+    if (event.key === 'ArrowRight') {
+      event.preventDefault()
+      selectControlItem(index + 1, true)
+      return
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      changeSegment(segment.type, 1)
+      return
+    }
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      changeSegment(segment.type, -1)
+      return
+    }
+    if (event.key === 'Home') {
+      event.preventDefault()
+      selectControlItem(0, true)
+      return
+    }
+    if (event.key === 'End') {
+      event.preventDefault()
+      selectControlItem(editableSegments().length + actionButtons.length - 1, true)
+      return
+    }
+    if (event.key === 'Backspace' || event.key === 'Delete') {
+      event.preventDefault()
+      clearSegment(segment.type)
+      return
+    }
+    if (matchesFollowingSeparator(index, event.key)) {
+      event.preventDefault()
+      selectSegment(index + 1, true)
+      return
+    }
     if (segment.type === 'dayPeriod' && /^(a|p)$/i.test(event.key)) {
       event.preventDefault()
       setDayPeriod(event.key.toLowerCase() === 'a')
@@ -348,7 +493,11 @@ function Neodt(props: NeodtProps): JSX.Element {
       const digits = `${previous}${event.key}`.slice(-digitLimit(segment.type))
       setTyped({ index, digits })
       setSegment(segment.type, digits)
-      const hour12 = new Intl.DateTimeFormat(local.locale, { hour: 'numeric', ...local.formatOptions }).resolvedOptions().hour12 ?? false
+      const hour12 =
+        new Intl.DateTimeFormat(local.locale, {
+          hour: 'numeric',
+          ...local.formatOptions,
+        }).resolvedOptions().hour12 ?? false
       if (isCompleteSegment(segment.type, digits, hour12)) selectSegment(index + 1, true)
     }
   }
@@ -359,49 +508,127 @@ function Neodt(props: NeodtProps): JSX.Element {
   }
 
   return (
-    <span {...rest} class={`datetime-neo ${local.class ?? ''}`} classList={local.classList} data-disabled={local.disabled ? '' : undefined}>
-      <span class="datetime-neo__editor" role="group" aria-label={local['aria-label'] ?? 'Date and time'} onClick={onEditorClick}>
-        {naturalMode() ? <>
-          <span class="datetime-neo__natural-field">
-            <input
-              ref={element => (naturalInput = element)}
-              class="datetime-neo__natural-input"
-              type="text"
-              value={naturalText()}
-              placeholder="Type Anything"
-              disabled={local.disabled}
-              onInput={event => updateNaturalText(event.currentTarget.value)}
-              onKeyDown={event => {
-                if (event.key === 'ArrowDown') { event.preventDefault(); cycleNaturalCompletion(1); return }
-                if (event.key === 'ArrowUp') { event.preventDefault(); cycleNaturalCompletion(-1); return }
-                if (event.key === 'Tab' && !event.shiftKey && event.currentTarget.selectionStart === event.currentTarget.value.length && acceptNaturalCompletion()) { event.preventDefault(); return }
-                if (event.key === 'Enter') { event.preventDefault(); confirmNaturalInput(); return }
-                if (event.key === 'Escape') { event.preventDefault(); closeNaturalInput(); return }
-              }}
-            />
-            {activeNaturalCompletion() && <span class="datetime-neo__natural-ghost" aria-hidden="true"><span class="datetime-neo__natural-ghost-typed">{naturalText()}</span>{activeNaturalCompletion()!.insertText.slice(naturalText().length)}<kbd>Tab</kbd></span>}
-          </span>
-          <span class="datetime-neo__natural-preview" aria-live="polite">
-            {naturalDate() ? naturalPreview(naturalDate()!, local.locale, local.formatOptions) : ''}
-          </span>
-        </> : <Index each={segments()}>{part => part().editable ? (() => {
-          const segment = () => part() as Segment
-          const index = () => editableSegments().findIndex(candidate => candidate.type === segment().type)
-          return <button
-             ref={element => (segmentButtons[index()] = element)}
-             class="datetime-neo__segment"
-             classList={{ 'datetime-neo__segment--selected': selected() === index() }}
-             type="button"
-             tabindex={activeItem() === index() ? 0 : -1}
-             disabled={local.disabled}
-            aria-label={part().type}
-            aria-selected={selected() === index()}
-            onFocus={() => selectSegment(index())}
-            onClick={() => selectSegment(index())}
-            onKeyDown={event => onSegmentKeyDown(event, index(), segment())}
-          >{isCleared(segment().type) ? <span class="datetime-neo__placeholder">{placeholderFor(segment().type)}</span> : segment().value}</button>
-        })() : <span class="datetime-neo__separator" aria-hidden="true">{part().value}</span>}</Index>}
-        <span class="datetime-neo__timezone" aria-hidden="true">{timeOffset(naturalMode() ? naturalDate() ?? local.referenceTime : cleared().size ? draftDate() : value() ?? draftDate())}</span>
+    <span
+      {...rest}
+      class={`datetime-neo ${local.class ?? ''}`}
+      classList={local.classList}
+      data-disabled={local.disabled ? '' : undefined}
+    >
+      <span
+        class="datetime-neo__editor"
+        role="group"
+        aria-label={local['aria-label'] ?? 'Date and time'}
+        onClick={onEditorClick}
+      >
+        {naturalMode() ? (
+          <>
+            <span class="datetime-neo__natural-prefix" aria-hidden="true">
+              @
+            </span>
+            <span class="datetime-neo__natural-field">
+              <input
+                ref={element => (naturalInput = element)}
+                class="datetime-neo__natural-input"
+                type="text"
+                value={naturalText()}
+                placeholder="Type Anything"
+                disabled={local.disabled}
+                onInput={event => updateNaturalText(event.currentTarget.value)}
+                onKeyDown={event => {
+                  if (event.key === 'ArrowDown') {
+                    event.preventDefault()
+                    cycleNaturalCompletion(1)
+                    return
+                  }
+                  if (event.key === 'ArrowUp') {
+                    event.preventDefault()
+                    cycleNaturalCompletion(-1)
+                    return
+                  }
+                  if (
+                    event.key === 'Tab' &&
+                    !event.shiftKey &&
+                    event.currentTarget.selectionStart === event.currentTarget.value.length &&
+                    acceptNaturalCompletion()
+                  ) {
+                    event.preventDefault()
+                    return
+                  }
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    confirmNaturalInput()
+                    return
+                  }
+                  if (event.key === 'Escape') {
+                    event.preventDefault()
+                    closeNaturalInput()
+                    return
+                  }
+                }}
+              />
+              {activeNaturalCompletion() && (
+                <span class="datetime-neo__natural-ghost" aria-hidden="true">
+                  <span class="datetime-neo__natural-ghost-typed">{naturalText()}</span>
+                  {activeNaturalCompletion()!.insertText.slice(naturalText().length)}
+                  <kbd>Tab</kbd>
+                </span>
+              )}
+            </span>
+            <span class="datetime-neo__natural-preview" aria-live="polite">
+              {naturalDate()
+                ? naturalPreview(naturalDate()!, local.locale, local.formatOptions)
+                : ''}
+            </span>
+          </>
+        ) : (
+          <Index each={segments()}>
+            {part =>
+              part().editable ? (
+                (() => {
+                  const segment = () => part() as Segment
+                  const index = () =>
+                    editableSegments().findIndex(candidate => candidate.type === segment().type)
+                  return (
+                    <button
+                      ref={element => (segmentButtons[index()] = element)}
+                      class="datetime-neo__segment"
+                      classList={{ 'datetime-neo__segment--selected': selected() === index() }}
+                      type="button"
+                      tabindex={activeItem() === index() ? 0 : -1}
+                      disabled={local.disabled}
+                      aria-label={part().type}
+                      aria-selected={selected() === index()}
+                      onFocus={() => selectSegment(index())}
+                      onClick={() => selectSegment(index())}
+                      onKeyDown={event => onSegmentKeyDown(event, index(), segment())}
+                    >
+                      {isCleared(segment().type) ? (
+                        <span class="datetime-neo__placeholder">
+                          {placeholderFor(segment().type)}
+                        </span>
+                      ) : (
+                        segment().value
+                      )}
+                    </button>
+                  )
+                })()
+              ) : (
+                <span class="datetime-neo__separator" aria-hidden="true">
+                  {part().value}
+                </span>
+              )
+            }
+          </Index>
+        )}
+        <span class="datetime-neo__timezone" aria-hidden="true">
+          {timeOffset(
+            naturalMode()
+              ? naturalDate() ?? local.referenceTime
+              : cleared().size
+              ? draftDate()
+              : value() ?? draftDate(),
+          )}
+        </span>
       </span>
       <span class="datetime-neo__actions">
         <button
@@ -410,17 +637,52 @@ function Neodt(props: NeodtProps): JSX.Element {
           type="button"
           tabindex={activeItem() === editableSegments().length ? 0 : -1}
           disabled={local.disabled}
-          aria-label={naturalMode() ? naturalDate() ? 'Confirm natural-language date' : 'Cancel natural-language date' : 'Enter date and time naturally'}
+          aria-label={
+            naturalMode()
+              ? naturalDate()
+                ? 'Confirm natural-language date'
+                : 'Cancel natural-language date'
+              : 'Enter date and time naturally'
+          }
           onFocus={() => setActiveItem(editableSegments().length)}
           onKeyDown={event => {
-            if (event.key === 'ArrowLeft') { event.preventDefault(); selectControlItem(editableSegments().length - 1, true); return }
-            if (event.key === 'ArrowRight') { event.preventDefault(); selectControlItem(editableSegments().length + 1, true); return }
-            if (event.key === 'Home') { event.preventDefault(); selectControlItem(0, true); return }
-            if (event.key === 'End') { event.preventDefault(); selectControlItem(editableSegments().length + actionButtons.length - 1, true) }
+            if (event.key === 'ArrowLeft') {
+              event.preventDefault()
+              selectControlItem(editableSegments().length - 1, true)
+              return
+            }
+            if (event.key === 'ArrowRight') {
+              event.preventDefault()
+              selectControlItem(editableSegments().length + 1, true)
+              return
+            }
+            if (event.key === 'Home') {
+              event.preventDefault()
+              selectControlItem(0, true)
+              return
+            }
+            if (event.key === 'End') {
+              event.preventDefault()
+              selectControlItem(editableSegments().length + actionButtons.length - 1, true)
+            }
           }}
-          onClick={() => naturalMode() ? naturalDate() ? confirmNaturalInput() : closeNaturalInput() : openNaturalInput()}
+          onClick={() =>
+            naturalMode()
+              ? naturalDate()
+                ? confirmNaturalInput()
+                : closeNaturalInput()
+              : openNaturalInput()
+          }
         >
-          {naturalMode() ? naturalDate() ? <ConfirmIcon /> : <CancelIcon /> : local.magicIcon ?? <MagicIcon />}
+          {naturalMode() ? (
+            naturalDate() ? (
+              <ConfirmIcon />
+            ) : (
+              <CancelIcon />
+            )
+          ) : (
+            local.magicIcon ?? <MagicIcon />
+          )}
         </button>
         <button
           ref={element => (actionButtons[1] = element)}
@@ -431,10 +693,25 @@ function Neodt(props: NeodtProps): JSX.Element {
           aria-label="Open date and time picker"
           onFocus={() => setActiveItem(editableSegments().length + 1)}
           onKeyDown={event => {
-            if (event.key === 'ArrowLeft') { event.preventDefault(); selectControlItem(editableSegments().length, true); return }
-            if (event.key === 'ArrowRight') { event.preventDefault(); selectControlItem(editableSegments().length + 2, true); return }
-            if (event.key === 'Home') { event.preventDefault(); selectControlItem(0, true); return }
-            if (event.key === 'End') { event.preventDefault(); selectControlItem(editableSegments().length + actionButtons.length - 1, true) }
+            if (event.key === 'ArrowLeft') {
+              event.preventDefault()
+              selectControlItem(editableSegments().length, true)
+              return
+            }
+            if (event.key === 'ArrowRight') {
+              event.preventDefault()
+              selectControlItem(editableSegments().length + 2, true)
+              return
+            }
+            if (event.key === 'Home') {
+              event.preventDefault()
+              selectControlItem(0, true)
+              return
+            }
+            if (event.key === 'End') {
+              event.preventDefault()
+              selectControlItem(editableSegments().length + actionButtons.length - 1, true)
+            }
           }}
           onClick={openPicker}
         >

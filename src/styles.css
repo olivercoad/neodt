@@ -1,202 +1,214 @@
 .datetime-neo {
-    --datetime-neo-border: #9ca3af;
-    --datetime-neo-focus: #2563eb;
-    --datetime-neo-focus-ring: color-mix(in srgb, var(--datetime-neo-focus) 22%, transparent);
-    --datetime-neo-highlight: var(--datetime-neo-focus);
-    --datetime-neo-highlight-foreground: #fff;
-    --datetime-neo-hover: color-mix(in srgb, var(--datetime-neo-focus) 10%, transparent);
-    --datetime-neo-background: #fff;
-    --datetime-neo-foreground: #111827;
-    background: var(--datetime-neo-background);
-    border: 1px solid var(--datetime-neo-border);
-    border-radius: .375rem;
-    box-sizing: border-box;
-    color: var(--datetime-neo-foreground);
-    display: inline-flex;
-    min-height: 2.25rem;
-    position: relative;
+  --datetime-neo-border: #9ca3af;
+  --datetime-neo-focus: #2563eb;
+  --datetime-neo-focus-ring: color-mix(in srgb, var(--datetime-neo-focus) 22%, transparent);
+  --datetime-neo-highlight: var(--datetime-neo-focus);
+  --datetime-neo-highlight-foreground: #fff;
+  --datetime-neo-hover: color-mix(in srgb, var(--datetime-neo-focus) 10%, transparent);
+  --datetime-neo-background: #fff;
+  --datetime-neo-foreground: #111827;
+  background: var(--datetime-neo-background);
+  border: 1px solid var(--datetime-neo-border);
+  border-radius: 0.375rem;
+  box-sizing: border-box;
+  color: var(--datetime-neo-foreground);
+  display: inline-flex;
+  min-height: 2.25rem;
+  position: relative;
 }
 
 .datetime-neo:focus-within {
-    border-color: var(--datetime-neo-focus);
-    box-shadow: 0 0 0 3px var(--datetime-neo-focus-ring);
+  border-color: var(--datetime-neo-focus);
+  box-shadow: 0 0 0 3px var(--datetime-neo-focus-ring);
 }
 
 .datetime-neo[data-disabled] {
-    opacity: .55;
+  opacity: 0.55;
 }
 
 .datetime-neo__editor {
-    align-items: center;
-    display: flex;
-    flex: 1 1 13rem;
-    min-width: 13rem;
-    padding: .25rem .375rem;
-    white-space: nowrap;
+  align-items: center;
+  display: flex;
+  flex: 1 1 13rem;
+  min-width: 13rem;
+  padding: 0.25rem 0.375rem;
+  white-space: nowrap;
 }
 
 .datetime-neo__natural-input {
-    background: transparent;
-    border: 0;
-    color: inherit;
-    font: inherit;
-    min-width: 0;
-    outline: 0;
-    padding: .16rem .18rem;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  min-width: 0;
+  outline: 0;
+  padding: 0.16rem 0.18rem;
 }
 
 .datetime-neo__natural-field {
-    display: grid;
-    flex: 1 1 0;
-    min-width: 0;
+  display: grid;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .datetime-neo__natural-field > * {
-    grid-area: 1 / 1;
+  grid-area: 1 / 1;
 }
 
 .datetime-neo__natural-ghost {
-    align-items: center;
-    color: color-mix(in srgb, currentColor 70%, transparent);
-    display: flex;
-    font: inherit;
-    min-width: 0;
-    overflow: hidden;
-    padding: .16rem .18rem;
-    pointer-events: none;
-    white-space: pre;
+  align-items: center;
+  color: color-mix(in srgb, currentColor 70%, transparent);
+  display: flex;
+  font: inherit;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0.16rem 0.18rem;
+  pointer-events: none;
+  white-space: pre;
 }
 
 .datetime-neo__natural-ghost-typed {
-    color: transparent;
+  color: transparent;
 }
 
 .datetime-neo__natural-ghost kbd {
-    border: 1px solid currentColor;
-    border-radius: .2rem;
-    font: inherit;
-    font-size: .7em;
-    margin-left: .45em;
-    opacity: .5;
-    padding: 0 .25em;
+  border: 1px solid currentColor;
+  border-radius: 0.2rem;
+  font: inherit;
+  font-size: 0.7em;
+  margin-left: 0.45em;
+  opacity: 0.5;
+  padding: 0 0.25em;
 }
 
 .datetime-neo__natural-input::placeholder {
-    color: color-mix(in srgb, currentColor 52%, transparent);
+  color: color-mix(in srgb, currentColor 52%, transparent);
 }
 
 .datetime-neo__natural-preview {
-    color: color-mix(in srgb, currentColor 70%, transparent);
-    flex: 0 1 auto;
-    font-variant-numeric: tabular-nums;
-    padding: .16rem .18rem;
-    text-align: right;
+  color: color-mix(in srgb, currentColor 70%, transparent);
+  flex: 0 1 auto;
+  font-variant-numeric: tabular-nums;
+  padding: 0.16rem 0.18rem;
+  text-align: right;
+}
+
+.datetime-neo__natural-prefix {
+  color: color-mix(in srgb, currentColor 52%, transparent);
+  flex: 0 0 auto;
+  padding: 0.16rem 0.18rem;
 }
 
 .datetime-neo__timezone {
-    color: color-mix(in srgb, currentColor 52%, transparent);
-    flex: 0 0 auto;
-    font-size: .82em;
-    font-variant-numeric: tabular-nums;
-    margin-left: auto;
-    padding: .16rem .18rem;
-    text-align: right;
+  color: color-mix(in srgb, currentColor 52%, transparent);
+  flex: 0 0 auto;
+  font-size: 0.82em;
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+  padding: 0.16rem 0.18rem;
+  text-align: right;
 }
 
 .datetime-neo__native-input {
-    height: 1px;
-    left: 0;
-    margin: -1px;
-    opacity: 0;
-    overflow: hidden;
-    pointer-events: none;
-    position: absolute;
-    top: calc(100% + 4px);
-    width: 1px;
+  height: 1px;
+  left: 0;
+  margin: -1px;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  width: 1px;
 }
 
 .datetime-neo__segment {
-    appearance: none;
-    background: transparent;
-    border: 0;
-    border-radius: .16rem;
-    color: inherit;
-    cursor: text;
-    font: inherit;
-    line-height: 1.35;
-    min-width: 1.2em;
-    outline: 0;
-    padding: .16rem .18rem;
-    text-align: center;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-radius: 0.16rem;
+  color: inherit;
+  cursor: text;
+  font: inherit;
+  line-height: 1.35;
+  min-width: 1.2em;
+  outline: 0;
+  padding: 0.16rem 0.18rem;
+  text-align: center;
 }
 
 .datetime-neo__segment:hover {
-    background: var(--datetime-neo-hover);
+  background: var(--datetime-neo-hover);
 }
 
 .datetime-neo__editor:focus-within .datetime-neo__segment--selected,
 .datetime-neo__segment:focus-visible {
-    background: var(--datetime-neo-highlight);
-    color: var(--datetime-neo-highlight-foreground);
+  background: var(--datetime-neo-highlight);
+  color: var(--datetime-neo-highlight-foreground);
 }
 
 .datetime-neo__segment:disabled {
-    cursor: not-allowed;
+  cursor: not-allowed;
 }
 
 .datetime-neo__placeholder {
-    color: color-mix(in srgb, currentColor 52%, transparent);
+  color: color-mix(in srgb, currentColor 52%, transparent);
 }
 
 .datetime-neo__editor:focus-within .datetime-neo__segment--selected .datetime-neo__placeholder,
 .datetime-neo__segment:focus-visible .datetime-neo__placeholder {
-    color: inherit;
+  color: inherit;
 }
 
 .datetime-neo__separator {
-    user-select: none;
+  user-select: none;
 }
 
 .datetime-neo__trigger {
-    align-items: center;
-    appearance: none;
-    background: transparent;
-    border: 0;
-    border-radius: .16rem;
-    color: inherit;
-    cursor: pointer;
-    display: inline-flex;
-    justify-content: center;
-    margin: 0;
-    padding: .25rem;
+  align-items: center;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-radius: 0.16rem;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  justify-content: center;
+  margin: 0;
+  padding: 0.25rem;
 }
 
 .datetime-neo__actions {
-    align-items: center;
-    display: inline-flex;
-    gap: .125rem;
-    margin: .25rem .375rem .25rem auto;
+  align-items: center;
+  display: inline-flex;
+  gap: 0.125rem;
+  margin: 0.25rem 0.375rem 0.25rem auto;
 }
 
 .datetime-neo__trigger:hover {
-    background: var(--datetime-neo-hover);
+  background: var(--datetime-neo-hover);
 }
 
 .datetime-neo__trigger:focus-visible {
-    outline: 2px solid var(--datetime-neo-focus);
-    outline-offset: 1px;
+  outline: 2px solid var(--datetime-neo-focus);
+  outline-offset: 1px;
 }
 
 .datetime-neo__trigger:disabled {
-    cursor: not-allowed;
+  cursor: not-allowed;
 }
 
 .datetime-neo__trigger svg {
-    fill: none;
-    height: 1.1em;
-    stroke: currentColor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 1.8;
-    width: 1.1em;
+  fill: none;
+  height: 1.1em;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+  width: 1.1em;
+}
+
+.datetime-neo__magic-icon {
+  font-size: 1.1em;
+  line-height: 1;
+  text-box: trim-both cap text;
 }

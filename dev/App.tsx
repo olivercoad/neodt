@@ -17,7 +17,7 @@ const initialReference = DateTime.fromISO('2026-08-18T09:30:00', { zone: 'Austra
 const initialValue = DateTime.fromISO('2026-08-24T14:30:00', { zone: 'Australia/Sydney' })
 
 function iso(date: DateTime | null): string {
-  return date?.toISO({ precision: 'minutes', suppressSeconds: true, includeOffset: false }) ?? 'null'
+  return date?.toISO({ precision: 'minutes' }) ?? 'null'
 }
 
 const App: Component = () => {

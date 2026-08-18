@@ -199,11 +199,22 @@ function parseDate(
   const weekdayToken = weekday?.[2]
   if (weekdayToken && weekdays[weekdayToken]) {
     const wanted = weekdays[weekdayToken]!
-    const direction = weekday[1] === 'last' ? -1 : 1
-    let distance = direction * ((wanted - now.weekday + (direction > 0 ? 7 : -7)) % 7)
-    if (distance === 0 && weekday[1] !== 'this') distance = direction * 7
+    const modifier = weekday[1]
+    const distance =
+      modifier === 'last'
+        ? -((now.weekday - wanted + 7) % 7 || 7)
+        : (wanted - now.weekday + 7) % 7 || (modifier === 'this' ? 0 : 7)
     return now.startOf('day').plus({ days: distance })
   }
+
+  if (months[input]) return makeDate(now, now.year, months[input]!, 1)
+
+  if (/^\d{4}$/.test(input)) return makeDate(now, Number(input), 1, 1)
+
+  const monthYear = input.match(/^([a-z]+)\s+(\d{4})$/)
+  const monthYearToken = monthYear?.[1]
+  if (monthYear && monthYearToken && months[monthYearToken])
+    return makeDate(now, Number(monthYear[2]), months[monthYearToken]!, 1)
 
   const numeric = input.match(/^(\d{1,2})[\/.\-](\d{1,2})(?:[\/.\-](\d{2,4}))?$/)
   if (numeric) {

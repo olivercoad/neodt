@@ -19,6 +19,9 @@ describe('parseNaturalDate', () => {
       ['Jan 3', '2026-01-03T00:00+00:00'],
       ['5 July', '2026-07-05T00:00+00:00'],
       ['5th July 2027', '2027-07-05T00:00+00:00'],
+      ['March', '2026-03-01T00:00+00:00'],
+      ['2015', '2015-01-01T00:00+00:00'],
+      ['Nov 2022', '2022-11-01T00:00+00:00'],
       ['the 20th', '2026-04-20T00:00+00:00'],
       ['2027-03-01T09:15+11:00', '2027-02-28T22:15+00:00'],
     ]
@@ -37,6 +40,7 @@ describe('parseNaturalDate', () => {
       ['tomorrow at 9:30am', '2026-04-16T09:30+00:00'],
       ['day after tomorrow noon', '2026-04-17T12:00+00:00'],
       ['next monday', '2026-04-20T00:00+00:00'],
+      ['last wednesday', '2026-04-08T00:00+00:00'],
       ['fri 8am', '2026-04-17T08:00+00:00'],
       ['next monday 3pm', '2026-04-20T15:00+00:00'],
       ['jan 3 14:45', '2026-01-03T14:45+00:00'],
@@ -47,6 +51,12 @@ describe('parseNaturalDate', () => {
       ['today + 9 days', '2026-04-24T00:00+00:00'],
     ]
     for (const [input, expected] of cases) expect(parse(input)).toBe(expected)
+  })
+
+  it('resolves last weekdays to the previous occurrence', () => {
+    const tuesday = DateTime.fromISO('2026-08-18T12:00:00Z')
+    const parsed = parseNaturalDate('last wednesday', { referenceTime: tuesday, zone: 'UTC' })
+    expect(parsed?.toFormat("yyyy-MM-dd'T'HH:mmZZ")).toBe('2026-08-12T00:00+00:00')
   })
 
   it('parses every rotating placeholder example', () => {

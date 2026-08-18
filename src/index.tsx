@@ -25,7 +25,7 @@ export interface NeodtProps extends JSX.HTMLAttributes<HTMLSpanElement> {
   value?: DateTime | null
   /** Initial value when the component is uncontrolled. */
   defaultValue?: DateTime
-  /** Locale used for the visible date and time, independent of the browser locale. */
+  /** Locale used for the visible date and time. Defaults to the system locale. */
   locale?: Intl.LocalesArgument
   /** Options affecting the visible locale formatting, such as `hour12` or `hourCycle`. */
   formatOptions?: Intl.DateTimeFormatOptions
@@ -44,6 +44,7 @@ export interface NeodtProps extends JSX.HTMLAttributes<HTMLSpanElement> {
 }
 
 const editableTypes = new Set<SegmentName>(['year', 'month', 'day', 'hour', 'minute', 'dayPeriod'])
+const systemLocale = new Intl.DateTimeFormat().resolvedOptions().locale
 
 function parseLocal(value: string, zone: Zone): DateTime | undefined {
   if (!value) return undefined
@@ -189,6 +190,7 @@ function Neodt(props: NeodtProps): JSX.Element {
     'disabled',
     'aria-label',
   ])
+  const locale = () => local.locale ?? systemLocale
   const [uncontrolledValue, setUncontrolledValue] = createSignal<DateTime | undefined>(
     local.defaultValue,
   )
@@ -215,7 +217,7 @@ function Neodt(props: NeodtProps): JSX.Element {
     partsFor(
       toLocalValue(cleared().size ? draftDate() : value() ?? draftDate()),
       referenceZone(),
-      local.locale,
+      locale(),
       local.formatOptions,
     ),
   )
@@ -239,7 +241,7 @@ function Neodt(props: NeodtProps): JSX.Element {
     parseNaturalDate(naturalText(), {
       referenceTime: local.referenceTime,
       zone: local.referenceTime.zoneName ?? undefined,
-      locale: local.locale,
+      locale: locale(),
     }),
   )
   const naturalCompletions = createMemo(() => getNaturalDateCompletions(naturalText()))
@@ -358,7 +360,7 @@ function Neodt(props: NeodtProps): JSX.Element {
     if (segment === 'month' && number >= 1 && number <= 12) date = date.set({ month: number })
     if (segment === 'day' && number >= 1 && number <= 31) date = date.set({ day: number })
     if (segment === 'hour') {
-      const hour12 = new Intl.DateTimeFormat(local.locale, {
+      const hour12 = new Intl.DateTimeFormat(locale(), {
         hour: 'numeric',
         ...local.formatOptions,
       }).resolvedOptions().hour12
@@ -468,7 +470,7 @@ function Neodt(props: NeodtProps): JSX.Element {
     const date = parseNaturalDate(event.clipboardData?.getData('text') ?? '', {
       referenceTime: local.referenceTime,
       zone: referenceZone(),
-      locale: local.locale,
+      locale: locale(),
     })
     if (!date) return
     event.preventDefault()
@@ -508,7 +510,7 @@ function Neodt(props: NeodtProps): JSX.Element {
     setTyped({ index, digits })
     setSegment(segment.type, digits)
     const hour12 =
-      new Intl.DateTimeFormat(local.locale, {
+      new Intl.DateTimeFormat(locale(), {
         hour: 'numeric',
         ...local.formatOptions,
       }).resolvedOptions().hour12 ?? false
@@ -674,7 +676,7 @@ function Neodt(props: NeodtProps): JSX.Element {
             </span>
             <span class="datetime-neo__natural-preview" aria-live="polite">
               {naturalDate()
-                ? naturalPreview(naturalDate()!, local.locale, local.formatOptions)
+                ? naturalPreview(naturalDate()!, locale(), local.formatOptions)
                 : ''}
             </span>
           </>

@@ -43,6 +43,25 @@ describe('environment', () => {
 })
 
 describe('Neodt', () => {
+  it('uses the system locale when locale is omitted', () =>
+    createRoot(() => {
+      const value = date('2026-08-17T15:30')
+      const control = <DateTimeLocal referenceTime={referenceTime} value={value} /> as HTMLSpanElement
+      const expected = value
+        .setLocale(new Intl.DateTimeFormat().resolvedOptions().locale)
+        .toLocaleParts({
+          year: 'numeric',
+          month: 'numeric',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+        })
+        .map(part => part.value)
+        .join('')
+
+      expect(control.querySelector('.datetime-neo__value')?.textContent).toBe(expected)
+    }))
+
   it('renders locale-ordered editable segments with a hidden native input and picker button', () =>
     createRoot(() => {
       const control = (

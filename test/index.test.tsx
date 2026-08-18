@@ -1070,9 +1070,13 @@ describe('Neodt', () => {
           expect(
             readonly.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')[0]?.textContent,
           ).toBe('8')
+          expect(readonly.querySelector('.datetime-neo__actions')).toBeNull()
+          expect(readonly.querySelector('.datetime-neo__trigger')).toBeNull()
           expect(
             disabled.querySelector<HTMLButtonElement>('.datetime-neo__segment')?.disabled,
           ).toBe(true)
+          expect(disabled.querySelector('.datetime-neo__actions')).toBeNull()
+          expect(disabled.querySelector('.datetime-neo__trigger')).toBeNull()
           control.remove()
           readonly.remove()
           disabled.remove()

@@ -20,6 +20,8 @@ export interface NeodtProps extends JSX.HTMLAttributes<HTMLSpanElement> {
   locale?: Intl.LocalesArgument
   /** Options affecting the visible locale formatting, such as `hour12` or `hourCycle`. */
   formatOptions?: Intl.DateTimeFormatOptions
+  /** Shows the selected date's UTC offset beside the visible date and time. */
+  showTimeOffset?: boolean
   /** Icon displayed in the button that opens the browser's native date and time picker. */
   calendarIcon?: JSX.Element
   /** Icon displayed in the button that opens natural-language date entry. */
@@ -164,6 +166,7 @@ function Neodt(props: NeodtProps): JSX.Element {
     'defaultValue',
     'locale',
     'formatOptions',
+    'showTimeOffset',
     'calendarIcon',
     'magicIcon',
     'onValueChange',
@@ -663,15 +666,17 @@ function Neodt(props: NeodtProps): JSX.Element {
             </Index>
           </span>
         )}
-        <span class="datetime-neo__timezone" aria-hidden="true">
-          {timeOffset(
-            naturalMode()
-              ? naturalDate() ?? local.referenceTime
-              : cleared().size
-              ? draftDate()
-              : value() ?? draftDate(),
-          )}
-        </span>
+        {local.showTimeOffset && (
+          <span class="datetime-neo__timezone" aria-hidden="true">
+            {timeOffset(
+              naturalMode()
+                ? naturalDate() ?? local.referenceTime
+                : cleared().size
+                ? draftDate()
+                : value() ?? draftDate(),
+            )}
+          </span>
+        )}
       </span>
       <span class="datetime-neo__actions">
         <button

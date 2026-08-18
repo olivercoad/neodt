@@ -84,9 +84,7 @@ describe('Neodt', () => {
       expect(value.textContent).toBe(expected)
       expect(window.getSelection()?.toString()).toBe(expected)
       expect(window.getSelection()?.toString()).not.toContain('\n')
-      expect(window.getSelection()?.toString()).not.toContain(
-        control.querySelector('.datetime-neo__timezone')!.textContent!,
-      )
+      expect(control.querySelector('.datetime-neo__timezone')).toBeNull()
       let copiedText = ''
       document.addEventListener(
         'copy',
@@ -101,7 +99,7 @@ describe('Neodt', () => {
       dispose()
     }))
 
-  it('uses the reference timezone for editing and shows its offset in normal mode', () =>
+  it('uses the reference timezone for editing and hides its offset by default', () =>
     createRoot(() => {
       const sydneyReference = DateTime.fromISO('2026-08-17T15:30:00', { zone: 'Australia/Sydney' })
       const control = (
@@ -112,6 +110,20 @@ describe('Neodt', () => {
         />
       ) as HTMLSpanElement
       expect(control.querySelector('.datetime-neo__segment')?.textContent).toBe('17')
+      expect(control.querySelector('.datetime-neo__timezone')).toBeNull()
+    }))
+
+  it('shows the selected offset when showTimeOffset is enabled', () =>
+    createRoot(() => {
+      const sydneyReference = DateTime.fromISO('2026-08-17T15:30:00', { zone: 'Australia/Sydney' })
+      const control = (
+        <DateTimeLocal
+          referenceTime={sydneyReference}
+          locale="en-GB"
+          showTimeOffset
+          value={date('2026-08-17T15:30')}
+        />
+      ) as HTMLSpanElement
       expect(control.querySelector('.datetime-neo__timezone')?.textContent).toBe('+10:00')
     }))
 
@@ -287,7 +299,7 @@ describe('Neodt', () => {
     const sydneyReference = DateTime.fromISO('2026-08-17T15:30:00', { zone: 'Australia/Sydney' })
     const control = createRoot(rootDispose => {
       dispose = rootDispose
-      return (<DateTimeLocal referenceTime={sydneyReference} />) as HTMLSpanElement
+      return (<DateTimeLocal referenceTime={sydneyReference} showTimeOffset />) as HTMLSpanElement
     })
     document.body.append(control)
     control
@@ -311,6 +323,7 @@ describe('Neodt', () => {
         <DateTimeLocal
           referenceTime={referenceTime}
           formatOptions={{ timeZoneName: 'shortOffset' }}
+          showTimeOffset
         />
       ) as HTMLSpanElement
     })

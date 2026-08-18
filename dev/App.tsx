@@ -25,6 +25,7 @@ const App: Component = () => {
   const [locale, setLocale] = createSignal<Intl.LocalesArgument>('en-US')
   const [dayPeriod, setDayPeriod] = createSignal<DayPeriod>('locale')
   const [value, setValue] = createSignal<DateTime | null>(initialValue)
+  const [showTimeOffset, setShowTimeOffset] = createSignal(false)
   const [readonly, setReadonly] = createSignal(false)
   const [disabled, setDisabled] = createSignal(false)
 
@@ -39,6 +40,7 @@ const App: Component = () => {
       `  referenceTime={referenceTime()}`,
       `  locale="${locale()}"`,
       dayPeriod() === 'locale' ? undefined : `  formatOptions={{ hour12: ${dayPeriod() === '12'} }}`,
+      showTimeOffset() ? '  showTimeOffset' : undefined,
       readonly() ? '  readonly' : undefined,
       disabled() ? '  disabled' : undefined,
       '  value={value()}',
@@ -52,6 +54,7 @@ const App: Component = () => {
     setLocale('en-US')
     setDayPeriod('locale')
     setValue(initialValue)
+    setShowTimeOffset(false)
     setReadonly(false)
     setDisabled(false)
   }
@@ -105,6 +108,7 @@ const App: Component = () => {
               <label class={styles.field}><span class={styles.fieldLabel}>Clock</span><select value={dayPeriod()} onChange={event => setDayPeriod(event.currentTarget.value as DayPeriod)}><option value="locale">Locale dependent</option><option value="12">12 hour / AM PM</option><option value="24">24 hour</option></select></label>
             </div>
             <div class={styles.toggleRow}>
+              <label><input type="checkbox" checked={showTimeOffset()} onChange={event => setShowTimeOffset(event.currentTarget.checked)} /> Time offset</label>
               <label><input type="checkbox" checked={readonly()} onChange={event => setReadonly(event.currentTarget.checked)} /> Readonly</label>
               <label><input type="checkbox" checked={disabled()} onChange={event => setDisabled(event.currentTarget.checked)} /> Disabled</label>
             </div>
@@ -112,7 +116,7 @@ const App: Component = () => {
           <div class={styles.preview}>
             <div class={styles.previewTop}><span>Preview</span><code>{referenceTime().zoneName}</code></div>
             <label>Appointment time</label>
-            <Neodt class={styles.previewInput} referenceTime={referenceTime()} value={value()} locale={locale()} formatOptions={formatOptions()} readonly={readonly()} disabled={disabled()} onValueChange={setValue} />
+            <Neodt class={styles.previewInput} referenceTime={referenceTime()} value={value()} locale={locale()} formatOptions={formatOptions()} showTimeOffset={showTimeOffset()} readonly={readonly()} disabled={disabled()} onValueChange={setValue} />
             <div class={styles.valueLine}><span>Current value</span><code>{iso(value())}</code></div>
           </div>
           <div class={styles.codePanel}>

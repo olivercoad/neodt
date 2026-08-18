@@ -11,7 +11,16 @@ const locales = [
   ['ja-JP', 'Japanese (Japan)'],
 ] as const
 
+const timezones = [
+  ['Australia/Sydney', 'Sydney (Australia/Sydney)'],
+  ['America/New_York', 'New York (America/New_York)'],
+  ['Europe/London', 'London (Europe/London)'],
+  ['Asia/Tokyo', 'Tokyo (Asia/Tokyo)'],
+  ['UTC', 'UTC'],
+] as const
+
 type DayPeriod = 'locale' | '12' | '24'
+type Timezone = (typeof timezones)[number][0]
 
 const initialReference = DateTime.fromISO('2026-08-18T09:30:00', { zone: 'Australia/Sydney' })
 const initialValue = DateTime.fromISO('2026-08-24T14:30:00', { zone: 'Australia/Sydney' })
@@ -22,6 +31,7 @@ function iso(date: DateTime | null): string {
 
 const App: Component = () => {
   const [referenceTime, setReferenceTime] = createSignal(initialReference)
+  const [timezone, setTimezone] = createSignal<Timezone>('Australia/Sydney')
   const [locale, setLocale] = createSignal<Intl.LocalesArgument>('en-US')
   const [dayPeriod, setDayPeriod] = createSignal<DayPeriod>('locale')
   const [value, setValue] = createSignal<DateTime | null>(initialValue)
@@ -51,12 +61,18 @@ const App: Component = () => {
 
   const reset = () => {
     setReferenceTime(initialReference)
+    setTimezone('Australia/Sydney')
     setLocale('en-US')
     setDayPeriod('locale')
     setValue(initialValue)
     setShowTimeOffset(false)
     setReadonly(false)
     setDisabled(false)
+  }
+
+  const setReferenceTimezone = (nextTimezone: Timezone) => {
+    setTimezone(nextTimezone)
+    setReferenceTime(referenceTime().setZone(nextTimezone))
   }
 
   return (
@@ -102,7 +118,8 @@ const App: Component = () => {
         <div class={styles.playground}>
           <div class={styles.settings}>
             <div class={styles.settingsTop}><span>Input settings</span><button type="button" onClick={reset}>Reset</button></div>
-            <label class={styles.field}><span class={styles.fieldLabel}>Reference time <em>timezone + defaults</em></span><Neodt class={styles.previewInput} referenceTime={initialReference} value={referenceTime()} onValueChange={next => next && setReferenceTime(next)} /></label>
+            <div class={styles.field}><span class={styles.fieldLabel}>Reference time <em>timezone + defaults</em></span><Neodt class={styles.previewInput} referenceTime={referenceTime()} value={referenceTime()} onValueChange={next => next && setReferenceTime(next)} showTimeOffset /></div>
+            <label class={styles.field}><span class={styles.fieldLabel}>Timezone</span><select value={timezone()} onChange={event => setReferenceTimezone(event.currentTarget.value as Timezone)}><For each={timezones}>{([name, label]) => <option value={name}>{label}</option>}</For></select></label>
             <div class={styles.twoFields}>
               <label class={styles.field}><span class={styles.fieldLabel}>Locale</span><select value={locale() as string} onChange={event => setLocale(event.currentTarget.value)}><For each={locales}>{([name, label]) => <option value={name}>{label}</option>}</For></select></label>
               <label class={styles.field}><span class={styles.fieldLabel}>Clock</span><select value={dayPeriod()} onChange={event => setDayPeriod(event.currentTarget.value as DayPeriod)}><option value="locale">Locale dependent</option><option value="12">12 hour / AM PM</option><option value="24">24 hour</option></select></label>

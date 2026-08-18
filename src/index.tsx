@@ -8,6 +8,7 @@ import {
   type JSX,
 } from 'solid-js'
 import { DateTime } from 'luxon'
+import { createElementSize } from '@solid-primitives/resize-observer'
 import { getNaturalDateCompletions } from './natural-completion'
 import { parseNaturalDate } from './natural-parser'
 import { createNaturalPlaceholder } from './natural-placeholder'
@@ -222,6 +223,11 @@ function Neodt(props: NeodtProps): JSX.Element {
   const [activeItem, setActiveItem] = createSignal(0)
   let nativeInput: HTMLInputElement | undefined
   let naturalInput: HTMLInputElement | undefined
+  const [actions, setActions] = createSignal<HTMLSpanElement>()
+  const actionSize =
+    typeof ResizeObserver === 'undefined'
+      ? { width: 0 }
+      : createElementSize(actions)
   const nativeInputId = createUniqueId()
   let hasOpenedNaturalInput = false
   const naturalPlaceholderAnimation = createNaturalPlaceholder(setNaturalPlaceholder)
@@ -727,7 +733,11 @@ function Neodt(props: NeodtProps): JSX.Element {
           <span class="datetime-neo__empty-area" aria-hidden="true" onClick={onEmptyAreaClick} />
         )}
         {local.showTimeOffset && (
-          <span class="datetime-neo__timezone" aria-hidden="true">
+          <span
+            class="datetime-neo__timezone"
+            aria-hidden="true"
+            style={{ '--datetime-neo-actions-offset': `${actionSize.width ?? 0}px` }}
+          >
             {timeOffset(
               naturalMode()
                 ? naturalDate() ?? local.referenceTime
@@ -739,7 +749,7 @@ function Neodt(props: NeodtProps): JSX.Element {
         )}
       </span>
       {!local.readonly && !local.disabled && (
-        <span class="datetime-neo__actions">
+        <span ref={setActions} class="datetime-neo__actions">
           <button
             ref={element => (actionButtons[0] = element)}
             class="datetime-neo__trigger"

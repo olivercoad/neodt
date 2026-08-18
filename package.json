@@ -91,6 +91,7 @@
     "pnpm": ">=9.0.0"
   },
   "dependencies": {
+    "@solid-primitives/resize-observer": "^2.2.0",
     "luxon": "^3.7.2"
   }
 }

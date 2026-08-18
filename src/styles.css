@@ -131,6 +131,7 @@
   background: transparent;
   border: 0;
   border-radius: 0.16rem;
+  caret-color: transparent;
   color: inherit;
   cursor: text;
   font: inherit;

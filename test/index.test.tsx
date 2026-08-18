@@ -590,6 +590,20 @@ describe('Neodt', () => {
       }),
     ))
 
+  it('does not create a native text selection when a segment receives focus', () =>
+    createRoot(dispose => {
+      const control = (
+        <DateTimeLocal referenceTime={referenceTime} value={date('2026-08-17T15:30')} />
+      ) as HTMLSpanElement
+      document.body.append(control)
+      const segment = control.querySelector<HTMLElement>('.datetime-neo__segment')!
+      window.getSelection()?.removeAllRanges()
+      segment.focus()
+      expect(window.getSelection()?.rangeCount).toBe(0)
+      control.remove()
+      dispose()
+    }))
+
   it('uses one tab stop and moves between segments and actions with arrow keys', async () =>
     await new Promise<void>(resolve =>
       createRoot(dispose => {
@@ -599,7 +613,7 @@ describe('Neodt', () => {
         document.body.append(control)
         const segments = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')
         const actions = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__trigger')
-        expect(control.querySelectorAll<HTMLButtonElement>('button[tabindex="0"]')).toHaveLength(1)
+        expect(control.querySelectorAll<HTMLElement>('[tabindex="0"]')).toHaveLength(1)
         expect(segments[0]?.tabIndex).toBe(0)
         expect(segments[1]?.tabIndex).toBe(-1)
         expect(actions[0]?.tabIndex).toBe(-1)
@@ -665,7 +679,28 @@ describe('Neodt', () => {
       }),
     ))
 
-  it('focuses the first segment when the empty editor area is clicked', async () =>
+  it('uses the decimal keyboard for numeric segments and advances on decimal input', async () =>
+    await new Promise<void>(resolve =>
+      createRoot(dispose => {
+        const control = (
+          <DateTimeLocal referenceTime={referenceTime} value={date('2026-08-17T15:30')} />
+        ) as HTMLSpanElement
+        document.body.append(control)
+        const segments = control.querySelectorAll<HTMLSpanElement>('.datetime-neo__segment')
+        expect(segments[0]?.getAttribute('inputmode')).toBe('decimal')
+        segments[0]!.focus()
+        segments[0]!.textContent = '.'
+        segments[0]!.dispatchEvent(new Event('input', { bubbles: true }))
+        nextRender().then(() => {
+          expect(document.activeElement).toBe(segments[1])
+          control.remove()
+          dispose()
+          resolve()
+        })
+      }),
+    ))
+
+  it('focuses the first segment when the empty editor area is pressed', async () =>
     await new Promise<void>(resolve =>
       createRoot(dispose => {
         const control = (
@@ -674,9 +709,15 @@ describe('Neodt', () => {
         document.body.append(control)
         const editor = control.querySelector<HTMLSpanElement>('.datetime-neo__editor')!
         const firstSegment = control.querySelector<HTMLButtonElement>('.datetime-neo__segment')!
-        editor.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+        const segments = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')
+        segments[segments.length - 1]!.focus()
+        const event = new MouseEvent('mousedown', { bubbles: true, cancelable: true })
+        editor.dispatchEvent(event)
         nextRender().then(() => {
+          expect(event.defaultPrevented).toBe(true)
           expect(document.activeElement).toBe(firstSegment)
+          expect(firstSegment.getAttribute('aria-selected')).toBe('true')
+          expect(segments[segments.length - 1]?.getAttribute('aria-selected')).toBe('false')
           control.remove()
           dispose()
           resolve()
@@ -1077,9 +1118,9 @@ describe('Neodt', () => {
           ).toBe('8')
           expect(readonly.querySelector('.datetime-neo__actions')).toBeNull()
           expect(readonly.querySelector('.datetime-neo__trigger')).toBeNull()
-          expect(
-            disabled.querySelector<HTMLButtonElement>('.datetime-neo__segment')?.disabled,
-          ).toBe(true)
+          expect(disabled.querySelector('.datetime-neo__segment')?.getAttribute('aria-disabled')).toBe(
+            'true',
+          )
           expect(disabled.querySelector('.datetime-neo__actions')).toBeNull()
           expect(disabled.querySelector('.datetime-neo__trigger')).toBeNull()
           control.remove()

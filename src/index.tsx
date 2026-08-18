@@ -208,7 +208,7 @@ function Neodt(props: NeodtProps): JSX.Element {
   const editableSegments = createMemo(() =>
     segments().filter((part): part is Segment => part.editable),
   )
-  const segmentButtons: HTMLButtonElement[] = []
+  const segmentButtons: HTMLElement[] = []
   const actionButtons: HTMLElement[] = []
   const [activeItem, setActiveItem] = createSignal(0)
   let nativeInput: HTMLInputElement | undefined
@@ -463,6 +463,19 @@ function Neodt(props: NeodtProps): JSX.Element {
     return false
   }
 
+  const enterSegmentDigit = (index: number, segment: Segment, digit: string) => {
+    const previous = typed()?.index === index ? typed()?.digits ?? '' : ''
+    const digits = `${previous}${digit}`.slice(-digitLimit(segment.type))
+    setTyped({ index, digits })
+    setSegment(segment.type, digits)
+    const hour12 =
+      new Intl.DateTimeFormat(local.locale, {
+        hour: 'numeric',
+        ...local.formatOptions,
+      }).resolvedOptions().hour12 ?? false
+    if (isCompleteSegment(segment.type, digits, hour12)) selectSegment(index + 1, true)
+  }
+
   const onSegmentKeyDown = (event: KeyboardEvent, index: number, segment: Segment) => {
     if (event.key === ' ') {
       event.preventDefault()
@@ -509,6 +522,11 @@ function Neodt(props: NeodtProps): JSX.Element {
       clearSegment(segment.type)
       return
     }
+    if (segment.type !== 'dayPeriod' && event.key === '.') {
+      event.preventDefault()
+      selectSegment(index + 1, true)
+      return
+    }
     if (matchesFollowingSeparator(index, event.key)) {
       event.preventDefault()
       selectSegment(index + 1, true)
@@ -521,21 +539,13 @@ function Neodt(props: NeodtProps): JSX.Element {
     }
     if (/^\d$/.test(event.key)) {
       event.preventDefault()
-      const previous = typed()?.index === index ? typed()?.digits ?? '' : ''
-      const digits = `${previous}${event.key}`.slice(-digitLimit(segment.type))
-      setTyped({ index, digits })
-      setSegment(segment.type, digits)
-      const hour12 =
-        new Intl.DateTimeFormat(local.locale, {
-          hour: 'numeric',
-          ...local.formatOptions,
-        }).resolvedOptions().hour12 ?? false
-      if (isCompleteSegment(segment.type, digits, hour12)) selectSegment(index + 1, true)
+      enterSegmentDigit(index, segment, event.key)
     }
   }
 
-  const onEditorClick = (event: MouseEvent) => {
+  const onEditorPointerDown = (event: MouseEvent) => {
     if (event.target !== event.currentTarget || naturalMode()) return
+    event.preventDefault()
     selectSegment(0, true)
   }
 
@@ -551,7 +561,7 @@ function Neodt(props: NeodtProps): JSX.Element {
         class="datetime-neo__editor"
         role="group"
         aria-label={local['aria-label'] ?? 'Date and time'}
-        onClick={onEditorClick}
+        onMouseDown={onEditorPointerDown}
         onPaste={pasteDateTime}
         onKeyDown={event => {
           if (naturalMode() || !(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'a')
@@ -636,18 +646,31 @@ function Neodt(props: NeodtProps): JSX.Element {
                     const index = () =>
                       editableSegments().findIndex(candidate => candidate.type === segment().type)
                     return (
-                      <button
+                      <span
                         ref={element => (segmentButtons[index()] = element)}
                         class="datetime-neo__segment"
                         classList={{ 'datetime-neo__segment--selected': selected() === index() }}
-                        type="button"
-                        tabindex={activeItem() === index() ? 0 : -1}
-                        disabled={local.disabled}
+                        role="spinbutton"
+                        contenteditable={!local.disabled && !local.readonly}
+                        inputmode={segment().type === 'dayPeriod' ? 'text' : 'decimal'}
+                        tabindex={!local.disabled && activeItem() === index() ? 0 : -1}
+                        aria-disabled={local.disabled || undefined}
                         aria-label={part().type}
                         aria-selected={selected() === index()}
                         onFocus={() => selectSegment(index())}
                         onClick={() => selectSegment(index())}
                         onKeyDown={event => onSegmentKeyDown(event, index(), segment())}
+                        onInput={event => {
+                          const input = event.currentTarget
+                          const lastCharacter = input.textContent?.at(-1)
+                          input.textContent = isCleared(segment().type) ? '' : segment().value
+                          if (segment().type !== 'dayPeriod' && lastCharacter === '.') {
+                            selectSegment(index() + 1, true)
+                            return
+                          }
+                          if (/^\d$/.test(lastCharacter ?? ''))
+                            enterSegmentDigit(index(), segment(), lastCharacter!)
+                        }}
                       >
                         {isCleared(segment().type) ? (
                           <span class="datetime-neo__placeholder">
@@ -656,7 +679,7 @@ function Neodt(props: NeodtProps): JSX.Element {
                         ) : (
                           segment().value
                         )}
-                      </button>
+                      </span>
                     )
                   })()
                 ) : (

@@ -127,20 +127,25 @@ describe('Neodt', () => {
       expect(control.querySelector('.datetime-neo__timezone')?.textContent).toBe('+10:00')
     }))
 
-  it('opens the native picker from the trigger or Space key', () =>
+  it('associates the picker label with the native input and opens it from Space', () =>
     createRoot(dispose => {
       const showPicker = vi.fn()
+      const nativeClick = vi.fn()
       const control = (
         <DateTimeLocal referenceTime={referenceTime} value={date('2026-08-17T15:30')} />
       ) as HTMLSpanElement
       const input = control.querySelector<HTMLInputElement>('input')!
-      const trigger = control.querySelector<HTMLButtonElement>(
+      const trigger = control.querySelector<HTMLLabelElement>(
         '[aria-label="Open date and time picker"]',
       )!
       Object.defineProperty(input, 'showPicker', { value: showPicker })
+      input.addEventListener('click', nativeClick)
       document.body.append(control)
       trigger.click()
       key(control.querySelector<HTMLButtonElement>('.datetime-neo__segment')!, ' ')
+      expect(trigger.htmlFor).toBe(input.id)
+      expect(input.getAttribute('aria-hidden')).toBeNull()
+      expect(nativeClick).toHaveBeenCalledTimes(1)
       expect(showPicker).toHaveBeenCalledTimes(2)
       control.remove()
       dispose()

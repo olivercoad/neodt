@@ -1,4 +1,4 @@
-import { createMemo, createSignal, Index, onCleanup, splitProps, type JSX } from 'solid-js'
+import { createMemo, createSignal, createUniqueId, Index, onCleanup, splitProps, type JSX } from 'solid-js'
 import { DateTime } from 'luxon'
 import { getNaturalDateCompletions } from './natural-completion'
 import { parseNaturalDate } from './natural-parser'
@@ -209,10 +209,11 @@ function Neodt(props: NeodtProps): JSX.Element {
     segments().filter((part): part is Segment => part.editable),
   )
   const segmentButtons: HTMLButtonElement[] = []
-  const actionButtons: HTMLButtonElement[] = []
+  const actionButtons: HTMLElement[] = []
   const [activeItem, setActiveItem] = createSignal(0)
   let nativeInput: HTMLInputElement | undefined
   let naturalInput: HTMLInputElement | undefined
+  const nativeInputId = createUniqueId()
   let hasOpenedNaturalInput = false
   const naturalPlaceholderAnimation = createNaturalPlaceholder(setNaturalPlaceholder)
   const naturalDate = createMemo(() =>
@@ -734,15 +735,20 @@ function Neodt(props: NeodtProps): JSX.Element {
               local.magicIcon ?? <MagicIcon />
             )}
           </button>
-          <button
+          <label
             ref={element => (actionButtons[1] = element)}
             class="datetime-neo__trigger"
-            type="button"
+            for={nativeInputId}
             tabindex={activeItem() === editableSegments().length + 1 ? 0 : -1}
-            disabled={local.disabled}
             aria-label="Open date and time picker"
             onFocus={() => setActiveItem(editableSegments().length + 1)}
+            onClick={openPicker}
             onKeyDown={event => {
+              if (event.key === ' ' || event.key === 'Enter') {
+                event.preventDefault()
+                openPicker()
+                return
+              }
               if (event.key === 'ArrowLeft') {
                 event.preventDefault()
                 selectControlItem(editableSegments().length, true)
@@ -763,21 +769,20 @@ function Neodt(props: NeodtProps): JSX.Element {
                 selectControlItem(editableSegments().length + actionButtons.length - 1, true)
               }
             }}
-            onClick={openPicker}
           >
             {local.calendarIcon ?? <CalendarIcon />}
-          </button>
+          </label>
         </span>
       )}
       <input
         ref={element => (nativeInput = element)}
         class="datetime-neo__native-input"
+        id={nativeInputId}
         type="datetime-local"
         value={nativeValue()}
         disabled={local.disabled}
         readonly={local.readonly}
         tabindex={-1}
-        aria-hidden="true"
         onInput={event => updateFromNativeInput(event.currentTarget.value)}
         onChange={event => updateFromNativeInput(event.currentTarget.value)}
       />

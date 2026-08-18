@@ -589,6 +589,7 @@ function Neodt(props: NeodtProps): JSX.Element {
       classList={local.classList}
       data-actions={!local.readonly && !local.disabled ? '' : undefined}
       data-disabled={local.disabled ? '' : undefined}
+      data-empty={value() ? undefined : ''}
       data-readonly={local.readonly ? '' : undefined}
     >
       <span

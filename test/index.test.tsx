@@ -537,6 +537,7 @@ describe('Neodt', () => {
       const segments = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')
       expect(segments[5]?.textContent).toBe('--')
       expect(control.querySelectorAll('.datetime-neo__placeholder')).toHaveLength(6)
+      expect(control.hasAttribute('data-empty')).toBe(true)
     }))
 
   it('sets the draft day period directly with a and p keys', async () =>

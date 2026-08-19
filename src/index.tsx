@@ -234,6 +234,16 @@ function Neodt(props: NeodtProps): JSX.Element {
   const editableSegments = createMemo(() =>
     segments().filter((part): part is Segment => part.editable),
   )
+  const dayPeriodLabels = createMemo(() => {
+    const labelForHour = (hour: number) =>
+      partsFor(
+        `2001-02-03T${hour.toString().padStart(2, '0')}:05`,
+        referenceZone(),
+        locale(),
+        local.formatOptions,
+      ).find(part => part.type === 'dayPeriod')?.value
+    return { morning: labelForHour(4), afternoon: labelForHour(16) }
+  })
   const segmentButtons: HTMLElement[] = []
   const actionButtons: HTMLElement[] = []
   const [activeItem, setActiveItem] = createSignal(0)
@@ -409,6 +419,22 @@ function Neodt(props: NeodtProps): JSX.Element {
     nextCleared.delete('dayPeriod')
     setCleared(nextCleared)
     emitValue(hasClearedSegment(nextCleared) ? undefined : date)
+  }
+
+  const dayPeriodForInput = (input: string) => {
+    const normalizedInput = input.toLocaleLowerCase(locale())
+    if (normalizedInput === 'a') return true
+    if (normalizedInput === 'p') return false
+    const labels = dayPeriodLabels()
+    const matches = [
+      { morning: true, label: labels.morning },
+      { morning: false, label: labels.afternoon },
+    ].filter(
+      (candidate): candidate is { morning: boolean; label: string } =>
+        candidate.label !== undefined &&
+        candidate.label.toLocaleLowerCase(locale()).startsWith(normalizedInput),
+    )
+    return matches.length === 1 ? matches[0]!.morning : undefined
   }
 
   const setSegment = (segment: SegmentName, digits: string) => {
@@ -654,10 +680,11 @@ function Neodt(props: NeodtProps): JSX.Element {
       selectSegment(index + 1, true)
       return
     }
-    // Day periods are textual segments and accept their conventional A/P shortcuts.
-    if (segment.type === 'dayPeriod' && /^(a|p)$/i.test(event.key)) {
+    // Accept locale-specific day-period labels. A partial label works only when unambiguous.
+    const dayPeriod = segment.type === 'dayPeriod' ? dayPeriodForInput(event.key) : undefined
+    if (dayPeriod !== undefined) {
       event.preventDefault()
-      setDayPeriod(event.key.toLowerCase() === 'a')
+      setDayPeriod(dayPeriod)
       return
     }
     if (/^\d$/.test(event.key)) {
@@ -800,11 +827,12 @@ function Neodt(props: NeodtProps): JSX.Element {
                           // `textContent` may be unchanged after an unhandled key, so use the
                           // inserted character rather than accidentally re-entering its last digit.
                           const enteredCharacter = event.data
-                          if (
-                            segment().type === 'dayPeriod' &&
-                            /^(a|p)$/i.test(enteredCharacter ?? '')
-                          ) {
-                            setDayPeriod(enteredCharacter!.toLowerCase() === 'a')
+                          const dayPeriod =
+                            segment().type === 'dayPeriod' && enteredCharacter
+                              ? dayPeriodForInput(enteredCharacter)
+                              : undefined
+                          if (dayPeriod !== undefined) {
+                            setDayPeriod(dayPeriod)
                             return
                           }
                           input.textContent = isCleared(segment().type)

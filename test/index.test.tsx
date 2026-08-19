@@ -665,6 +665,61 @@ describe('Neodt', () => {
       }),
     ))
 
+  it('sets Japanese day periods from localized contenteditable input', async () =>
+    await new Promise<void>(resolve =>
+      createRoot(dispose => {
+        const control = (
+          <DateTimeLocal
+            referenceTime={referenceTime}
+            locale="ja-JP"
+            formatOptions={{ hour12: true }}
+            defaultValue={date('2026-08-17T15:30')}
+          />
+        ) as HTMLSpanElement
+        document.body.append(control)
+        const dayPeriod = () =>
+          control.querySelector<HTMLSpanElement>('[aria-label="dayPeriod"]')!
+        expect(dayPeriod().textContent).toBe('午後')
+        dayPeriod().textContent = '午後午前'
+        dayPeriod().dispatchEvent(new InputEvent('input', { bubbles: true, data: '午前' }))
+        nextRender().then(() => {
+          expect(dayPeriod().textContent).toBe('午前')
+          control.remove()
+          dispose()
+          resolve()
+        })
+      }),
+    ))
+
+  it('accepts A/P day-period aliases in every locale', async () =>
+    await new Promise<void>(resolve =>
+      createRoot(dispose => {
+        const control = (
+          <DateTimeLocal
+            referenceTime={referenceTime}
+            locale="ja-JP"
+            formatOptions={{ hour12: true }}
+            defaultValue={date('2026-08-17T15:30')}
+          />
+        ) as HTMLSpanElement
+        document.body.append(control)
+        const dayPeriod = () =>
+          control.querySelector<HTMLSpanElement>('[aria-label="dayPeriod"]')!
+        key(dayPeriod(), 'a')
+        nextRender().then(() => {
+          expect(dayPeriod().textContent).toBe('午前')
+          dayPeriod().textContent = '午前p'
+          dayPeriod().dispatchEvent(new InputEvent('input', { bubbles: true, data: 'p' }))
+          nextRender().then(() => {
+            expect(dayPeriod().textContent).toBe('午後')
+            control.remove()
+            dispose()
+            resolve()
+          })
+        })
+      }),
+    ))
+
   it('restores a cleared day-period placeholder after unhandled input', async () =>
     await new Promise<void>(resolve =>
       createRoot(dispose => {

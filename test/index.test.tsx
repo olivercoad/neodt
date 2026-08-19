@@ -277,6 +277,7 @@ describe('Neodt', () => {
     const input = control.querySelector<HTMLInputElement>('.datetime-neo__natural-input')!
     expect(input.placeholder).toHaveLength(1)
     expect(control.querySelector('[aria-label="Cancel natural-language date"]')).not.toBeNull()
+    expect(control.querySelector('[aria-label="Open date and time picker"]')).toBeNull()
     input.value = 'August 18, 2026 at 9am'
     input.dispatchEvent(new InputEvent('input', { bubbles: true }))
     await nextRender()

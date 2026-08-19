@@ -697,7 +697,7 @@ function Neodt(props: NeodtProps): JSX.Element {
         {naturalMode() ? (
           <>
             <span class="datetime-neo__natural-prefix" aria-hidden="true">
-              @
+              <span>@</span>
             </span>
             <span class="datetime-neo__natural-field">
               <input
@@ -894,43 +894,45 @@ function Neodt(props: NeodtProps): JSX.Element {
               local.magicIcon ?? <MagicIcon />
             )}
           </button>
-          <label
-            ref={element => (actionButtons[1] = element)}
-            class="datetime-neo__trigger"
-            for={nativeInputId}
-            tabindex={activeItem() === editableSegments().length + 1 ? 0 : -1}
-            aria-label="Open date and time picker"
-            onFocus={() => setActiveItem(editableSegments().length + 1)}
-            onClick={openPicker}
-            onKeyDown={event => {
-              if (event.key === ' ' || event.key === 'Enter') {
-                event.preventDefault()
-                openPicker()
-                return
-              }
-              if (event.key === 'ArrowLeft') {
-                event.preventDefault()
-                selectControlItem(editableSegments().length, true)
-                return
-              }
-              if (event.key === 'ArrowRight') {
-                event.preventDefault()
-                selectControlItem(editableSegments().length + 2, true)
-                return
-              }
-              if (event.key === 'Home') {
-                event.preventDefault()
-                selectControlItem(0, true)
-                return
-              }
-              if (event.key === 'End') {
-                event.preventDefault()
-                selectControlItem(editableSegments().length + actionButtons.length - 1, true)
-              }
-            }}
-          >
-            {local.calendarIcon ?? <CalendarIcon />}
-          </label>
+          {!naturalMode() && (
+            <label
+              ref={element => (actionButtons[1] = element)}
+              class="datetime-neo__trigger"
+              for={nativeInputId}
+              tabindex={activeItem() === editableSegments().length + 1 ? 0 : -1}
+              aria-label="Open date and time picker"
+              onFocus={() => setActiveItem(editableSegments().length + 1)}
+              onClick={openPicker}
+              onKeyDown={event => {
+                if (event.key === ' ' || event.key === 'Enter') {
+                  event.preventDefault()
+                  openPicker()
+                  return
+                }
+                if (event.key === 'ArrowLeft') {
+                  event.preventDefault()
+                  selectControlItem(editableSegments().length, true)
+                  return
+                }
+                if (event.key === 'ArrowRight') {
+                  event.preventDefault()
+                  selectControlItem(editableSegments().length + 2, true)
+                  return
+                }
+                if (event.key === 'Home') {
+                  event.preventDefault()
+                  selectControlItem(0, true)
+                  return
+                }
+                if (event.key === 'End') {
+                  event.preventDefault()
+                  selectControlItem(editableSegments().length + actionButtons.length - 1, true)
+                }
+              }}
+            >
+              {local.calendarIcon ?? <CalendarIcon />}
+            </label>
+          )}
         </span>
       )}
       <input

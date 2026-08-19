@@ -223,6 +223,11 @@
   width: 100%;
 }
 
+.datetime-neo[data-wrapped][data-time-offset] > .datetime-neo__trailing {
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+}
+
 .datetime-neo[data-wrapped] > .datetime-neo__editor > .datetime-neo__value {
   align-content: center;
   display: grid;
@@ -368,7 +373,7 @@
   transition-delay: 100ms;
 }
 
-.datetime-neo:not(:hover):not(:focus-within) .datetime-neo__timezone {
+.datetime-neo:not([data-wrapped]):not(:hover):not(:focus-within) .datetime-neo__timezone {
   margin-right: calc(-1 * var(--datetime-neo-actions-width, 0px));
   padding-right: 0.375rem;
 }

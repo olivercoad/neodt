@@ -96,9 +96,7 @@
   white-space: nowrap;
 }
 
-.datetime-neo__date-row,
-.datetime-neo__time-row,
-.datetime-neo__between {
+.datetime-neo__row {
   display: inline;
 }
 
@@ -236,21 +234,10 @@
 .datetime-neo[data-wrapped]
   > .datetime-neo__editor
   > .datetime-neo__value
-  > .datetime-neo__date-row,
-.datetime-neo[data-wrapped]
-  > .datetime-neo__editor
-  > .datetime-neo__value
-  > .datetime-neo__time-row {
+  > .datetime-neo__row {
   align-items: center;
   display: flex;
   min-width: 0;
-}
-
-.datetime-neo[data-wrapped]
-  > .datetime-neo__editor
-  > .datetime-neo__value
-  > .datetime-neo__between {
-  display: none;
 }
 
 .datetime-neo[data-wrapped] > .datetime-neo__editor > .datetime-neo__timezone,

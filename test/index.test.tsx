@@ -69,8 +69,9 @@ describe('Neodt', () => {
 
     await nextRender()
     expect(control.dataset.wrapped).toBeUndefined()
-    expect(control.querySelector('.datetime-neo__date-row')).not.toBeNull()
-    expect(control.querySelector('.datetime-neo__time-row')).not.toBeNull()
+    expect(control.querySelectorAll(':scope > .datetime-neo__editor .datetime-neo__row')).toHaveLength(
+      2,
+    )
     const measurement = control.querySelector('.datetime-neo__measurement')!
     expect(measurement.classList).toContain('datetime-neo__editor')
     expect(measurement.querySelector('.datetime-neo__value')).not.toBeNull()
@@ -108,8 +109,9 @@ describe('Neodt', () => {
 
     await nextRender()
     expect(control.dataset.wrapped).toBe('')
-    expect(control.querySelector('.datetime-neo__date-row')?.textContent).toContain('17/08/2026')
-    expect(control.querySelector('.datetime-neo__time-row')?.textContent).toContain('15:30')
+    const rows = control.querySelectorAll(':scope > .datetime-neo__editor .datetime-neo__row')
+    expect(rows[0]?.textContent).toContain('17/08/2026')
+    expect(rows[1]?.textContent).toContain('15:30')
     control.querySelector<HTMLButtonElement>('.datetime-neo__segment')!.focus()
     await nextRender()
     expect(control.dataset.wrapped).toBe('')

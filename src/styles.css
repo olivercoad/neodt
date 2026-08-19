@@ -17,6 +17,24 @@
   position: relative;
 }
 
+.datetime-neo__measurements {
+  left: 0;
+  overflow: hidden;
+  position: absolute;
+  top: 0;
+  visibility: hidden;
+  white-space: nowrap;
+  width: max-content;
+}
+
+.datetime-neo__measurement {
+  display: block;
+}
+
+.datetime-neo__measurements .datetime-neo__editor {
+  width: max-content;
+}
+
 .datetime-neo:focus-within {
   border-color: var(--datetime-neo-focus);
   box-shadow: 0 0 0 3px var(--datetime-neo-focus-ring);
@@ -66,7 +84,7 @@
   );
 }
 
-.datetime-neo:not(:hover):not(:focus-within) .datetime-neo__editor {
+.datetime-neo:not(:hover):not(:focus-within) > .datetime-neo__editor {
   margin-right: calc(-1 * var(--datetime-neo-actions-width, 0px));
   transition-delay: 320ms;
   width: 100%;
@@ -76,6 +94,12 @@
   opacity: 1;
   transition: opacity 220ms ease;
   white-space: nowrap;
+}
+
+.datetime-neo__date-row,
+.datetime-neo__time-row,
+.datetime-neo__between {
+  display: inline;
 }
 
 .datetime-neo__empty-area {
@@ -154,6 +178,22 @@
   padding: 0.16rem 0.18rem 0.16rem 0.08rem;
 }
 
+.datetime-neo__natural-entry,
+.datetime-neo__natural-result {
+  align-items: center;
+  display: flex;
+  min-width: 0;
+}
+
+.datetime-neo__natural-entry {
+  flex: 1 1 auto;
+}
+
+.datetime-neo__natural-result {
+  flex: 0 1 auto;
+  margin-left: auto;
+}
+
 .datetime-neo__natural-prefix > span {
   font-size: 1.1em;
   line-height: 1;
@@ -171,6 +211,72 @@
   transition:
     opacity 220ms ease,
     transform 220ms ease;
+}
+
+.datetime-neo[data-wrapped] {
+  align-items: stretch;
+  min-height: 4.5rem;
+}
+
+.datetime-neo[data-wrapped] > .datetime-neo__editor {
+  align-items: stretch;
+  flex: 1 1 auto;
+  overflow: hidden;
+  width: 100%;
+}
+
+.datetime-neo[data-wrapped] > .datetime-neo__editor > .datetime-neo__value {
+  align-content: center;
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.datetime-neo[data-wrapped]
+  > .datetime-neo__editor
+  > .datetime-neo__value
+  > .datetime-neo__date-row,
+.datetime-neo[data-wrapped]
+  > .datetime-neo__editor
+  > .datetime-neo__value
+  > .datetime-neo__time-row {
+  align-items: center;
+  display: flex;
+  min-width: 0;
+}
+
+.datetime-neo[data-wrapped]
+  > .datetime-neo__editor
+  > .datetime-neo__value
+  > .datetime-neo__between {
+  display: none;
+}
+
+.datetime-neo[data-wrapped] > .datetime-neo__editor > .datetime-neo__timezone,
+.datetime-neo[data-wrapped]
+  > .datetime-neo__editor
+  > .datetime-neo__natural-result
+  > .datetime-neo__timezone {
+  align-self: center;
+}
+
+.datetime-neo[data-wrapped] > .datetime-neo__editor > .datetime-neo__natural-entry,
+.datetime-neo[data-wrapped] > .datetime-neo__editor > .datetime-neo__natural-result {
+  min-height: 50%;
+}
+
+.datetime-neo[data-wrapped] > .datetime-neo__editor > .datetime-neo__natural-entry {
+  grid-row: 1;
+}
+
+.datetime-neo[data-wrapped] > .datetime-neo__editor > .datetime-neo__natural-result {
+  grid-row: 2;
+}
+
+.datetime-neo[data-wrapped][data-natural] > .datetime-neo__editor {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
 }
 
 .datetime-neo__native-input {
@@ -205,7 +311,9 @@
   background: var(--datetime-neo-hover);
 }
 
-.datetime-neo[data-empty]:not(:hover):not(:focus-within) .datetime-neo__value {
+.datetime-neo[data-empty]:not(:hover):not(:focus-within)
+  > .datetime-neo__editor
+  > .datetime-neo__value {
   opacity: 0;
   transition-delay: 100ms;
 }

@@ -45,6 +45,7 @@ export interface NeodtProps extends JSX.HTMLAttributes<HTMLSpanElement> {
 }
 
 const editableTypes = new Set<SegmentName>(['year', 'month', 'day', 'hour', 'minute', 'dayPeriod'])
+const timeTypes = new Set<SegmentName>(['hour', 'minute', 'dayPeriod'])
 const systemLocale = new Intl.DateTimeFormat().resolvedOptions().locale
 
 function parseLocal(value: string, zone: Zone): DateTime | undefined {
@@ -84,10 +85,10 @@ function partsFor(
     .map(part =>
       editableTypes.has(part.type as SegmentName)
         ? {
-          type: part.type as SegmentName,
-          value: part.type === 'year' ? part.value.padStart(4, '0') : part.value,
-          editable: true,
-        }
+            type: part.type as SegmentName,
+            value: part.type === 'year' ? part.value.padStart(4, '0') : part.value,
+            editable: true,
+          }
         : { type: part.type, value: part.value, editable: false },
     )
 }
@@ -104,6 +105,28 @@ function naturalPreview(
 
 function timeOffset(date: DateTime): string {
   return date.toFormat('ZZ')
+}
+
+function splitDateAndTime(parts: DisplayPart[]) {
+  const indexed = parts.map((part, index) => ({ part, index }))
+  const dateIndexes = indexed
+    .filter(({ part }) => part.editable && !timeTypes.has(part.type))
+    .map(({ index }) => index)
+  const timeIndexes = indexed
+    .filter(({ part }) => part.editable && timeTypes.has(part.type))
+    .map(({ index }) => index)
+  const dateStart = dateIndexes[0] ?? 0
+  const dateEnd = dateIndexes.at(-1) ?? -1
+  const timeStart = timeIndexes[0] ?? 0
+  const timeEnd = timeIndexes.at(-1) ?? -1
+  const dateFirst = dateStart < timeStart
+  const firstEnd = dateFirst ? dateEnd : timeEnd
+  const secondStart = dateFirst ? timeStart : dateStart
+  return {
+    first: indexed.slice(0, firstEnd + 1),
+    between: indexed.slice(firstEnd + 1, secondStart),
+    second: indexed.slice(secondStart),
+  }
 }
 
 function digitLimit(segment: SegmentName): number {
@@ -123,14 +146,14 @@ function isCompleteSegment(segment: SegmentName, digits: string, hour12: boolean
     segment === 'month'
       ? 12
       : segment === 'day'
-        ? 31
-        : segment === 'hour'
-          ? hour12
-            ? 12
-            : 23
-          : segment === 'minute'
-            ? 59
-            : undefined
+      ? 31
+      : segment === 'hour'
+      ? hour12
+        ? 12
+        : 23
+      : segment === 'minute'
+      ? 59
+      : undefined
   return maximum !== undefined && Number(digits) * 10 > maximum
 }
 
@@ -247,17 +270,20 @@ function Neodt(props: NeodtProps): JSX.Element {
   const segmentButtons: HTMLElement[] = []
   const actionButtons: HTMLElement[] = []
   const [activeItem, setActiveItem] = createSignal(0)
+  const [control, setControl] = createSignal<HTMLSpanElement>()
   const [editor, setEditor] = createSignal<HTMLSpanElement>()
   const [editorHasHiddenEnd, setEditorHasHiddenEnd] = createSignal(false)
+  const [wrap, setWrap] = createSignal(false)
   let nativeInput: HTMLInputElement | undefined
   let naturalInput: HTMLInputElement | undefined
   const [actions, setActions] = createSignal<HTMLSpanElement>()
   const actionSize =
-    typeof ResizeObserver === 'undefined'
-      ? { width: 0 }
-      : createElementSize(actions)
+    typeof ResizeObserver === 'undefined' ? { width: 0 } : createElementSize(actions)
   const editorSize =
     typeof ResizeObserver === 'undefined' ? { width: 0 } : createElementSize(editor)
+  const controlSize =
+    typeof ResizeObserver === 'undefined' ? { width: 0 } : createElementSize(control)
+  const [measurements, setMeasurements] = createSignal<HTMLSpanElement>()
   const nativeInputId = createUniqueId()
   let hasOpenedNaturalInput = false
   const naturalPlaceholderAnimation = createNaturalPlaceholder(setNaturalPlaceholder)
@@ -270,6 +296,20 @@ function Neodt(props: NeodtProps): JSX.Element {
   )
   const naturalCompletions = createMemo(() => getNaturalDateCompletions(naturalText()))
   const activeNaturalCompletion = createMemo(() => naturalCompletions()[naturalSuggestion()])
+  const displayedParts = createMemo(() => splitDateAndTime(segments()))
+  // Day-period labels can be widest at midnight, midday, or late evening depending on the locale.
+  const widestParts = createMemo(() =>
+    [0, 12, 23].map(hour =>
+      splitDateAndTime(
+        partsFor(
+          `2088-12-28T${hour.toString().padStart(2, '0')}:59`,
+          referenceZone(),
+          locale(),
+          local.formatOptions,
+        ),
+      ),
+    ),
+  )
 
   const updateEditorOverflow = () => {
     const element = editor()
@@ -305,6 +345,23 @@ function Neodt(props: NeodtProps): JSX.Element {
     updateEditorOverflow()
   })
 
+  createEffect(() => {
+    controlSize.width
+    widestParts()
+    local.showTimeOffset
+    measurements()
+    queueMicrotask(() => {
+      const availableWidth = control()?.clientWidth ?? 0
+      const requiredWidth = Math.max(
+        0,
+        ...[
+          ...(measurements()?.querySelectorAll<HTMLElement>('.datetime-neo__measurement') ?? []),
+        ].map(element => element.scrollWidth),
+      )
+      setWrap(availableWidth > 0 && requiredWidth > availableWidth)
+    })
+  })
+
   const emitValue = (next: DateTime | undefined) => {
     if (local.value === undefined) setUncontrolledValue(next)
     local.onValueChange?.(next ?? null)
@@ -320,10 +377,7 @@ function Neodt(props: NeodtProps): JSX.Element {
 
   const commitTypedYear = () => {
     const pending = typed()
-    if (
-      pending?.digits.length === 2 &&
-      editableSegments()[pending.index]?.type === 'year'
-    ) {
+    if (pending?.digits.length === 2 && editableSegments()[pending.index]?.type === 'year') {
       setSegment('year', `${closestYear(pending.digits, local.referenceTime)}`)
     }
     setTyped(undefined)
@@ -377,10 +431,7 @@ function Neodt(props: NeodtProps): JSX.Element {
           if (isCleared('month')) {
             // Reset to January as Jan has 31 days
             date = date.set({ month: 1 })
-          } else if (
-            isCleared('year') &&
-            (date.month === 2 || (date.month === 3 && amount < 0))
-          ) {
+          } else if (isCleared('year') && (date.month === 2 || (date.month === 3 && amount < 0))) {
             date = date.set({ year: nearestLeapYear(date.year) })
           }
         }
@@ -581,7 +632,8 @@ function Neodt(props: NeodtProps): JSX.Element {
     if (!displayedValue) return
     const copiedValue = allSegmentsSelected()
       ? displayedValue.textContent ?? ''
-      : (cleared().size ? draftDate() : value() ?? draftDate()).toISO({ precision: 'minutes' }) ?? ''
+      : (cleared().size ? draftDate() : value() ?? draftDate()).toISO({ precision: 'minutes' }) ??
+        ''
     event.clipboardData?.setData('text/plain', copiedValue)
     event.preventDefault()
   }
@@ -701,13 +753,16 @@ function Neodt(props: NeodtProps): JSX.Element {
 
   return (
     <span
+      ref={setControl}
       {...rest}
       class={`datetime-neo ${local.class ?? ''}`}
       classList={local.classList}
       data-actions={!local.readonly && !local.disabled ? '' : undefined}
       data-disabled={local.disabled ? '' : undefined}
       data-empty={value() ? undefined : ''}
+      data-natural={naturalMode() ? '' : undefined}
       data-readonly={local.readonly ? '' : undefined}
+      data-wrapped={wrap() ? '' : undefined}
     >
       <span
         ref={setEditor}
@@ -729,146 +784,234 @@ function Neodt(props: NeodtProps): JSX.Element {
       >
         {naturalMode() ? (
           <>
-            <span class="datetime-neo__natural-prefix" aria-hidden="true">
-              <span>@</span>
+            <span class="datetime-neo__natural-entry">
+              <span class="datetime-neo__natural-prefix" aria-hidden="true">
+                <span>@</span>
+              </span>
+              <span class="datetime-neo__natural-field">
+                <input
+                  ref={element => (naturalInput = element)}
+                  class="datetime-neo__natural-input"
+                  type="text"
+                  value={naturalText()}
+                  placeholder={naturalPlaceholder()}
+                  disabled={local.disabled}
+                  onInput={event => updateNaturalText(event.currentTarget.value)}
+                  onKeyDown={event => {
+                    if (event.key === 'ArrowDown') {
+                      event.preventDefault()
+                      cycleNaturalCompletion(1)
+                      return
+                    }
+                    if (event.key === 'ArrowUp') {
+                      event.preventDefault()
+                      cycleNaturalCompletion(-1)
+                      return
+                    }
+                    if (
+                      event.key === 'Tab' &&
+                      !event.shiftKey &&
+                      event.currentTarget.selectionStart === event.currentTarget.value.length &&
+                      acceptNaturalCompletion()
+                    ) {
+                      event.preventDefault()
+                      return
+                    }
+                    if (event.key === 'Enter') {
+                      event.preventDefault()
+                      confirmNaturalInput()
+                      return
+                    }
+                    if (event.key === 'Escape') {
+                      event.preventDefault()
+                      closeNaturalInput()
+                      return
+                    }
+                  }}
+                />
+                {activeNaturalCompletion() && (
+                  <span class="datetime-neo__natural-ghost" aria-hidden="true">
+                    <span class="datetime-neo__natural-ghost-typed">{naturalText()}</span>
+                    {activeNaturalCompletion()!.insertText.slice(naturalText().length)}
+                    <kbd>Tab</kbd>
+                  </span>
+                )}
+              </span>
             </span>
-            <span class="datetime-neo__natural-field">
-              <input
-                ref={element => (naturalInput = element)}
-                class="datetime-neo__natural-input"
-                type="text"
-                value={naturalText()}
-                placeholder={naturalPlaceholder()}
-                disabled={local.disabled}
-                onInput={event => updateNaturalText(event.currentTarget.value)}
-                onKeyDown={event => {
-                  if (event.key === 'ArrowDown') {
-                    event.preventDefault()
-                    cycleNaturalCompletion(1)
-                    return
-                  }
-                  if (event.key === 'ArrowUp') {
-                    event.preventDefault()
-                    cycleNaturalCompletion(-1)
-                    return
-                  }
-                  if (
-                    event.key === 'Tab' &&
-                    !event.shiftKey &&
-                    event.currentTarget.selectionStart === event.currentTarget.value.length &&
-                    acceptNaturalCompletion()
-                  ) {
-                    event.preventDefault()
-                    return
-                  }
-                  if (event.key === 'Enter') {
-                    event.preventDefault()
-                    confirmNaturalInput()
-                    return
-                  }
-                  if (event.key === 'Escape') {
-                    event.preventDefault()
-                    closeNaturalInput()
-                    return
-                  }
-                }}
-              />
-              {activeNaturalCompletion() && (
-                <span class="datetime-neo__natural-ghost" aria-hidden="true">
-                  <span class="datetime-neo__natural-ghost-typed">{naturalText()}</span>
-                  {activeNaturalCompletion()!.insertText.slice(naturalText().length)}
-                  <kbd>Tab</kbd>
+            <span class="datetime-neo__natural-result">
+              <span class="datetime-neo__natural-preview" aria-live="polite">
+                {naturalDate() ? naturalPreview(naturalDate()!, locale(), local.formatOptions) : ''}
+              </span>
+              {local.showTimeOffset && (
+                <span class="datetime-neo__timezone" aria-hidden="true">
+                  {timeOffset(naturalDate() ?? local.referenceTime)}
                 </span>
               )}
-            </span>
-            <span class="datetime-neo__natural-preview" aria-live="polite">
-              {naturalDate()
-                ? naturalPreview(naturalDate()!, locale(), local.formatOptions)
-                : ''}
             </span>
           </>
         ) : (
           <span class="datetime-neo__value">
-            <Index each={segments()}>
-              {part =>
-                part().editable ? (
-                  (() => {
-                    const segment = () => part() as Segment
-                    const index = () =>
-                      editableSegments().findIndex(candidate => candidate.type === segment().type)
-                    return (
-                      <span
-                        ref={element => (segmentButtons[index()] = element)}
-                        class="datetime-neo__segment"
-                        classList={{
-                          'datetime-neo__segment--selected': selected() === index(),
-                          'datetime-neo__segment--all-selected': allSegmentsSelected(),
-                        }}
-                        role="spinbutton"
-                        contenteditable={!local.disabled && !local.readonly ? true : undefined}
-                        spellcheck={false}
-                        inputmode={segment().type === 'dayPeriod' ? 'text' : 'decimal'}
-                        tabindex={
-                          local.disabled || local.readonly
-                            ? undefined
-                            : activeItem() === index()
+            <span class="datetime-neo__date-row">
+              <Index each={displayedParts().first}>
+                {indexedPart => {
+                  const part = () => indexedPart().part
+                  return part().editable ? (
+                    (() => {
+                      const segment = () => part() as Segment
+                      const index = () =>
+                        editableSegments().findIndex(candidate => candidate.type === segment().type)
+                      return (
+                        <span
+                          ref={element => (segmentButtons[index()] = element)}
+                          class="datetime-neo__segment"
+                          classList={{
+                            'datetime-neo__segment--selected': selected() === index(),
+                            'datetime-neo__segment--all-selected': allSegmentsSelected(),
+                          }}
+                          role="spinbutton"
+                          contenteditable={!local.disabled && !local.readonly ? true : undefined}
+                          spellcheck={false}
+                          inputmode={segment().type === 'dayPeriod' ? 'text' : 'decimal'}
+                          tabindex={
+                            local.disabled || local.readonly
+                              ? undefined
+                              : activeItem() === index()
                               ? 0
                               : -1
-                        }
-                        aria-disabled={local.disabled || undefined}
-                        aria-label={part().type}
-                        aria-selected={selected() === index()}
-                        onFocus={() => selectSegment(index())}
-                        onBlur={commitTypedYear}
-                        onClick={() => selectSegment(index())}
-                        onKeyDown={event => onSegmentKeyDown(event, index(), segment())}
-                        onInput={event => {
-                          const input = event.currentTarget
-                          // `textContent` may be unchanged after an unhandled key, so use the
-                          // inserted character rather than accidentally re-entering its last digit.
-                          const enteredCharacter = event.data
-                          const dayPeriod =
-                            segment().type === 'dayPeriod' && enteredCharacter
-                              ? dayPeriodForInput(enteredCharacter)
-                              : undefined
-                          if (dayPeriod !== undefined) {
-                            setDayPeriod(dayPeriod)
-                            return
                           }
-                          input.textContent = isCleared(segment().type)
-                            ? placeholderFor(segment().type)
-                            : segment().value
-                          if (segment().type !== 'dayPeriod' && enteredCharacter === '.') {
-                            selectSegment(index() + 1, true)
-                            return
+                          aria-disabled={local.disabled || undefined}
+                          aria-label={part().type}
+                          aria-selected={selected() === index()}
+                          onFocus={() => selectSegment(index())}
+                          onBlur={commitTypedYear}
+                          onClick={() => selectSegment(index())}
+                          onKeyDown={event => onSegmentKeyDown(event, index(), segment())}
+                          onInput={event => {
+                            const input = event.currentTarget
+                            // `textContent` may be unchanged after an unhandled key, so use the
+                            // inserted character rather than accidentally re-entering its last digit.
+                            const enteredCharacter = event.data
+                            const dayPeriod =
+                              segment().type === 'dayPeriod' && enteredCharacter
+                                ? dayPeriodForInput(enteredCharacter)
+                                : undefined
+                            if (dayPeriod !== undefined) {
+                              setDayPeriod(dayPeriod)
+                              return
+                            }
+                            input.textContent = isCleared(segment().type)
+                              ? placeholderFor(segment().type)
+                              : segment().value
+                            if (segment().type !== 'dayPeriod' && enteredCharacter === '.') {
+                              selectSegment(index() + 1, true)
+                              return
+                            }
+                            if (/^\d$/.test(enteredCharacter ?? ''))
+                              enterSegmentDigit(index(), segment(), enteredCharacter!)
+                          }}
+                        >
+                          {isCleared(segment().type) ? (
+                            <span class="datetime-neo__placeholder">
+                              {placeholderFor(segment().type)}
+                            </span>
+                          ) : (
+                            displaySegmentValue(index(), segment())
+                          )}
+                        </span>
+                      )
+                    })()
+                  ) : (
+                    <span class="datetime-neo__separator" aria-hidden="true">
+                      {part().value}
+                    </span>
+                  )
+                }}
+              </Index>
+            </span>
+            <span class="datetime-neo__between">
+              <Index each={displayedParts().between}>{part => part().part.value}</Index>
+            </span>
+            <span class="datetime-neo__time-row">
+              <Index each={displayedParts().second}>
+                {indexedPart => {
+                  const part = () => indexedPart().part
+                  return part().editable ? (
+                    (() => {
+                      const segment = () => part() as Segment
+                      const index = () =>
+                        editableSegments().findIndex(candidate => candidate.type === segment().type)
+                      return (
+                        <span
+                          ref={element => (segmentButtons[index()] = element)}
+                          class="datetime-neo__segment"
+                          classList={{
+                            'datetime-neo__segment--selected': selected() === index(),
+                            'datetime-neo__segment--all-selected': allSegmentsSelected(),
+                          }}
+                          role="spinbutton"
+                          contenteditable={!local.disabled && !local.readonly ? true : undefined}
+                          spellcheck={false}
+                          inputmode={segment().type === 'dayPeriod' ? 'text' : 'decimal'}
+                          tabindex={
+                            local.disabled || local.readonly
+                              ? undefined
+                              : activeItem() === index()
+                              ? 0
+                              : -1
                           }
-                          if (/^\d$/.test(enteredCharacter ?? ''))
-                            enterSegmentDigit(index(), segment(), enteredCharacter!)
-                        }}
-                      >
-                        {isCleared(segment().type) ? (
-                          <span class="datetime-neo__placeholder">
-                            {placeholderFor(segment().type)}
-                          </span>
-                        ) : (
-                          displaySegmentValue(index(), segment())
-                        )}
-                      </span>
-                    )
-                  })()
-                ) : (
-                  <span class="datetime-neo__separator" aria-hidden="true">
-                    {part().value}
-                  </span>
-                )
-              }
-            </Index>
+                          aria-disabled={local.disabled || undefined}
+                          aria-label={part().type}
+                          aria-selected={selected() === index()}
+                          onFocus={() => selectSegment(index())}
+                          onBlur={commitTypedYear}
+                          onClick={() => selectSegment(index())}
+                          onKeyDown={event => onSegmentKeyDown(event, index(), segment())}
+                          onInput={event => {
+                            const input = event.currentTarget
+                            const enteredCharacter = event.data
+                            const dayPeriod =
+                              segment().type === 'dayPeriod' && enteredCharacter
+                                ? dayPeriodForInput(enteredCharacter)
+                                : undefined
+                            if (dayPeriod !== undefined) {
+                              setDayPeriod(dayPeriod)
+                              return
+                            }
+                            input.textContent = isCleared(segment().type)
+                              ? placeholderFor(segment().type)
+                              : segment().value
+                            if (segment().type !== 'dayPeriod' && enteredCharacter === '.') {
+                              selectSegment(index() + 1, true)
+                              return
+                            }
+                            if (/^\d$/.test(enteredCharacter ?? ''))
+                              enterSegmentDigit(index(), segment(), enteredCharacter!)
+                          }}
+                        >
+                          {isCleared(segment().type) ? (
+                            <span class="datetime-neo__placeholder">
+                              {placeholderFor(segment().type)}
+                            </span>
+                          ) : (
+                            displaySegmentValue(index(), segment())
+                          )}
+                        </span>
+                      )
+                    })()
+                  ) : (
+                    <span class="datetime-neo__separator" aria-hidden="true">
+                      {part().value}
+                    </span>
+                  )
+                }}
+              </Index>
+            </span>
           </span>
         )}
         {!naturalMode() && (
           <span class="datetime-neo__empty-area" aria-hidden="true" onClick={onEmptyAreaClick} />
         )}
-        {local.showTimeOffset && (
+        {local.showTimeOffset && !naturalMode() && (
           <span
             class="datetime-neo__timezone"
             aria-hidden="true"
@@ -878,8 +1021,8 @@ function Neodt(props: NeodtProps): JSX.Element {
               naturalMode()
                 ? naturalDate() ?? local.referenceTime
                 : cleared().size
-                  ? draftDate()
-                  : value() ?? draftDate(),
+                ? draftDate()
+                : value() ?? draftDate(),
             )}
           </span>
         )}
@@ -992,6 +1135,42 @@ function Neodt(props: NeodtProps): JSX.Element {
         onInput={event => updateFromNativeInput(event.currentTarget.value)}
         onChange={event => updateFromNativeInput(event.currentTarget.value)}
       />
+      <span ref={setMeasurements} class="datetime-neo__measurements" aria-hidden="true">
+        <Index each={widestParts()}>
+          {parts => (
+            <span class="datetime-neo__measurement datetime-neo__editor">
+              <span class="datetime-neo__value">
+                <Index each={parts().first}>
+                  {part => (
+                    <span
+                      class={
+                        part().part.editable ? 'datetime-neo__segment' : 'datetime-neo__separator'
+                      }
+                    >
+                      {part().part.value}
+                    </span>
+                  )}
+                </Index>
+                <Index each={parts().between}>
+                  {part => <span class="datetime-neo__separator">{part().part.value}</span>}
+                </Index>
+                <Index each={parts().second}>
+                  {part => (
+                    <span
+                      class={
+                        part().part.editable ? 'datetime-neo__segment' : 'datetime-neo__separator'
+                      }
+                    >
+                      {part().part.value}
+                    </span>
+                  )}
+                </Index>
+              </span>
+              {local.showTimeOffset && <span class="datetime-neo__timezone">+12:45</span>}
+            </span>
+          )}
+        </Index>
+      </span>
     </span>
   )
 }

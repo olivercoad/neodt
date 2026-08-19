@@ -43,10 +43,99 @@ describe('environment', () => {
 })
 
 describe('Neodt', () => {
+  it('does not wrap when the widest idle locale value fits', async () => {
+    const clientWidth = vi
+      .spyOn(HTMLElement.prototype, 'clientWidth', 'get')
+      .mockImplementation(function () {
+        return this.classList.contains('datetime-neo') ? 400 : 0
+      })
+    const scrollWidth = vi
+      .spyOn(HTMLElement.prototype, 'scrollWidth', 'get')
+      .mockImplementation(function () {
+        return this.classList.contains('datetime-neo__measurement') ? 300 : 0
+      })
+    let dispose: (() => void) | undefined
+    const control = createRoot(rootDispose => {
+      dispose = rootDispose
+      return (
+        <DateTimeLocal
+          referenceTime={referenceTime}
+          locale="en-GB"
+          value={date('2026-08-17T15:30')}
+        />
+      ) as HTMLSpanElement
+    })
+    document.body.append(control)
+
+    await nextRender()
+    expect(control.dataset.wrapped).toBeUndefined()
+    expect(control.querySelector('.datetime-neo__date-row')).not.toBeNull()
+    expect(control.querySelector('.datetime-neo__time-row')).not.toBeNull()
+    const measurement = control.querySelector('.datetime-neo__measurement')!
+    expect(measurement.classList).toContain('datetime-neo__editor')
+    expect(measurement.querySelector('.datetime-neo__value')).not.toBeNull()
+    expect(measurement.querySelector('.datetime-neo__segment')).not.toBeNull()
+    expect(measurement.querySelector('.datetime-neo__separator')).not.toBeNull()
+    dispose!()
+    clientWidth.mockRestore()
+    scrollWidth.mockRestore()
+  })
+
+  it('locks a two-row layout from idle width across focus and natural entry', async () => {
+    const clientWidth = vi
+      .spyOn(HTMLElement.prototype, 'clientWidth', 'get')
+      .mockImplementation(function () {
+        return this.classList.contains('datetime-neo') ? 120 : 0
+      })
+    const scrollWidth = vi
+      .spyOn(HTMLElement.prototype, 'scrollWidth', 'get')
+      .mockImplementation(function () {
+        return this.classList.contains('datetime-neo__measurement') ? 300 : 0
+      })
+    let dispose: (() => void) | undefined
+    const control = createRoot(rootDispose => {
+      dispose = rootDispose
+      return (
+        <DateTimeLocal
+          referenceTime={referenceTime}
+          locale="en-GB"
+          showTimeOffset
+          value={date('2026-08-17T15:30')}
+        />
+      ) as HTMLSpanElement
+    })
+    document.body.append(control)
+
+    await nextRender()
+    expect(control.dataset.wrapped).toBe('')
+    expect(control.querySelector('.datetime-neo__date-row')?.textContent).toContain('17/08/2026')
+    expect(control.querySelector('.datetime-neo__time-row')?.textContent).toContain('15:30')
+    control.querySelector<HTMLButtonElement>('.datetime-neo__segment')!.focus()
+    await nextRender()
+    expect(control.dataset.wrapped).toBe('')
+    control
+      .querySelector<HTMLButtonElement>('[aria-label="Enter date and time naturally"]')!
+      .click()
+    await nextRender()
+    expect(control.dataset.wrapped).toBe('')
+    expect(control.querySelector('.datetime-neo__natural-entry')).not.toBeNull()
+    expect(control.querySelector('.datetime-neo__natural-result')).not.toBeNull()
+    expect(
+      getComputedStyle(control.querySelector('.datetime-neo__measurement > .datetime-neo__value')!)
+        .display,
+    ).not.toBe('grid')
+    control.remove()
+    dispose!()
+    clientWidth.mockRestore()
+    scrollWidth.mockRestore()
+  })
+
   it('uses the system locale when locale is omitted', () =>
     createRoot(() => {
       const value = date('2026-08-17T15:30')
-      const control = <DateTimeLocal referenceTime={referenceTime} value={value} /> as HTMLSpanElement
+      const control = (
+        <DateTimeLocal referenceTime={referenceTime} value={value} />
+      ) as HTMLSpanElement
       const expected = value
         .setLocale(new Intl.DateTimeFormat().resolvedOptions().locale)
         .toLocaleParts({
@@ -120,7 +209,7 @@ describe('Neodt', () => {
     })
     document.body.append(control)
     const editor = control.querySelector<HTMLSpanElement>('.datetime-neo__editor')!
-    const segments = control.querySelectorAll('.datetime-neo__segment')
+    const segments = editor.querySelectorAll('.datetime-neo__segment')
     const expected = '17/08/2026, 15:30'
     const isoDate = date('2026-08-17T15:30').toISO({ precision: 'minutes' })
     const normalCopy = copy(control.querySelector<HTMLButtonElement>('.datetime-neo__segment')!)
@@ -138,7 +227,7 @@ describe('Neodt', () => {
         segment.classList.contains('datetime-neo__segment--all-selected'),
       ),
     ).toBe(true)
-    expect(control.querySelector('.datetime-neo__timezone')).toBeNull()
+    expect(editor.querySelector('.datetime-neo__timezone')).toBeNull()
     const result = copy(control.querySelector<HTMLButtonElement>('.datetime-neo__segment')!)
     expect(result.prevented).toBe(true)
     expect(result.text).toBe(expected)
@@ -390,7 +479,11 @@ describe('Neodt', () => {
     expect(control.querySelector('.datetime-neo__natural-preview')?.textContent).not.toContain(
       'GMT',
     )
-    expect(control.querySelectorAll('.datetime-neo__timezone')).toHaveLength(1)
+    expect(
+      control.querySelectorAll(
+        '[role="group"] .datetime-neo__natural-result > .datetime-neo__timezone',
+      ),
+    ).toHaveLength(1)
     control.remove()
     dispose!()
   })
@@ -622,8 +715,7 @@ describe('Neodt', () => {
           />
         ) as HTMLSpanElement
         document.body.append(control)
-        const dayPeriod = () =>
-          control.querySelector<HTMLSpanElement>('[aria-label="dayPeriod"]')!
+        const dayPeriod = () => control.querySelector<HTMLSpanElement>('[aria-label="dayPeriod"]')!
         dayPeriod().textContent = 'PMa'
         dayPeriod().dispatchEvent(new InputEvent('input', { bubbles: true, data: 'a' }))
         nextRender().then(() => {
@@ -652,8 +744,7 @@ describe('Neodt', () => {
           />
         ) as HTMLSpanElement
         document.body.append(control)
-        const dayPeriod = () =>
-          control.querySelector<HTMLSpanElement>('[aria-label="dayPeriod"]')!
+        const dayPeriod = () => control.querySelector<HTMLSpanElement>('[aria-label="dayPeriod"]')!
         dayPeriod().textContent = 'p'
         dayPeriod().dispatchEvent(new InputEvent('input', { bubbles: true, data: 'p' }))
         nextRender().then(() => {
@@ -677,8 +768,7 @@ describe('Neodt', () => {
           />
         ) as HTMLSpanElement
         document.body.append(control)
-        const dayPeriod = () =>
-          control.querySelector<HTMLSpanElement>('[aria-label="dayPeriod"]')!
+        const dayPeriod = () => control.querySelector<HTMLSpanElement>('[aria-label="dayPeriod"]')!
         expect(dayPeriod().textContent).toBe('午後')
         dayPeriod().textContent = '午後午前'
         dayPeriod().dispatchEvent(new InputEvent('input', { bubbles: true, data: '午前' }))
@@ -703,8 +793,7 @@ describe('Neodt', () => {
           />
         ) as HTMLSpanElement
         document.body.append(control)
-        const dayPeriod = () =>
-          control.querySelector<HTMLSpanElement>('[aria-label="dayPeriod"]')!
+        const dayPeriod = () => control.querySelector<HTMLSpanElement>('[aria-label="dayPeriod"]')!
         key(dayPeriod(), 'a')
         nextRender().then(() => {
           expect(dayPeriod().textContent).toBe('午前')
@@ -732,8 +821,7 @@ describe('Neodt', () => {
           />
         ) as HTMLSpanElement
         document.body.append(control)
-        const dayPeriod = () =>
-          control.querySelector<HTMLSpanElement>('[aria-label="dayPeriod"]')!
+        const dayPeriod = () => control.querySelector<HTMLSpanElement>('[aria-label="dayPeriod"]')!
         dayPeriod().textContent = 'x'
         dayPeriod().dispatchEvent(new InputEvent('input', { bubbles: true, data: 'x' }))
         nextRender().then(() => {
@@ -752,7 +840,9 @@ describe('Neodt', () => {
           <DateTimeLocal referenceTime={referenceTime} value={date('2026-08-17T15:30')} />
         ) as HTMLSpanElement
         document.body.append(control)
-        const segments = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')
+        const segments = control.querySelectorAll<HTMLButtonElement>(
+          '.datetime-neo__editor[role="group"] .datetime-neo__segment',
+        )
         segments[1]?.focus()
         nextRender().then(() => {
           expect(segments[1]?.getAttribute('aria-selected')).toBe('true')
@@ -793,7 +883,9 @@ describe('Neodt', () => {
           <DateTimeLocal referenceTime={referenceTime} value={date('2026-08-17T15:30')} />
         ) as HTMLSpanElement
         document.body.append(control)
-        const segments = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')
+        const segments = control.querySelectorAll<HTMLButtonElement>(
+          '.datetime-neo__editor[role="group"] .datetime-neo__segment',
+        )
         const actions = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__trigger')
         expect(control.querySelectorAll<HTMLElement>('[tabindex="0"]')).toHaveLength(1)
         expect(segments[0]?.tabIndex).toBe(0)
@@ -837,7 +929,9 @@ describe('Neodt', () => {
           />
         ) as HTMLSpanElement
         document.body.append(control)
-        const segments = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')
+        const segments = control.querySelectorAll<HTMLButtonElement>(
+          '.datetime-neo__editor[role="group"] .datetime-neo__segment',
+        )
         segments[0]!.focus()
         key(segments[0]!, '/')
         nextRender().then(() => {
@@ -912,7 +1006,9 @@ describe('Neodt', () => {
         document.body.append(control)
         const emptyArea = control.querySelector<HTMLSpanElement>('.datetime-neo__empty-area')!
         const firstSegment = control.querySelector<HTMLButtonElement>('.datetime-neo__segment')!
-        const segments = control.querySelectorAll<HTMLButtonElement>('.datetime-neo__segment')
+        const segments = control.querySelectorAll<HTMLButtonElement>(
+          '.datetime-neo__editor[role="group"] .datetime-neo__segment',
+        )
         segments[segments.length - 1]!.focus()
         const event = new MouseEvent('click', { bubbles: true, cancelable: true })
         emptyArea.dispatchEvent(event)
@@ -1345,9 +1441,9 @@ describe('Neodt', () => {
         key(day, 'ArrowUp')
         nextRender().then(() => {
           expect(day.textContent).toBe('29')
-          expect(control.querySelector<HTMLInputElement>('input[type="datetime-local"]')?.value).toBe(
-            '2024-02-29T15:30',
-          )
+          expect(
+            control.querySelector<HTMLInputElement>('input[type="datetime-local"]')?.value,
+          ).toBe('2024-02-29T15:30')
           key(day, 'ArrowUp')
           nextRender().then(() => {
             key(day, 'ArrowDown')
@@ -1472,7 +1568,9 @@ describe('Neodt', () => {
         key(year, '6')
         nextRender().then(() => {
           expect(year.textContent).toBe('26')
-          control.querySelector<HTMLButtonElement>('[aria-label="Open date and time picker"]')!.focus()
+          control
+            .querySelector<HTMLButtonElement>('[aria-label="Open date and time picker"]')!
+            .focus()
           nextRender().then(() => {
             expect(year.textContent).toBe('2026')
             control.remove()

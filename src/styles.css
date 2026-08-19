@@ -84,7 +84,7 @@
   );
 }
 
-.datetime-neo:not(:hover):not(:focus-within) > .datetime-neo__editor {
+.datetime-neo:not(:hover):not(:focus-within):not([data-time-offset]) > .datetime-neo__editor {
   margin-right: calc(-1 * var(--datetime-neo-actions-width, 0px));
   transition-delay: 320ms;
   width: 100%;
@@ -203,12 +203,12 @@
   flex: 0 0 auto;
   font-size: 0.82em;
   font-variant-numeric: tabular-nums;
-  margin-left: auto;
   padding: 0.16rem 0.18rem;
   text-align: right;
   transition:
-    opacity 220ms ease,
-    transform 220ms ease;
+    margin-right 220ms ease,
+    padding-right 220ms ease,
+    opacity 220ms ease;
 }
 
 .datetime-neo[data-wrapped] {
@@ -231,21 +231,10 @@
   white-space: nowrap;
 }
 
-.datetime-neo[data-wrapped]
-  > .datetime-neo__editor
-  > .datetime-neo__value
-  > .datetime-neo__row {
+.datetime-neo[data-wrapped] > .datetime-neo__editor > .datetime-neo__value > .datetime-neo__row {
   align-items: center;
   display: flex;
   min-width: 0;
-}
-
-.datetime-neo[data-wrapped] > .datetime-neo__editor > .datetime-neo__timezone,
-.datetime-neo[data-wrapped]
-  > .datetime-neo__editor
-  > .datetime-neo__natural-result
-  > .datetime-neo__timezone {
-  align-self: center;
 }
 
 .datetime-neo[data-wrapped] > .datetime-neo__editor > .datetime-neo__natural-entry,
@@ -360,10 +349,17 @@
   display: inline-flex;
   flex: 0 0 auto;
   gap: 0.125rem;
-  margin: 0.25rem 0 0.25rem auto;
+  margin: 0.25rem 0;
   padding-right: 0.375rem;
   transition: opacity 220ms ease 220ms;
   user-select: none;
+}
+
+.datetime-neo__trailing {
+  align-items: center;
+  display: inline-flex;
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .datetime-neo:not(:hover):not(:focus-within) .datetime-neo__actions {
@@ -372,9 +368,9 @@
   transition-delay: 100ms;
 }
 
-.datetime-neo[data-actions]:not(:hover):not(:focus-within) .datetime-neo__timezone {
-  transform: translateX(var(--datetime-neo-actions-offset, 0px));
-  transition-delay: 100ms;
+.datetime-neo:not(:hover):not(:focus-within) .datetime-neo__timezone {
+  margin-right: calc(-1 * var(--datetime-neo-actions-width, 0px));
+  padding-right: 0.375rem;
 }
 
 .datetime-neo[data-empty]:not(:hover):not(:focus-within) .datetime-neo__timezone {

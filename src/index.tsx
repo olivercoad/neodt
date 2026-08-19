@@ -813,12 +813,13 @@ function Neodt(props: NeodtProps): JSX.Element {
       {...rest}
       class={`datetime-neo ${local.class ?? ''}`}
       classList={local.classList}
-      data-actions={!local.readonly && !local.disabled ? '' : undefined}
       data-disabled={local.disabled ? '' : undefined}
       data-empty={value() ? undefined : ''}
       data-natural={naturalMode() ? '' : undefined}
       data-readonly={local.readonly ? '' : undefined}
+      data-time-offset={local.showTimeOffset ? '' : undefined}
       data-wrapped={wrap() ? '' : undefined}
+      style={{ '--datetime-neo-actions-width': `${actionSize.width ?? 0}px` }}
     >
       <span
         ref={setEditor}
@@ -827,7 +828,6 @@ function Neodt(props: NeodtProps): JSX.Element {
         aria-label={local['aria-label'] ?? 'Date and time'}
         aria-readonly={local.readonly || undefined}
         data-overflowing={editorHasHiddenEnd() ? '' : undefined}
-        style={{ '--datetime-neo-actions-width': `${actionSize.width ?? 0}px` }}
         onScroll={updateEditorOverflow}
         onCopy={copyDateTime}
         onPaste={pasteDateTime}
@@ -898,11 +898,6 @@ function Neodt(props: NeodtProps): JSX.Element {
               <span class="datetime-neo__natural-preview" aria-live="polite">
                 {naturalDate() ? naturalPreview(naturalDate()!, locale(), local.formatOptions) : ''}
               </span>
-              {local.showTimeOffset && (
-                <span class="datetime-neo__timezone" aria-hidden="true">
-                  {timeOffset(naturalDate() ?? local.referenceTime)}
-                </span>
-              )}
             </span>
           </>
         ) : (
@@ -919,115 +914,115 @@ function Neodt(props: NeodtProps): JSX.Element {
         {!naturalMode() && (
           <span class="datetime-neo__empty-area" aria-hidden="true" onClick={onEmptyAreaClick} />
         )}
-        {local.showTimeOffset && !naturalMode() && (
-          <span
-            class="datetime-neo__timezone"
-            aria-hidden="true"
-            style={{ '--datetime-neo-actions-offset': `${actionSize.width ?? 0}px` }}
-          >
-            {timeOffset(
-              naturalMode()
-                ? naturalDate() ?? local.referenceTime
-                : cleared().size
-                ? draftDate()
-                : value() ?? draftDate(),
-            )}
-          </span>
-        )}
       </span>
-      {!local.readonly && !local.disabled && (
-        <span ref={setActions} class="datetime-neo__actions">
-          <button
-            ref={element => (actionButtons[0] = element)}
-            class="datetime-neo__trigger"
-            type="button"
-            tabindex={activeItem() === editableSegments().length ? 0 : -1}
-            disabled={local.disabled}
-            aria-label={
-              naturalMode()
-                ? naturalDate()
-                  ? 'Confirm natural-language date'
-                  : 'Cancel natural-language date'
-                : 'Enter date and time naturally'
-            }
-            onFocus={() => setActiveItem(editableSegments().length)}
-            onKeyDown={event => {
-              if (event.key === 'ArrowLeft') {
-                event.preventDefault()
-                selectControlItem(editableSegments().length - 1, true)
-                return
-              }
-              if (event.key === 'ArrowRight') {
-                event.preventDefault()
-                selectControlItem(editableSegments().length + 1, true)
-                return
-              }
-              if (event.key === 'Home') {
-                event.preventDefault()
-                selectControlItem(0, true)
-                return
-              }
-              if (event.key === 'End') {
-                event.preventDefault()
-                selectControlItem(editableSegments().length + actionButtons.length - 1, true)
-              }
-            }}
-            onClick={() =>
-              naturalMode()
-                ? naturalDate()
-                  ? confirmNaturalInput()
-                  : closeNaturalInput()
-                : openNaturalInput()
-            }
-          >
-            {naturalMode() ? (
-              naturalDate() ? (
-                <ConfirmIcon />
-              ) : (
-                <CancelIcon />
-              )
-            ) : (
-              local.magicIcon ?? <MagicIcon />
-            )}
-          </button>
-          {!naturalMode() && (
-            <label
-              ref={element => (actionButtons[1] = element)}
-              class="datetime-neo__trigger"
-              for={nativeInputId}
-              tabindex={activeItem() === editableSegments().length + 1 ? 0 : -1}
-              aria-label="Open date and time picker"
-              onFocus={() => setActiveItem(editableSegments().length + 1)}
-              onClick={openPicker}
-              onKeyDown={event => {
-                if (event.key === ' ' || event.key === 'Enter') {
-                  event.preventDefault()
-                  openPicker()
-                  return
+      {(local.showTimeOffset || (!local.readonly && !local.disabled)) && (
+        <span class="datetime-neo__trailing">
+          {local.showTimeOffset && (
+            <span class="datetime-neo__timezone" aria-hidden="true">
+              {timeOffset(
+                naturalMode()
+                  ? naturalDate() ?? local.referenceTime
+                  : cleared().size
+                  ? draftDate()
+                  : value() ?? draftDate(),
+              )}
+            </span>
+          )}
+          {!local.readonly && !local.disabled && (
+            <span ref={setActions} class="datetime-neo__actions">
+              <button
+                ref={element => (actionButtons[0] = element)}
+                class="datetime-neo__trigger"
+                type="button"
+                tabindex={activeItem() === editableSegments().length ? 0 : -1}
+                disabled={local.disabled}
+                aria-label={
+                  naturalMode()
+                    ? naturalDate()
+                      ? 'Confirm natural-language date'
+                      : 'Cancel natural-language date'
+                    : 'Enter date and time naturally'
                 }
-                if (event.key === 'ArrowLeft') {
-                  event.preventDefault()
-                  selectControlItem(editableSegments().length, true)
-                  return
+                onFocus={() => setActiveItem(editableSegments().length)}
+                onKeyDown={event => {
+                  if (event.key === 'ArrowLeft') {
+                    event.preventDefault()
+                    selectControlItem(editableSegments().length - 1, true)
+                    return
+                  }
+                  if (event.key === 'ArrowRight') {
+                    event.preventDefault()
+                    selectControlItem(editableSegments().length + 1, true)
+                    return
+                  }
+                  if (event.key === 'Home') {
+                    event.preventDefault()
+                    selectControlItem(0, true)
+                    return
+                  }
+                  if (event.key === 'End') {
+                    event.preventDefault()
+                    selectControlItem(editableSegments().length + actionButtons.length - 1, true)
+                  }
+                }}
+                onClick={() =>
+                  naturalMode()
+                    ? naturalDate()
+                      ? confirmNaturalInput()
+                      : closeNaturalInput()
+                    : openNaturalInput()
                 }
-                if (event.key === 'ArrowRight') {
-                  event.preventDefault()
-                  selectControlItem(editableSegments().length + 2, true)
-                  return
-                }
-                if (event.key === 'Home') {
-                  event.preventDefault()
-                  selectControlItem(0, true)
-                  return
-                }
-                if (event.key === 'End') {
-                  event.preventDefault()
-                  selectControlItem(editableSegments().length + actionButtons.length - 1, true)
-                }
-              }}
-            >
-              {local.calendarIcon ?? <CalendarIcon />}
-            </label>
+              >
+                {naturalMode() ? (
+                  naturalDate() ? (
+                    <ConfirmIcon />
+                  ) : (
+                    <CancelIcon />
+                  )
+                ) : (
+                  local.magicIcon ?? <MagicIcon />
+                )}
+              </button>
+              {!naturalMode() && (
+                <label
+                  ref={element => (actionButtons[1] = element)}
+                  class="datetime-neo__trigger"
+                  for={nativeInputId}
+                  tabindex={activeItem() === editableSegments().length + 1 ? 0 : -1}
+                  aria-label="Open date and time picker"
+                  onFocus={() => setActiveItem(editableSegments().length + 1)}
+                  onClick={openPicker}
+                  onKeyDown={event => {
+                    if (event.key === ' ' || event.key === 'Enter') {
+                      event.preventDefault()
+                      openPicker()
+                      return
+                    }
+                    if (event.key === 'ArrowLeft') {
+                      event.preventDefault()
+                      selectControlItem(editableSegments().length, true)
+                      return
+                    }
+                    if (event.key === 'ArrowRight') {
+                      event.preventDefault()
+                      selectControlItem(editableSegments().length + 2, true)
+                      return
+                    }
+                    if (event.key === 'Home') {
+                      event.preventDefault()
+                      selectControlItem(0, true)
+                      return
+                    }
+                    if (event.key === 'End') {
+                      event.preventDefault()
+                      selectControlItem(editableSegments().length + actionButtons.length - 1, true)
+                    }
+                  }}
+                >
+                  {local.calendarIcon ?? <CalendarIcon />}
+                </label>
+              )}
+            </span>
           )}
         </span>
       )}

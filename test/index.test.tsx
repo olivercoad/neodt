@@ -69,9 +69,9 @@ describe('Neodt', () => {
 
     await nextRender()
     expect(control.dataset.wrapped).toBeUndefined()
-    expect(control.querySelectorAll(':scope > .datetime-neo__editor .datetime-neo__row')).toHaveLength(
-      2,
-    )
+    expect(
+      control.querySelectorAll(':scope > .datetime-neo__editor .datetime-neo__row'),
+    ).toHaveLength(2)
     const measurement = control.querySelector('.datetime-neo__measurement')!
     expect(measurement.classList).toContain('datetime-neo__editor')
     expect(measurement.querySelector('.datetime-neo__value')).not.toBeNull()
@@ -262,7 +262,10 @@ describe('Neodt', () => {
           value={date('2026-08-17T15:30')}
         />
       ) as HTMLSpanElement
-      expect(control.querySelector('.datetime-neo__timezone')?.textContent).toBe('+10:00')
+      const timezone = control.querySelector('.datetime-neo__timezone')
+      expect(timezone?.textContent).toBe('+10:00')
+      expect(timezone?.parentElement?.classList.contains('datetime-neo__trailing')).toBe(true)
+      expect(timezone?.parentElement?.querySelector('.datetime-neo__actions')).not.toBeNull()
     }))
 
   it('associates the picker label with the native input and opens it from Space', () =>
@@ -482,9 +485,7 @@ describe('Neodt', () => {
       'GMT',
     )
     expect(
-      control.querySelectorAll(
-        '[role="group"] .datetime-neo__natural-result > .datetime-neo__timezone',
-      ),
+      control.querySelectorAll('.datetime-neo__trailing > .datetime-neo__timezone'),
     ).toHaveLength(1)
     control.remove()
     dispose!()

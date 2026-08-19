@@ -83,10 +83,10 @@ function partsFor(
     .map(part =>
       editableTypes.has(part.type as SegmentName)
         ? {
-            type: part.type as SegmentName,
-            value: part.type === 'year' ? part.value.padStart(4, '0') : part.value,
-            editable: true,
-          }
+          type: part.type as SegmentName,
+          value: part.type === 'year' ? part.value.padStart(4, '0') : part.value,
+          editable: true,
+        }
         : { type: part.type, value: part.value, editable: false },
     )
 }
@@ -122,14 +122,14 @@ function isCompleteSegment(segment: SegmentName, digits: string, hour12: boolean
     segment === 'month'
       ? 12
       : segment === 'day'
-      ? 31
-      : segment === 'hour'
-      ? hour12
-        ? 12
-        : 23
-      : segment === 'minute'
-      ? 59
-      : undefined
+        ? 31
+        : segment === 'hour'
+          ? hour12
+            ? 12
+            : 23
+          : segment === 'minute'
+            ? 59
+            : undefined
   return maximum !== undefined && Number(digits) * 10 > maximum
 }
 
@@ -138,6 +138,15 @@ function closestYear(twoDigitYear: string, referenceTime: DateTime): number {
   if (candidate - referenceTime.year > 50) return candidate - 100
   if (referenceTime.year - candidate > 50) return candidate + 100
   return candidate
+}
+
+function nearestLeapYear(year: number): number {
+  for (let distance = 0; ; distance += 1) {
+    const earlier = year - distance
+    if (earlier >= 1 && DateTime.fromObject({ year: earlier }).isInLeapYear) return earlier
+    const later = year + distance
+    if (DateTime.fromObject({ year: later }).isInLeapYear) return later
+  }
 }
 
 function CalendarIcon(): JSX.Element {
@@ -313,6 +322,18 @@ function Neodt(props: NeodtProps): JSX.Element {
         date = date.plus({ months: amount })
         break
       case 'day':
+        // Retain a permissive backing date while month or year is hidden.
+        if (date.day + amount < 1 || date.day + amount > date.daysInMonth) {
+          if (isCleared('month')) {
+            // Reset to January as Jan has 31 days
+            date = date.set({ month: 1 })
+          } else if (
+            isCleared('year') &&
+            (date.month === 2 || (date.month === 3 && amount < 0))
+          ) {
+            date = date.set({ year: nearestLeapYear(date.year) })
+          }
+        }
         date = date.plus({ days: amount })
         break
       case 'hour':
@@ -358,7 +379,13 @@ function Neodt(props: NeodtProps): JSX.Element {
     let setDayPeriodToPm = false
     if (segment === 'year' && number >= 1) date = date.set({ year: number })
     if (segment === 'month' && number >= 1 && number <= 12) date = date.set({ month: number })
-    if (segment === 'day' && number >= 1 && number <= 31) date = date.set({ day: number })
+    if (segment === 'day' && number >= 1 && number <= 31) {
+      // Retain a valid backing date while its hidden segments are incomplete.
+      if (isCleared('month')) date = date.set({ month: 1 })
+      else if (isCleared('year') && date.month === 2 && number === 29)
+        date = date.set({ year: nearestLeapYear(date.year) })
+      if (number <= date.daysInMonth) date = date.set({ day: number })
+    }
     if (segment === 'hour') {
       const hour12 = new Intl.DateTimeFormat(locale(), {
         hour: 'numeric',
@@ -705,8 +732,8 @@ function Neodt(props: NeodtProps): JSX.Element {
                           local.disabled || local.readonly
                             ? undefined
                             : activeItem() === index()
-                            ? 0
-                            : -1
+                              ? 0
+                              : -1
                         }
                         aria-disabled={local.disabled || undefined}
                         aria-label={part().type}
@@ -759,8 +786,8 @@ function Neodt(props: NeodtProps): JSX.Element {
               naturalMode()
                 ? naturalDate() ?? local.referenceTime
                 : cleared().size
-                ? draftDate()
-                : value() ?? draftDate(),
+                  ? draftDate()
+                  : value() ?? draftDate(),
             )}
           </span>
         )}

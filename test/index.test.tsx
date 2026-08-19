@@ -1064,6 +1064,146 @@ describe('Neodt', () => {
       }),
     ))
 
+  it('allows day 31 when the month is cleared', async () =>
+    await new Promise<void>(resolve =>
+      createRoot(dispose => {
+        const [value, setValue] = createSignal<DateTime | null>(date('2026-02-17T15:30'))
+        const control = (
+          <DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />
+        ) as HTMLSpanElement
+        document.body.append(control)
+        const month = control.querySelector<HTMLButtonElement>('[aria-label="month"]')!
+        const day = control.querySelector<HTMLButtonElement>('[aria-label="day"]')!
+        key(month, 'Backspace')
+        key(day, '3')
+        key(day, '1')
+        nextRender().then(() => {
+          expect(value()).toBeNull()
+          expect(month.textContent).toBe('mm')
+          expect(day.textContent).toBe('31')
+          control.remove()
+          dispose()
+          resolve()
+        })
+      }),
+    ))
+
+  it('increments a cleared-month day to 31 instead of rolling into the next month', async () =>
+    await new Promise<void>(resolve =>
+      createRoot(dispose => {
+        const [value, setValue] = createSignal<DateTime | null>(date('2026-04-30T15:30'))
+        const control = (
+          <DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />
+        ) as HTMLSpanElement
+        document.body.append(control)
+        const month = control.querySelector<HTMLButtonElement>('[aria-label="month"]')!
+        const day = control.querySelector<HTMLButtonElement>('[aria-label="day"]')!
+        key(month, 'Backspace')
+        key(day, 'ArrowUp')
+        nextRender().then(() => {
+          expect(value()).toBeNull()
+          expect(month.textContent).toBe('mm')
+          expect(day.textContent).toBe('31')
+          control.remove()
+          dispose()
+          resolve()
+        })
+      }),
+    ))
+
+  it('allows February 29 when the year is cleared', async () =>
+    await new Promise<void>(resolve =>
+      createRoot(dispose => {
+        const [value, setValue] = createSignal<DateTime | null>(date('2026-02-17T15:30'))
+        const control = (
+          <DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />
+        ) as HTMLSpanElement
+        document.body.append(control)
+        const year = control.querySelector<HTMLButtonElement>('[aria-label="year"]')!
+        const day = control.querySelector<HTMLButtonElement>('[aria-label="day"]')!
+        key(year, 'Backspace')
+        key(day, '2')
+        key(day, '9')
+        nextRender().then(() => {
+          expect(value()).toBeNull()
+          expect(year.textContent).toBe('yyyy')
+          expect(day.textContent).toBe('29')
+          control.remove()
+          dispose()
+          resolve()
+        })
+      }),
+    ))
+
+  it('rolls February 29 to March 1 and rejects February 30 when the year is cleared', async () =>
+    await new Promise<void>(resolve =>
+      createRoot(dispose => {
+        const [value, setValue] = createSignal<DateTime | null>(date('2026-02-28T15:30'))
+        const control = (
+          <DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />
+        ) as HTMLSpanElement
+        document.body.append(control)
+        const year = control.querySelector<HTMLButtonElement>('[aria-label="year"]')!
+        const month = control.querySelector<HTMLButtonElement>('[aria-label="month"]')!
+        const day = control.querySelector<HTMLButtonElement>('[aria-label="day"]')!
+        key(year, 'Backspace')
+        key(day, 'ArrowUp')
+        nextRender().then(() => {
+          expect(day.textContent).toBe('29')
+          key(day, 'ArrowUp')
+          nextRender().then(() => {
+            expect(month.textContent).toBe('3')
+            expect(day.textContent).toBe('1')
+            key(month, '2')
+            key(day, '3')
+            key(day, '0')
+            nextRender().then(() => {
+              expect(value()).toBeNull()
+              expect(month.textContent).toBe('2')
+              expect(day.textContent).toBe('3')
+              control.remove()
+              dispose()
+              resolve()
+            })
+          })
+        })
+      }),
+    ))
+
+  it('uses the nearest leap year for February day navigation when the year is cleared', async () =>
+    await new Promise<void>(resolve =>
+      createRoot(dispose => {
+        const [value, setValue] = createSignal<DateTime | null>(date('2025-02-28T15:30'))
+        const control = (
+          <DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />
+        ) as HTMLSpanElement
+        document.body.append(control)
+        const year = control.querySelector<HTMLButtonElement>('[aria-label="year"]')!
+        const day = control.querySelector<HTMLButtonElement>('[aria-label="day"]')!
+        key(year, 'Backspace')
+        key(day, 'ArrowUp')
+        nextRender().then(() => {
+          expect(day.textContent).toBe('29')
+          expect(control.querySelector<HTMLInputElement>('input[type="datetime-local"]')?.value).toBe(
+            '2024-02-29T15:30',
+          )
+          key(day, 'ArrowUp')
+          nextRender().then(() => {
+            key(day, 'ArrowDown')
+            nextRender().then(() => {
+              expect(day.textContent).toBe('29')
+              expect(
+                control.querySelector<HTMLInputElement>('input[type="datetime-local"]')?.value,
+              ).toBe('2024-02-29T15:30')
+              control.remove()
+              dispose()
+              resolve()
+            })
+          })
+        })
+      }),
+    ))
+
   it('clears individual segments with backspace or delete and renders contextual placeholders', async () =>
     await new Promise<void>(resolve =>
       createRoot(dispose => {

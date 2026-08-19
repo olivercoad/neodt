@@ -511,9 +511,12 @@ function Neodt(props: NeodtProps): JSX.Element {
   const copyDateTime = (event: ClipboardEvent) => {
     if (naturalMode()) return
     const editor = event.currentTarget as HTMLSpanElement
-    const value = editor.querySelector('.datetime-neo__value')
-    if (!value) return
-    event.clipboardData?.setData('text/plain', value.textContent ?? '')
+    const displayedValue = editor.querySelector('.datetime-neo__value')
+    if (!displayedValue) return
+    const copiedValue = allSegmentsSelected()
+      ? displayedValue.textContent ?? ''
+      : (cleared().size ? draftDate() : value() ?? draftDate()).toISO({ precision: 'minutes' }) ?? ''
+    event.clipboardData?.setData('text/plain', copiedValue)
     event.preventDefault()
   }
 

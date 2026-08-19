@@ -106,7 +106,7 @@ describe('Neodt', () => {
       expect(value.textContent).not.toContain('@')
     }))
 
-  it('copies all formatted date and time text with Ctrl+C', async () => {
+  it('copies ISO date text unless all segments are selected', async () => {
     let dispose: (() => void) | undefined
     const control = createRoot(rootDispose => {
       dispose = rootDispose
@@ -122,6 +122,10 @@ describe('Neodt', () => {
     const editor = control.querySelector<HTMLSpanElement>('.datetime-neo__editor')!
     const segments = control.querySelectorAll('.datetime-neo__segment')
     const expected = '17/08/2026, 15:30'
+    const isoDate = date('2026-08-17T15:30').toISO({ precision: 'minutes' })
+    const normalCopy = copy(control.querySelector<HTMLButtonElement>('.datetime-neo__segment')!)
+    expect(normalCopy.prevented).toBe(true)
+    expect(normalCopy.text).toBe(isoDate)
     key(control.querySelector<HTMLButtonElement>('.datetime-neo__segment')!, 'a')
     expect(window.getSelection()?.toString()).not.toBe(editor.textContent)
     control

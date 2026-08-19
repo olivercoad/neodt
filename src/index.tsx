@@ -1,4 +1,5 @@
 import {
+  createEffect,
   createMemo,
   createSignal,
   createUniqueId,
@@ -236,6 +237,8 @@ function Neodt(props: NeodtProps): JSX.Element {
   const segmentButtons: HTMLElement[] = []
   const actionButtons: HTMLElement[] = []
   const [activeItem, setActiveItem] = createSignal(0)
+  const [editor, setEditor] = createSignal<HTMLSpanElement>()
+  const [editorHasHiddenEnd, setEditorHasHiddenEnd] = createSignal(false)
   let nativeInput: HTMLInputElement | undefined
   let naturalInput: HTMLInputElement | undefined
   const [actions, setActions] = createSignal<HTMLSpanElement>()
@@ -243,6 +246,8 @@ function Neodt(props: NeodtProps): JSX.Element {
     typeof ResizeObserver === 'undefined'
       ? { width: 0 }
       : createElementSize(actions)
+  const editorSize =
+    typeof ResizeObserver === 'undefined' ? { width: 0 } : createElementSize(editor)
   const nativeInputId = createUniqueId()
   let hasOpenedNaturalInput = false
   const naturalPlaceholderAnimation = createNaturalPlaceholder(setNaturalPlaceholder)
@@ -255,6 +260,40 @@ function Neodt(props: NeodtProps): JSX.Element {
   )
   const naturalCompletions = createMemo(() => getNaturalDateCompletions(naturalText()))
   const activeNaturalCompletion = createMemo(() => naturalCompletions()[naturalSuggestion()])
+
+  const updateEditorOverflow = () => {
+    const element = editor()
+    if (!element) return
+    setEditorHasHiddenEnd(element.scrollLeft + element.clientWidth < element.scrollWidth - 1)
+  }
+
+  const revealSegment = (index: number) => {
+    const element = editor()
+    const segment = segmentButtons[index]
+    if (!element || !segment) return
+    if (index === 0) {
+      element.scrollLeft = 0
+      updateEditorOverflow()
+      return
+    }
+    const editorBounds = element.getBoundingClientRect()
+    const segmentBounds = segment.getBoundingClientRect()
+    const visibleRight = editorBounds.right - 40
+    if (segmentBounds.right > visibleRight) {
+      element.scrollLeft += segmentBounds.right - visibleRight
+    } else if (segmentBounds.left < editorBounds.left) {
+      element.scrollLeft += segmentBounds.left - editorBounds.left
+    }
+    updateEditorOverflow()
+  }
+
+  createEffect(() => {
+    editorSize.width
+    segments()
+    naturalMode()
+    naturalText()
+    updateEditorOverflow()
+  })
 
   const emitValue = (next: DateTime | undefined) => {
     if (local.value === undefined) setUncontrolledValue(next)
@@ -296,6 +335,7 @@ function Neodt(props: NeodtProps): JSX.Element {
     if (pending?.index !== next) commitTypedYear()
     setSelected(next)
     setActiveItem(next)
+    revealSegment(next)
     if (focus) segmentButtons[next]?.focus()
   }
 
@@ -637,10 +677,14 @@ function Neodt(props: NeodtProps): JSX.Element {
       data-readonly={local.readonly ? '' : undefined}
     >
       <span
+        ref={setEditor}
         class="datetime-neo__editor"
         role="group"
         aria-label={local['aria-label'] ?? 'Date and time'}
         aria-readonly={local.readonly || undefined}
+        data-overflowing={editorHasHiddenEnd() ? '' : undefined}
+        style={{ '--datetime-neo-actions-width': `${actionSize.width ?? 0}px` }}
+        onScroll={updateEditorOverflow}
         onCopy={copyDateTime}
         onPaste={pasteDateTime}
         onKeyDown={event => {

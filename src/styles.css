@@ -33,10 +33,43 @@
 
 .datetime-neo__editor {
   align-items: center;
+  box-sizing: border-box;
   display: flex;
-  flex: 1 1 13rem;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
   padding: 0.25rem 0.375rem;
+  scrollbar-width: none;
+  transition:
+    margin-right 220ms ease,
+    width 220ms ease;
+  transition-delay: 0ms;
+  width: calc(100% - var(--datetime-neo-actions-width, 0px));
   white-space: nowrap;
+}
+
+.datetime-neo__editor::-webkit-scrollbar {
+  display: none;
+}
+
+.datetime-neo__editor[data-overflowing] {
+  mask-image: linear-gradient(
+    to right,
+    black 0%,
+    black calc(100% - 40px),
+    rgba(0, 0, 0, 0.7) calc(100% - 30px),
+    rgba(0, 0, 0, 0.3) calc(100% - 18px),
+    rgba(0, 0, 0, 0.05) calc(100% - 8px),
+    rgba(0, 0, 0, 0.01) calc(100% - 2px),
+    transparent 100%
+  );
+}
+
+.datetime-neo:not(:hover):not(:focus-within) .datetime-neo__editor {
+  margin-right: calc(-1 * var(--datetime-neo-actions-width, 0px));
+  transition-delay: 320ms;
+  width: 100%;
 }
 
 .datetime-neo__value {
@@ -122,7 +155,9 @@
   margin-left: auto;
   padding: 0.16rem 0.18rem;
   text-align: right;
-  transition: opacity 220ms ease, transform 220ms ease;
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease;
 }
 
 .datetime-neo__native-input {
@@ -219,7 +254,7 @@
   gap: 0.125rem;
   margin: 0.25rem 0 0.25rem auto;
   padding-right: 0.375rem;
-  transition: opacity 220ms ease;
+  transition: opacity 220ms ease 220ms;
   user-select: none;
 }
 

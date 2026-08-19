@@ -610,6 +610,86 @@ describe('Neodt', () => {
       }),
     ))
 
+  it('sets day periods from contenteditable input', async () =>
+    await new Promise<void>(resolve =>
+      createRoot(dispose => {
+        const control = (
+          <DateTimeLocal
+            referenceTime={referenceTime}
+            locale="en-US"
+            formatOptions={{ hour12: true }}
+            defaultValue={date('2026-08-17T15:30')}
+          />
+        ) as HTMLSpanElement
+        document.body.append(control)
+        const dayPeriod = () =>
+          control.querySelector<HTMLSpanElement>('[aria-label="dayPeriod"]')!
+        dayPeriod().textContent = 'PMa'
+        dayPeriod().dispatchEvent(new InputEvent('input', { bubbles: true, data: 'a' }))
+        nextRender().then(() => {
+          expect(dayPeriod().textContent).toBe('AM')
+          dayPeriod().textContent = 'AMp'
+          dayPeriod().dispatchEvent(new InputEvent('input', { bubbles: true, data: 'p' }))
+          nextRender().then(() => {
+            expect(dayPeriod().textContent).toBe('PM')
+            control.remove()
+            dispose()
+            resolve()
+          })
+        })
+      }),
+    ))
+
+  it('fills a cleared day period from contenteditable input', async () =>
+    await new Promise<void>(resolve =>
+      createRoot(dispose => {
+        const control = (
+          <DateTimeLocal
+            referenceTime={referenceTime}
+            locale="en-US"
+            formatOptions={{ hour12: true }}
+            value={null}
+          />
+        ) as HTMLSpanElement
+        document.body.append(control)
+        const dayPeriod = () =>
+          control.querySelector<HTMLSpanElement>('[aria-label="dayPeriod"]')!
+        dayPeriod().textContent = 'p'
+        dayPeriod().dispatchEvent(new InputEvent('input', { bubbles: true, data: 'p' }))
+        nextRender().then(() => {
+          expect(dayPeriod().textContent).toBe('PM')
+          control.remove()
+          dispose()
+          resolve()
+        })
+      }),
+    ))
+
+  it('restores a cleared day-period placeholder after unhandled input', async () =>
+    await new Promise<void>(resolve =>
+      createRoot(dispose => {
+        const control = (
+          <DateTimeLocal
+            referenceTime={referenceTime}
+            locale="en-US"
+            formatOptions={{ hour12: true }}
+            value={null}
+          />
+        ) as HTMLSpanElement
+        document.body.append(control)
+        const dayPeriod = () =>
+          control.querySelector<HTMLSpanElement>('[aria-label="dayPeriod"]')!
+        dayPeriod().textContent = 'x'
+        dayPeriod().dispatchEvent(new InputEvent('input', { bubbles: true, data: 'x' }))
+        nextRender().then(() => {
+          expect(dayPeriod().textContent).toBe('--')
+          control.remove()
+          dispose()
+          resolve()
+        })
+      }),
+    ))
+
   it('selects focused segments and moves focus with left and right arrows', async () =>
     await new Promise<void>(resolve =>
       createRoot(dispose => {
@@ -736,10 +816,31 @@ describe('Neodt', () => {
         const segments = control.querySelectorAll<HTMLSpanElement>('.datetime-neo__segment')
         expect(segments[0]?.getAttribute('inputmode')).toBe('decimal')
         segments[0]!.focus()
-        segments[0]!.textContent = '.'
-        segments[0]!.dispatchEvent(new Event('input', { bubbles: true }))
+        segments[0]!.dispatchEvent(new InputEvent('input', { bubbles: true, data: '.' }))
         nextRender().then(() => {
           expect(document.activeElement).toBe(segments[1])
+          control.remove()
+          dispose()
+          resolve()
+        })
+      }),
+    ))
+
+  it('does not re-enter a segment digit for unhandled contenteditable input', async () =>
+    await new Promise<void>(resolve =>
+      createRoot(dispose => {
+        const control = (
+          <DateTimeLocal referenceTime={referenceTime} value={date('2026-08-17T15:30')} />
+        ) as HTMLSpanElement
+        document.body.append(control)
+        const segments = control.querySelectorAll<HTMLSpanElement>('.datetime-neo__segment')
+        const originalValue = segments[0]!.textContent
+        segments[0]!.focus()
+        segments[0]!.textContent = `${originalValue}x`
+        segments[0]!.dispatchEvent(new InputEvent('input', { bubbles: true, data: 'x' }))
+        nextRender().then(() => {
+          expect(segments[0]?.textContent).toBe(originalValue)
+          expect(document.activeElement).toBe(segments[0])
           control.remove()
           dispose()
           resolve()

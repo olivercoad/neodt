@@ -588,6 +588,7 @@ function Neodt(props: NeodtProps): JSX.Element {
   }
 
   const onSegmentKeyDown = (event: KeyboardEvent, index: number, segment: Segment) => {
+    // Let the segmented editor support select-all without selecting the whole page.
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
       event.preventDefault()
       setAllSegmentsSelected(true)
@@ -604,6 +605,7 @@ function Neodt(props: NeodtProps): JSX.Element {
       openNaturalInput()
       return
     }
+    // Arrow keys traverse segments horizontally and adjust the selected value vertically.
     if (event.key === 'ArrowLeft') {
       event.preventDefault()
       selectControlItem(index - 1, true)
@@ -639,16 +641,20 @@ function Neodt(props: NeodtProps): JSX.Element {
       clearSegment(segment.type)
       return
     }
+    // Numeric segments expose a decimal keyboard on mobile; its decimal key advances instead of
+    // becoming editable content. The day-period segment uses a text keyboard for A/P input.
     if (segment.type !== 'dayPeriod' && event.key === '.') {
       event.preventDefault()
       selectSegment(index + 1, true)
       return
     }
+    // Locale punctuation, such as /, . or :, also moves across the matching separator.
     if (matchesFollowingSeparator(index, event.key)) {
       event.preventDefault()
       selectSegment(index + 1, true)
       return
     }
+    // Day periods are textual segments and accept their conventional A/P shortcuts.
     if (segment.type === 'dayPeriod' && /^(a|p)$/i.test(event.key)) {
       event.preventDefault()
       setDayPeriod(event.key.toLowerCase() === 'a')
@@ -791,14 +797,25 @@ function Neodt(props: NeodtProps): JSX.Element {
                         onKeyDown={event => onSegmentKeyDown(event, index(), segment())}
                         onInput={event => {
                           const input = event.currentTarget
-                          const lastCharacter = input.textContent?.at(-1)
-                          input.textContent = isCleared(segment().type) ? '' : segment().value
-                          if (segment().type !== 'dayPeriod' && lastCharacter === '.') {
+                          // `textContent` may be unchanged after an unhandled key, so use the
+                          // inserted character rather than accidentally re-entering its last digit.
+                          const enteredCharacter = event.data
+                          if (
+                            segment().type === 'dayPeriod' &&
+                            /^(a|p)$/i.test(enteredCharacter ?? '')
+                          ) {
+                            setDayPeriod(enteredCharacter!.toLowerCase() === 'a')
+                            return
+                          }
+                          input.textContent = isCleared(segment().type)
+                            ? placeholderFor(segment().type)
+                            : segment().value
+                          if (segment().type !== 'dayPeriod' && enteredCharacter === '.') {
                             selectSegment(index() + 1, true)
                             return
                           }
-                          if (/^\d$/.test(lastCharacter ?? ''))
-                            enterSegmentDigit(index(), segment(), lastCharacter!)
+                          if (/^\d$/.test(enteredCharacter ?? ''))
+                            enterSegmentDigit(index(), segment(), enteredCharacter!)
                         }}
                       >
                         {isCleared(segment().type) ? (

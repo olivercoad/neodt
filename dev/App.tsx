@@ -21,6 +21,7 @@ const locales = [
 const timezones = [
   [systemTimezone, `System (${systemTimezone})`],
   ['Australia/Sydney', 'Sydney (Australia/Sydney)'],
+  ['Australia/Lord_Howe', 'Lord Howe (Australia/Lord_Howe)'],
   ['America/New_York', 'New York (America/New_York)'],
   ['Europe/London', 'London (Europe/London)'],
   ['Asia/Tokyo', 'Tokyo (Asia/Tokyo)'],
@@ -44,13 +45,15 @@ function iso(date: DateTime | null): string {
 }
 
 const App: Component = () => {
+  const [timezone, setTimezone] = makePersistedSignal<Timezone>(systemTimezone, {
+    name: 'neodt-configuration-lab-timezone',
+  })
   const [referenceTime, setReferenceTime] = makePersistedSignal(initialReference, {
     name: 'neodt-configuration-lab-reference-time',
     serialize: value => value.toISO() ?? '',
-    deserialize: value => DateTime.fromISO(value),
-  })
-  const [timezone, setTimezone] = makePersistedSignal<Timezone>(systemTimezone, {
-    name: 'neodt-configuration-lab-timezone',
+    deserialize: value => DateTime.fromISO(value, {
+      zone: timezone(),
+    }),
   })
   const [locale, setLocale] = makePersistedSignal<string | undefined>(undefined, {
     name: 'neodt-configuration-lab-locale',

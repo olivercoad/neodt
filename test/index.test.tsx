@@ -1,8 +1,11 @@
 import { createRoot, createSignal } from 'solid-js'
 import { isServer } from 'solid-js/web'
 import { DateTime } from 'luxon'
+import { readFileSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
 import Neodt from '../src'
+
+const styles = readFileSync('src/styles.css', 'utf8')
 
 const DateTimeLocal = Neodt
 
@@ -46,12 +49,12 @@ describe('Neodt', () => {
   it('does not wrap when the widest idle locale value fits', async () => {
     const clientWidth = vi
       .spyOn(HTMLElement.prototype, 'clientWidth', 'get')
-      .mockImplementation(function () {
+      .mockImplementation(function (this: HTMLElement) {
         return this.classList.contains('datetime-neo') ? 400 : 0
       })
     const scrollWidth = vi
       .spyOn(HTMLElement.prototype, 'scrollWidth', 'get')
-      .mockImplementation(function () {
+      .mockImplementation(function (this: HTMLElement) {
         return this.classList.contains('datetime-neo__measurement') ? 300 : 0
       })
     let dispose: (() => void) | undefined
@@ -70,13 +73,30 @@ describe('Neodt', () => {
     await nextRender()
     expect(control.dataset.wrapped).toBeUndefined()
     expect(
-      control.querySelectorAll(':scope > .datetime-neo__editor .datetime-neo__row'),
+      control.querySelectorAll(
+        ':scope > .datetime-neo__content > .datetime-neo__editor .datetime-neo__row',
+      ),
     ).toHaveLength(2)
     const measurement = control.querySelector('.datetime-neo__measurement')!
-    expect(measurement.classList).toContain('datetime-neo__editor')
-    expect(measurement.querySelector('.datetime-neo__value')).not.toBeNull()
-    expect(measurement.querySelector('.datetime-neo__segment')).not.toBeNull()
-    expect(measurement.querySelector('.datetime-neo__separator')).not.toBeNull()
+    expect(measurement.querySelector(':scope > .datetime-neo__editor')).not.toBeNull()
+    expect(measurement.querySelector(':scope > .datetime-neo__trailing')).not.toBeNull()
+    expect(measurement.querySelector('.datetime-neo__editor .datetime-neo__value')).not.toBeNull()
+    expect(measurement.querySelector('.datetime-neo__editor .datetime-neo__segment')).not.toBeNull()
+    expect(
+      measurement.querySelector('.datetime-neo__editor .datetime-neo__separator'),
+    ).not.toBeNull()
+    expect(
+      measurement.querySelector('.datetime-neo__trailing .datetime-neo__actions'),
+    ).not.toBeNull()
+    expect(
+      measurement.querySelectorAll('.datetime-neo__trailing .datetime-neo__trigger'),
+    ).toHaveLength(2)
+    expect(styles).toMatch(
+      /:is\(\s*\.datetime-neo__content:not\(:hover\):not\(:focus-within\).*\.datetime-neo__editor,\s*\.datetime-neo:not\(\[data-time-offset\]\) \.datetime-neo__measurement > \.datetime-neo__editor/s,
+    )
+    expect(styles).toMatch(
+      /:is\(\s*\.datetime-neo:not\(:hover\):not\(:focus-within\).*\.datetime-neo__actions,\s*\.datetime-neo__measurement \.datetime-neo__actions/s,
+    )
     dispose!()
     clientWidth.mockRestore()
     scrollWidth.mockRestore()
@@ -85,12 +105,12 @@ describe('Neodt', () => {
   it('locks a two-row layout from idle width across focus and natural entry', async () => {
     const clientWidth = vi
       .spyOn(HTMLElement.prototype, 'clientWidth', 'get')
-      .mockImplementation(function () {
+      .mockImplementation(function (this: HTMLElement) {
         return this.classList.contains('datetime-neo') ? 120 : 0
       })
     const scrollWidth = vi
       .spyOn(HTMLElement.prototype, 'scrollWidth', 'get')
-      .mockImplementation(function () {
+      .mockImplementation(function (this: HTMLElement) {
         return this.classList.contains('datetime-neo__measurement') ? 300 : 0
       })
     let dispose: (() => void) | undefined
@@ -108,24 +128,83 @@ describe('Neodt', () => {
     document.body.append(control)
 
     await nextRender()
-    expect(control.dataset.wrapped).toBe('')
-    const rows = control.querySelectorAll(':scope > .datetime-neo__editor .datetime-neo__row')
+    expect(control.querySelector('.datetime-neo__content')?.dataset.wrapped).toBe('')
+    const rows = control.querySelectorAll(
+      ':scope > .datetime-neo__content > .datetime-neo__editor .datetime-neo__row',
+    )
     expect(rows[0]?.textContent).toContain('17/08/2026')
     expect(rows[1]?.textContent).toContain('15:30')
     control.querySelector<HTMLButtonElement>('.datetime-neo__segment')!.focus()
     await nextRender()
-    expect(control.dataset.wrapped).toBe('')
+    expect(control.querySelector('.datetime-neo__content')?.dataset.wrapped).toBe('')
     control
       .querySelector<HTMLButtonElement>('[aria-label="Enter date and time naturally"]')!
       .click()
     await nextRender()
-    expect(control.dataset.wrapped).toBe('')
+    expect(control.querySelector('.datetime-neo__content')?.dataset.wrapped).toBe('')
     expect(control.querySelector('.datetime-neo__natural-entry')).not.toBeNull()
     expect(control.querySelector('.datetime-neo__natural-result')).not.toBeNull()
     expect(
-      getComputedStyle(control.querySelector('.datetime-neo__measurement > .datetime-neo__value')!)
-        .display,
+      getComputedStyle(
+        control.querySelector(
+          '.datetime-neo__measurement > .datetime-neo__editor > .datetime-neo__value',
+        )!,
+      ).display,
     ).not.toBe('grid')
+    control.remove()
+    dispose!()
+    clientWidth.mockRestore()
+    scrollWidth.mockRestore()
+  })
+
+  it('keeps wrapped and natural rows intrinsically matched with consumer metrics', async () => {
+    const clientWidth = vi
+      .spyOn(HTMLElement.prototype, 'clientWidth', 'get')
+      .mockImplementation(function (this: HTMLElement) {
+        return this.classList.contains('datetime-neo') ? 120 : 0
+      })
+    const scrollWidth = vi
+      .spyOn(HTMLElement.prototype, 'scrollWidth', 'get')
+      .mockImplementation(function (this: HTMLElement) {
+        return this.classList.contains('datetime-neo__measurement') ? 300 : 0
+      })
+    let dispose: (() => void) | undefined
+    const control = createRoot(rootDispose => {
+      dispose = rootDispose
+      return (
+        <DateTimeLocal
+          class="consumer-metrics"
+          referenceTime={referenceTime}
+          locale="en-GB"
+          value={date('2026-08-17T15:30')}
+        />
+      ) as HTMLSpanElement
+    })
+    document.body.append(control)
+
+    await nextRender()
+    expect(control.querySelector('.datetime-neo__content')?.dataset.wrapped).toBe('')
+    expect(control.classList).toContain('consumer-metrics')
+
+    control
+      .querySelector<HTMLButtonElement>('[aria-label="Enter date and time naturally"]')!
+      .click()
+    await nextRender()
+
+    expect(control.querySelector('.datetime-neo__natural-input')).not.toBeNull()
+    expect(control.querySelector('.datetime-neo__natural-preview')).not.toBeNull()
+    expect(styles).not.toMatch(/\.datetime-neo(?:\[data-wrapped\])?\s*\{[^}]*min-height/)
+    expect(styles).toMatch(/grid-template-rows:\s*auto auto/g)
+    expect(styles).toMatch(
+      /\.datetime-neo__segment\s*\{[^}]*line-height:\s*var\(--datetime-neo-segment-line-height\)[^}]*padding:\s*var\(--datetime-neo-segment-padding\)/s,
+    )
+    expect(styles).toMatch(
+      /\.datetime-neo__natural-input\s*\{[^}]*line-height:\s*var\(--datetime-neo-segment-line-height\)[^}]*padding:\s*var\(--datetime-neo-segment-padding\)/s,
+    )
+    expect(styles).toMatch(
+      /\.datetime-neo__natural-preview\s*\{[^}]*line-height:\s*var\(--datetime-neo-segment-line-height\)[^}]*padding:\s*var\(--datetime-neo-segment-padding\)/s,
+    )
+
     control.remove()
     dispose!()
     clientWidth.mockRestore()
@@ -263,9 +342,42 @@ describe('Neodt', () => {
         />
       ) as HTMLSpanElement
       const timezone = control.querySelector('.datetime-neo__timezone')
-      expect(timezone?.textContent).toBe('+10:00')
+      expect(timezone?.textContent).toBe('+10')
       expect(timezone?.parentElement?.classList.contains('datetime-neo__trailing')).toBe(true)
       expect(timezone?.parentElement?.querySelector('.datetime-neo__actions')).not.toBeNull()
+    }))
+
+  it('uses compact offsets and fixed universal-zone offsets for measurements', () =>
+    createRoot(() => {
+      const fourHourReference = DateTime.fromISO('2026-08-17T15:30:00', { zone: 'UTC+4' })
+      const fourHourControl = (
+        <DateTimeLocal
+          referenceTime={fourHourReference}
+          locale="en-GB"
+          showTimeOffset
+          value={fourHourReference}
+        />
+      ) as HTMLSpanElement
+      expect(fourHourControl.querySelector('.datetime-neo__timezone')?.textContent).toBe('+4')
+      expect(
+        fourHourControl.querySelector('.datetime-neo__measurement .datetime-neo__timezone')
+          ?.textContent,
+      ).toBe('+4')
+
+      const halfHourReference = DateTime.fromISO('2026-08-17T15:30:00', { zone: 'UTC+10:30' })
+      const halfHourControl = (
+        <DateTimeLocal
+          referenceTime={halfHourReference}
+          locale="en-GB"
+          showTimeOffset
+          value={halfHourReference}
+        />
+      ) as HTMLSpanElement
+      expect(halfHourControl.querySelector('.datetime-neo__timezone')?.textContent).toBe('+10:30')
+      expect(
+        halfHourControl.querySelector('.datetime-neo__measurement .datetime-neo__timezone')
+          ?.textContent,
+      ).toBe('+10:30')
     }))
 
   it('associates the picker label with the native input and opens it from Space', () =>
@@ -363,7 +475,7 @@ describe('Neodt', () => {
     })
     document.body.append(control)
     const magicButton = control.querySelector<HTMLButtonElement>(
-      '[aria-label="Enter date and time naturally"]',
+      ':scope > .datetime-neo__content > .datetime-neo__trailing [aria-label="Enter date and time naturally"]',
     )!
     expect(magicButton.textContent).toBe('Magic')
     magicButton.click()
@@ -404,13 +516,25 @@ describe('Neodt', () => {
     magicButton.click()
     await nextRender()
     expect(
-      control.querySelector<HTMLInputElement>('.datetime-neo__natural-input')?.placeholder,
+      control.querySelector<HTMLInputElement>(
+        ':scope > .datetime-neo__content > .datetime-neo__editor .datetime-neo__natural-input',
+      )?.placeholder,
     ).toBe('n')
-    control.querySelector<HTMLButtonElement>('[aria-label="Cancel natural-language date"]')!.click()
-    magicButton.click()
+    control
+      .querySelector<HTMLButtonElement>(
+        ':scope > .datetime-neo__content > .datetime-neo__trailing [aria-label="Cancel natural-language date"]',
+      )!
+      .click()
+    control
+      .querySelector<HTMLButtonElement>(
+        ':scope > .datetime-neo__content > .datetime-neo__trailing [aria-label="Enter date and time naturally"]',
+      )!
+      .click()
     await nextRender()
     expect(
-      control.querySelector<HTMLInputElement>('.datetime-neo__natural-input')?.placeholder,
+      control.querySelector<HTMLInputElement>(
+        ':scope > .datetime-neo__content > .datetime-neo__editor .datetime-neo__natural-input',
+      )?.placeholder,
     ).toBe('t')
 
     control.remove()
@@ -455,7 +579,7 @@ describe('Neodt', () => {
     input.value = 'January 1, 2027 at 9am'
     input.dispatchEvent(new InputEvent('input', { bubbles: true }))
     await nextRender()
-    expect(control.querySelector('.datetime-neo__timezone')?.textContent).toBe('+11:00')
+      expect(control.querySelector('.datetime-neo__timezone')?.textContent).toBe('+11')
     control.remove()
     dispose!()
   })
@@ -485,7 +609,9 @@ describe('Neodt', () => {
       'GMT',
     )
     expect(
-      control.querySelectorAll('.datetime-neo__trailing > .datetime-neo__timezone'),
+      control.querySelectorAll(
+        ':scope > .datetime-neo__content > .datetime-neo__trailing > .datetime-neo__timezone',
+      ),
     ).toHaveLength(1)
     control.remove()
     dispose!()

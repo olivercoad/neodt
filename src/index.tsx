@@ -80,7 +80,6 @@ function partsFor(
       hour: 'numeric',
       minute: 'numeric',
       ...options,
-      timeZoneName: undefined,
     })
     .map(part =>
       editableTypes.has(part.type as SegmentName)
@@ -104,7 +103,12 @@ function naturalPreview(
 }
 
 function timeOffset(date: DateTime): string {
-  return date.toFormat('ZZ')
+  const offset = date.offset
+  const sign = offset < 0 ? '-' : '+'
+  const minutes = Math.abs(offset)
+  const hours = Math.floor(minutes / 60)
+  const remainder = minutes % 60
+  return `${sign}${hours}${remainder ? `:${remainder.toString().padStart(2, '0')}` : ''}`
 }
 
 function splitDateAndTime(parts: DisplayPart[]) {
@@ -818,214 +822,116 @@ function Neodt(props: NeodtProps): JSX.Element {
       data-natural={naturalMode() ? '' : undefined}
       data-readonly={local.readonly ? '' : undefined}
       data-time-offset={local.showTimeOffset ? '' : undefined}
-      data-wrapped={wrap() ? '' : undefined}
       style={{ '--datetime-neo-actions-width': `${actionSize.width ?? 0}px` }}
     >
       <span
-        ref={setEditor}
-        class="datetime-neo__editor"
-        role="group"
-        aria-label={local['aria-label'] ?? 'Date and time'}
-        aria-readonly={local.readonly || undefined}
-        data-overflowing={editorHasHiddenEnd() ? '' : undefined}
-        onScroll={updateEditorOverflow}
-        onCopy={copyDateTime}
-        onPaste={pasteDateTime}
-        onKeyDown={event => {
-          if (naturalMode() || !(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'a')
-            return
-          event.preventDefault()
-          setAllSegmentsSelected(true)
-        }}
+        class="datetime-neo__content"
+        data-natural={naturalMode() ? '' : undefined}
+        data-time-offset={local.showTimeOffset ? '' : undefined}
+        data-wrapped={wrap() ? '' : undefined}
       >
-        {naturalMode() ? (
-          <>
-            <span class="datetime-neo__natural-entry">
-              <span class="datetime-neo__natural-prefix" aria-hidden="true">
-                <span>@</span>
+        <span
+          ref={setEditor}
+          class="datetime-neo__editor"
+          role="group"
+          aria-label={local['aria-label'] ?? 'Date and time'}
+          aria-readonly={local.readonly || undefined}
+          data-overflowing={editorHasHiddenEnd() ? '' : undefined}
+          onScroll={updateEditorOverflow}
+          onCopy={copyDateTime}
+          onPaste={pasteDateTime}
+          onKeyDown={event => {
+            if (
+              naturalMode() ||
+              !(event.ctrlKey || event.metaKey) ||
+              event.key.toLowerCase() !== 'a'
+            )
+              return
+            event.preventDefault()
+            setAllSegmentsSelected(true)
+          }}
+        >
+          {naturalMode() ? (
+            <>
+              <span class="datetime-neo__natural-entry">
+                <span class="datetime-neo__natural-prefix" aria-hidden="true">
+                  <span>@</span>
+                </span>
+                <span class="datetime-neo__natural-field">
+                  <input
+                    ref={element => (naturalInput = element)}
+                    class="datetime-neo__natural-input"
+                    type="text"
+                    value={naturalText()}
+                    placeholder={naturalPlaceholder()}
+                    disabled={local.disabled}
+                    onInput={event => updateNaturalText(event.currentTarget.value)}
+                    onKeyDown={event => {
+                      if (event.key === 'ArrowDown') {
+                        event.preventDefault()
+                        cycleNaturalCompletion(1)
+                        return
+                      }
+                      if (event.key === 'ArrowUp') {
+                        event.preventDefault()
+                        cycleNaturalCompletion(-1)
+                        return
+                      }
+                      if (
+                        event.key === 'Tab' &&
+                        !event.shiftKey &&
+                        event.currentTarget.selectionStart === event.currentTarget.value.length &&
+                        acceptNaturalCompletion()
+                      ) {
+                        event.preventDefault()
+                        return
+                      }
+                      if (event.key === 'Enter') {
+                        event.preventDefault()
+                        confirmNaturalInput()
+                        return
+                      }
+                      if (event.key === 'Escape') {
+                        event.preventDefault()
+                        closeNaturalInput()
+                        return
+                      }
+                    }}
+                  />
+                  {activeNaturalCompletion() && (
+                    <span class="datetime-neo__natural-ghost" aria-hidden="true">
+                      <span class="datetime-neo__natural-ghost-typed">{naturalText()}</span>
+                      {activeNaturalCompletion()!.insertText.slice(naturalText().length)}
+                      <kbd>Tab</kbd>
+                    </span>
+                  )}
+                </span>
               </span>
-              <span class="datetime-neo__natural-field">
-                <input
-                  ref={element => (naturalInput = element)}
-                  class="datetime-neo__natural-input"
-                  type="text"
-                  value={naturalText()}
-                  placeholder={naturalPlaceholder()}
-                  disabled={local.disabled}
-                  onInput={event => updateNaturalText(event.currentTarget.value)}
-                  onKeyDown={event => {
-                    if (event.key === 'ArrowDown') {
-                      event.preventDefault()
-                      cycleNaturalCompletion(1)
-                      return
-                    }
-                    if (event.key === 'ArrowUp') {
-                      event.preventDefault()
-                      cycleNaturalCompletion(-1)
-                      return
-                    }
-                    if (
-                      event.key === 'Tab' &&
-                      !event.shiftKey &&
-                      event.currentTarget.selectionStart === event.currentTarget.value.length &&
-                      acceptNaturalCompletion()
-                    ) {
-                      event.preventDefault()
-                      return
-                    }
-                    if (event.key === 'Enter') {
-                      event.preventDefault()
-                      confirmNaturalInput()
-                      return
-                    }
-                    if (event.key === 'Escape') {
-                      event.preventDefault()
-                      closeNaturalInput()
-                      return
-                    }
-                  }}
-                />
-                {activeNaturalCompletion() && (
-                  <span class="datetime-neo__natural-ghost" aria-hidden="true">
-                    <span class="datetime-neo__natural-ghost-typed">{naturalText()}</span>
-                    {activeNaturalCompletion()!.insertText.slice(naturalText().length)}
-                    <kbd>Tab</kbd>
+              <span class="datetime-neo__natural-result">
+                <span class="datetime-neo__natural-preview" aria-live="polite">
+                  {naturalDate()
+                    ? naturalPreview(naturalDate()!, locale(), local.formatOptions)
+                    : ''}
+                </span>
+              </span>
+            </>
+          ) : (
+            <span class="datetime-neo__value">
+              <Index each={[displayedParts().first, displayedParts().second]}>
+                {row => (
+                  <span class="datetime-neo__row">
+                    <Index each={row()}>{renderPart}</Index>
                   </span>
                 )}
-              </span>
-            </span>
-            <span class="datetime-neo__natural-result">
-              <span class="datetime-neo__natural-preview" aria-live="polite">
-                {naturalDate() ? naturalPreview(naturalDate()!, locale(), local.formatOptions) : ''}
-              </span>
-            </span>
-          </>
-        ) : (
-          <span class="datetime-neo__value">
-            <Index each={[displayedParts().first, displayedParts().second]}>
-              {row => (
-                <span class="datetime-neo__row">
-                  <Index each={row()}>{renderPart}</Index>
-                </span>
-              )}
-            </Index>
-          </span>
-        )}
-        {!naturalMode() && (
-          <span class="datetime-neo__empty-area" aria-hidden="true" onClick={onEmptyAreaClick} />
-        )}
-      </span>
-      {(local.showTimeOffset || (!local.readonly && !local.disabled)) && (
-        <span class="datetime-neo__trailing">
-          {local.showTimeOffset && (
-            <span class="datetime-neo__timezone" aria-hidden="true">
-              {timeOffset(
-                naturalMode()
-                  ? naturalDate() ?? local.referenceTime
-                  : cleared().size
-                  ? draftDate()
-                  : value() ?? draftDate(),
-              )}
+              </Index>
             </span>
           )}
-          {!local.readonly && !local.disabled && (
-            <span ref={setActions} class="datetime-neo__actions">
-              <button
-                ref={element => (actionButtons[0] = element)}
-                class="datetime-neo__trigger"
-                type="button"
-                tabindex={activeItem() === editableSegments().length ? 0 : -1}
-                disabled={local.disabled}
-                aria-label={
-                  naturalMode()
-                    ? naturalDate()
-                      ? 'Confirm natural-language date'
-                      : 'Cancel natural-language date'
-                    : 'Enter date and time naturally'
-                }
-                onFocus={() => setActiveItem(editableSegments().length)}
-                onKeyDown={event => {
-                  if (event.key === 'ArrowLeft') {
-                    event.preventDefault()
-                    selectControlItem(editableSegments().length - 1, true)
-                    return
-                  }
-                  if (event.key === 'ArrowRight') {
-                    event.preventDefault()
-                    selectControlItem(editableSegments().length + 1, true)
-                    return
-                  }
-                  if (event.key === 'Home') {
-                    event.preventDefault()
-                    selectControlItem(0, true)
-                    return
-                  }
-                  if (event.key === 'End') {
-                    event.preventDefault()
-                    selectControlItem(editableSegments().length + actionButtons.length - 1, true)
-                  }
-                }}
-                onClick={() =>
-                  naturalMode()
-                    ? naturalDate()
-                      ? confirmNaturalInput()
-                      : closeNaturalInput()
-                    : openNaturalInput()
-                }
-              >
-                {naturalMode() ? (
-                  naturalDate() ? (
-                    <ConfirmIcon />
-                  ) : (
-                    <CancelIcon />
-                  )
-                ) : (
-                  local.magicIcon ?? <MagicIcon />
-                )}
-              </button>
-              {!naturalMode() && (
-                <label
-                  ref={element => (actionButtons[1] = element)}
-                  class="datetime-neo__trigger"
-                  for={nativeInputId}
-                  tabindex={activeItem() === editableSegments().length + 1 ? 0 : -1}
-                  aria-label="Open date and time picker"
-                  onFocus={() => setActiveItem(editableSegments().length + 1)}
-                  onClick={openPicker}
-                  onKeyDown={event => {
-                    if (event.key === ' ' || event.key === 'Enter') {
-                      event.preventDefault()
-                      openPicker()
-                      return
-                    }
-                    if (event.key === 'ArrowLeft') {
-                      event.preventDefault()
-                      selectControlItem(editableSegments().length, true)
-                      return
-                    }
-                    if (event.key === 'ArrowRight') {
-                      event.preventDefault()
-                      selectControlItem(editableSegments().length + 2, true)
-                      return
-                    }
-                    if (event.key === 'Home') {
-                      event.preventDefault()
-                      selectControlItem(0, true)
-                      return
-                    }
-                    if (event.key === 'End') {
-                      event.preventDefault()
-                      selectControlItem(editableSegments().length + actionButtons.length - 1, true)
-                    }
-                  }}
-                >
-                  {local.calendarIcon ?? <CalendarIcon />}
-                </label>
-              )}
-            </span>
+          {!naturalMode() && (
+            <span class="datetime-neo__empty-area" aria-hidden="true" onClick={onEmptyAreaClick} />
           )}
         </span>
-      )}
+        {renderTrailing()}
+      </span>
       <input
         ref={element => (nativeInput = element)}
         class="datetime-neo__native-input"
@@ -1041,33 +947,180 @@ function Neodt(props: NeodtProps): JSX.Element {
       <span ref={setMeasurements} class="datetime-neo__measurements" aria-hidden="true">
         <Index each={widestParts()}>
           {parts => (
-            <span class="datetime-neo__measurement datetime-neo__editor">
-              <span class="datetime-neo__value">
-                <Index each={[parts().first, parts().second]}>
-                  {row => (
-                    <span class="datetime-neo__row">
-                      <Index each={row()}>
-                        {part => (
-                          <span
-                            class={
-                              part().editable ? 'datetime-neo__segment' : 'datetime-neo__separator'
-                            }
-                          >
-                            {part().value}
-                          </span>
-                        )}
-                      </Index>
-                    </span>
-                  )}
-                </Index>
+            <span class="datetime-neo__measurement">
+              <span class="datetime-neo__editor">
+                <span class="datetime-neo__value">
+                  <Index each={[parts().first, parts().second]}>
+                    {row => (
+                      <span class="datetime-neo__row">
+                        <Index each={row()}>
+                          {part => (
+                            <span
+                              class={
+                                part().editable
+                                  ? 'datetime-neo__segment'
+                                  : 'datetime-neo__separator'
+                              }
+                            >
+                              {part().value}
+                            </span>
+                          )}
+                        </Index>
+                      </span>
+                    )}
+                  </Index>
+                </span>
               </span>
-              {local.showTimeOffset && <span class="datetime-neo__timezone">+12:45</span>}
+              {renderTrailing(true)}
             </span>
           )}
         </Index>
       </span>
     </span>
   )
+
+  function renderTrailing(measurement = false) {
+    const offset = measurement
+      ? referenceZone().isUniversal
+        ? timeOffset(local.referenceTime)
+        : '+12:45'
+      : timeOffset(
+          naturalMode()
+            ? naturalDate() ?? local.referenceTime
+            : cleared().size
+            ? draftDate()
+            : value() ?? draftDate(),
+        )
+
+    return (
+      (local.showTimeOffset || (!local.readonly && !local.disabled)) && (
+        <span class="datetime-neo__trailing">
+          {local.showTimeOffset && (
+            <span class="datetime-neo__timezone" aria-hidden={!measurement || undefined}>
+              {offset}
+            </span>
+          )}
+          {!local.readonly && !local.disabled && (
+            <span ref={measurement ? undefined : setActions} class="datetime-neo__actions">
+              <button
+                ref={measurement ? undefined : element => (actionButtons[0] = element)}
+                class="datetime-neo__trigger"
+                type="button"
+                tabindex={measurement ? -1 : activeItem() === editableSegments().length ? 0 : -1}
+                disabled={local.disabled}
+                aria-label={
+                  !measurement && naturalMode()
+                    ? naturalDate()
+                      ? 'Confirm natural-language date'
+                      : 'Cancel natural-language date'
+                    : 'Enter date and time naturally'
+                }
+                onFocus={measurement ? undefined : () => setActiveItem(editableSegments().length)}
+                onKeyDown={
+                  measurement
+                    ? undefined
+                    : event => {
+                        if (event.key === 'ArrowLeft') {
+                          event.preventDefault()
+                          selectControlItem(editableSegments().length - 1, true)
+                          return
+                        }
+                        if (event.key === 'ArrowRight') {
+                          event.preventDefault()
+                          selectControlItem(editableSegments().length + 1, true)
+                          return
+                        }
+                        if (event.key === 'Home') {
+                          event.preventDefault()
+                          selectControlItem(0, true)
+                          return
+                        }
+                        if (event.key === 'End') {
+                          event.preventDefault()
+                          selectControlItem(
+                            editableSegments().length + actionButtons.length - 1,
+                            true,
+                          )
+                        }
+                      }
+                }
+                onClick={
+                  measurement
+                    ? undefined
+                    : () =>
+                        naturalMode()
+                          ? naturalDate()
+                            ? confirmNaturalInput()
+                            : closeNaturalInput()
+                          : openNaturalInput()
+                }
+              >
+                {naturalMode() ? (
+                  naturalDate() ? (
+                    <ConfirmIcon />
+                  ) : (
+                    <CancelIcon />
+                  )
+                ) : (
+                  local.magicIcon ?? <MagicIcon />
+                )}
+              </button>
+              {!naturalMode() && (
+                <label
+                  ref={measurement ? undefined : element => (actionButtons[1] = element)}
+                  class="datetime-neo__trigger"
+                  for={nativeInputId}
+                  tabindex={
+                    measurement ? -1 : activeItem() === editableSegments().length + 1 ? 0 : -1
+                  }
+                  aria-label="Open date and time picker"
+                  onFocus={
+                    measurement ? undefined : () => setActiveItem(editableSegments().length + 1)
+                  }
+                  onClick={measurement ? undefined : openPicker}
+                  onKeyDown={
+                    measurement
+                      ? undefined
+                      : event => {
+                          if (event.key === ' ' || event.key === 'Enter') {
+                            event.preventDefault()
+                            openPicker()
+                            return
+                          }
+                          if (event.key === 'ArrowLeft') {
+                            event.preventDefault()
+                            selectControlItem(editableSegments().length, true)
+                            return
+                          }
+                          if (event.key === 'ArrowRight') {
+                            event.preventDefault()
+                            selectControlItem(editableSegments().length + 2, true)
+                            return
+                          }
+                          if (event.key === 'Home') {
+                            event.preventDefault()
+                            selectControlItem(0, true)
+                            return
+                          }
+                          if (event.key === 'End') {
+                            event.preventDefault()
+                            selectControlItem(
+                              editableSegments().length + actionButtons.length - 1,
+                              true,
+                            )
+                          }
+                        }
+                  }
+                >
+                  {local.calendarIcon ?? <CalendarIcon />}
+                </label>
+              )}
+            </span>
+          )}
+        </span>
+      )
+    )
+  }
 }
 
 export default Neodt

@@ -7,13 +7,14 @@
   --datetime-neo-hover: color-mix(in srgb, var(--datetime-neo-focus) 10%, transparent);
   --datetime-neo-background: #fff;
   --datetime-neo-foreground: #111827;
+  --datetime-neo-segment-line-height: 1.35;
+  --datetime-neo-segment-padding: 0.16rem 0.18rem;
   background: var(--datetime-neo-background);
   border: 1px solid var(--datetime-neo-border);
   border-radius: 0.375rem;
   box-sizing: border-box;
   color: var(--datetime-neo-foreground);
   display: inline-flex;
-  min-height: 2.25rem;
   position: relative;
 }
 
@@ -21,18 +22,27 @@
   left: 0;
   overflow: hidden;
   position: absolute;
-  top: 0;
+  top: 100%;
   visibility: hidden;
   white-space: nowrap;
   width: max-content;
+  display: flex;
+  flex-direction: column;
 }
 
 .datetime-neo__measurement {
-  display: block;
+  display: inline-flex;
 }
 
 .datetime-neo__measurements .datetime-neo__editor {
   width: max-content;
+}
+
+.datetime-neo__content {
+  align-items: center;
+  display: inline-flex;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .datetime-neo:focus-within {
@@ -57,7 +67,7 @@
   min-width: 0;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 0.25rem 0.375rem;
+  padding: 0.125rem 0.375rem;
   scrollbar-width: none;
   transition:
     margin-right 220ms ease,
@@ -65,6 +75,7 @@
   transition-delay: 0ms;
   width: calc(100% - var(--datetime-neo-actions-width, 0px));
   white-space: nowrap;
+  flex-grow: 1;
 }
 
 .datetime-neo__editor::-webkit-scrollbar {
@@ -84,7 +95,11 @@
   );
 }
 
-.datetime-neo:not(:hover):not(:focus-within):not([data-time-offset]) > .datetime-neo__editor {
+:is(
+    .datetime-neo__content:not(:hover):not(:focus-within):not([data-time-offset])
+      > .datetime-neo__editor,
+    .datetime-neo:not([data-time-offset]) .datetime-neo__measurement > .datetime-neo__editor
+  ) {
   margin-right: calc(-1 * var(--datetime-neo-actions-width, 0px));
   transition-delay: 320ms;
   width: 100%;
@@ -110,9 +125,10 @@
   border: 0;
   color: inherit;
   font: inherit;
+  line-height: var(--datetime-neo-segment-line-height);
   min-width: 0;
   outline: 0;
-  padding: 0.16rem 0.18rem;
+  padding: var(--datetime-neo-segment-padding);
 }
 
 .datetime-neo__natural-field {
@@ -130,9 +146,10 @@
   color: color-mix(in srgb, currentColor 70%, transparent);
   display: flex;
   font: inherit;
+  line-height: var(--datetime-neo-segment-line-height);
   min-width: 0;
   overflow: hidden;
-  padding: 0.16rem 0.18rem;
+  padding: var(--datetime-neo-segment-padding);
   pointer-events: none;
   white-space: pre;
 }
@@ -159,9 +176,10 @@
   color: color-mix(in srgb, currentColor 70%, transparent);
   flex: 0 1 auto;
   font-variant-numeric: tabular-nums;
+  line-height: var(--datetime-neo-segment-line-height);
   min-width: 0;
   overflow: hidden;
-  padding: 0.16rem 0.18rem;
+  padding: var(--datetime-neo-segment-padding);
   text-overflow: ellipsis;
   text-align: right;
   white-space: nowrap;
@@ -211,53 +229,50 @@
     opacity 220ms ease;
 }
 
-.datetime-neo[data-wrapped] {
+.datetime-neo__content[data-wrapped] {
   align-items: stretch;
-  min-height: 4.5rem;
 }
 
-.datetime-neo[data-wrapped] > .datetime-neo__editor {
+.datetime-neo__content[data-wrapped] > .datetime-neo__editor {
   align-items: stretch;
   flex: 1 1 auto;
   overflow: hidden;
   width: 100%;
 }
 
-.datetime-neo[data-wrapped][data-time-offset] > .datetime-neo__trailing {
+.datetime-neo__content[data-wrapped][data-time-offset] > .datetime-neo__trailing {
   display: grid;
   grid-template-rows: 1fr auto 1fr;
 }
 
-.datetime-neo[data-wrapped] > .datetime-neo__editor > .datetime-neo__value {
+.datetime-neo__content[data-wrapped] > .datetime-neo__editor > .datetime-neo__value {
   align-content: center;
   display: grid;
-  grid-template-rows: 1fr 1fr;
+  grid-template-rows: auto auto;
   min-width: 0;
   white-space: nowrap;
 }
 
-.datetime-neo[data-wrapped] > .datetime-neo__editor > .datetime-neo__value > .datetime-neo__row {
+.datetime-neo__content[data-wrapped]
+  > .datetime-neo__editor
+  > .datetime-neo__value
+  > .datetime-neo__row {
   align-items: center;
   display: flex;
   min-width: 0;
 }
 
-.datetime-neo[data-wrapped] > .datetime-neo__editor > .datetime-neo__natural-entry,
-.datetime-neo[data-wrapped] > .datetime-neo__editor > .datetime-neo__natural-result {
-  min-height: 50%;
-}
-
-.datetime-neo[data-wrapped] > .datetime-neo__editor > .datetime-neo__natural-entry {
+.datetime-neo__content[data-wrapped] > .datetime-neo__editor > .datetime-neo__natural-entry {
   grid-row: 1;
 }
 
-.datetime-neo[data-wrapped] > .datetime-neo__editor > .datetime-neo__natural-result {
+.datetime-neo__content[data-wrapped] > .datetime-neo__editor > .datetime-neo__natural-result {
   grid-row: 2;
 }
 
-.datetime-neo[data-wrapped][data-natural] > .datetime-neo__editor {
+.datetime-neo__content[data-wrapped][data-natural] > .datetime-neo__editor {
   display: grid;
-  grid-template-rows: 1fr 1fr;
+  grid-template-rows: auto auto;
 }
 
 .datetime-neo__native-input {
@@ -281,10 +296,10 @@
   color: inherit;
   cursor: text;
   font: inherit;
-  line-height: 1.35;
-  min-width: 1.2em;
+  line-height: var(--datetime-neo-segment-line-height);
+  min-width: fit-content;
   outline: 0;
-  padding: 0.16rem 0.18rem;
+  padding: var(--datetime-neo-segment-padding);
   text-align: center;
 }
 
@@ -292,9 +307,16 @@
   background: var(--datetime-neo-hover);
 }
 
-.datetime-neo[data-empty]:not(:hover):not(:focus-within)
-  > .datetime-neo__editor
-  > .datetime-neo__value {
+:is(
+    .datetime-neo[data-empty]
+      .datetime-neo__content:not(:hover):not(:focus-within)
+      > .datetime-neo__editor
+      > .datetime-neo__value,
+    .datetime-neo[data-empty]
+      .datetime-neo__measurement
+      > .datetime-neo__editor
+      > .datetime-neo__value
+  ) {
   opacity: 0;
   transition-delay: 100ms;
 }
@@ -330,7 +352,7 @@
 
 .datetime-neo__separator {
   display: inline-block;
-  line-height: 1.35;
+  line-height: var(--datetime-neo-segment-line-height);
   user-select: text;
   white-space: pre;
 }
@@ -367,18 +389,35 @@
   margin-left: auto;
 }
 
-.datetime-neo:not(:hover):not(:focus-within) .datetime-neo__actions {
+:is(
+    .datetime-neo:not(:hover):not(:focus-within) .datetime-neo__actions,
+    .datetime-neo__measurement .datetime-neo__actions
+  ) {
   opacity: 0;
   pointer-events: none;
   transition-delay: 100ms;
 }
 
-.datetime-neo:not([data-wrapped]):not(:hover):not(:focus-within) .datetime-neo__timezone {
+:is(
+    .datetime-neo__content:not([data-wrapped]):not(:hover):not(:focus-within)
+      .datetime-neo__timezone,
+    .datetime-neo__measurement .datetime-neo__timezone
+  ) {
   margin-right: calc(-1 * var(--datetime-neo-actions-width, 0px));
   padding-right: 0.375rem;
 }
 
-.datetime-neo[data-empty]:not(:hover):not(:focus-within) .datetime-neo__timezone {
+.datetime-neo__content[data-wrapped] .datetime-neo__timezone,
+.datetime-neo__content[data-wrapped] .datetime-neo__actions {
+  padding-top: 0;
+  padding-bottom: 0;
+  margin: 0;
+}
+
+:is(
+    .datetime-neo[data-empty]:not(:hover):not(:focus-within) .datetime-neo__timezone,
+    .datetime-neo[data-empty] .datetime-neo__measurement .datetime-neo__timezone
+  ) {
   opacity: 0;
   transition-delay: 100ms;
 }

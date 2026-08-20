@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "ignorePatterns": ["node_modules", "dist", "dev", "tsup.config.ts", "vitest.config.ts"],
+  "rules": {
+    "prefer-const": "warn",
+    "no-console": "warn",
+    "no-debugger": "warn",
+    "typescript/no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
+    "typescript/no-unnecessary-type-assertion": "warn",
+    "typescript/no-unnecessary-condition": "warn",
+    "typescript/no-useless-empty-export": "warn"
+  }
+}

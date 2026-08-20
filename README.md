@@ -11,17 +11,17 @@ pnpm add neodt solid-js
 ## Usage
 
 ```tsx
-import { DateTime } from 'luxon'
-import Neodt from 'neodt'
+import { DateTime } from "luxon";
+import Neodt from "neodt";
 
 function Appointment() {
   return (
     <Neodt
-      referenceTime={DateTime.fromISO('2026-08-17T12:00:00Z')}
+      referenceTime={DateTime.fromISO("2026-08-17T12:00:00Z")}
       locale="en-GB"
-      onValueChange={value => console.log(value)}
+      onValueChange={(value) => console.log(value)}
     />
-  )
+  );
 }
 ```
 
@@ -76,18 +76,19 @@ Enforce picked datetime to be between optional min and max props.
 
 ### Temporal API
 
- - Could take a peer dependency on `temporal-polyfill` and importing from `'temporal-polyfill/fns'`
- - Or another option could be to take a prop to receive a temporal ponyfill.
- - Is it possible to keep luxon as an **optional** peer dependency so that user decides whether to bundle luxon or a polyfill/ponyfill?
- - Add support for acting in Plain mode as well as the existing Zoned mode.
+- Could take a peer dependency on `temporal-polyfill` and importing from `'temporal-polyfill/fns'`
+- Or another option could be to take a prop to receive a temporal ponyfill.
+- Is it possible to keep luxon as an **optional** peer dependency so that user decides whether to bundle luxon or a polyfill/ponyfill?
+- Add support for acting in Plain mode as well as the existing Zoned mode.
 
 ### Precision and step size
 
 Support configuring precision.
- - Seconds
- - Milliseconds?
- - Date only
- - Step size
+
+- Seconds
+- Milliseconds?
+- Date only
+- Step size
 
 ### Other frameworks
 

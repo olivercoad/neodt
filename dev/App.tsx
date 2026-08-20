@@ -1,147 +1,151 @@
-import { makePersisted, type PersistenceOptions } from '@solid-primitives/storage'
-import { createMemo, createSignal, For, onCleanup, onMount, type Component } from 'solid-js'
-import { DateTime } from 'luxon'
-import Neodt from 'src'
-import styles from './App.module.css'
+import { makePersisted, type PersistenceOptions } from "@solid-primitives/storage";
+import { DateTime } from "luxon";
+import { createMemo, createSignal, For, onCleanup, onMount, type Component } from "solid-js";
+import Neodt from "src";
 
-const systemLocale = new Intl.DateTimeFormat().resolvedOptions().locale
-const systemTimezone = DateTime.now().zoneName ?? 'UTC'
+import styles from "./App.module.css";
+
+const systemLocale = new Intl.DateTimeFormat().resolvedOptions().locale;
+const systemTimezone = DateTime.now().zoneName ?? "UTC";
 
 const locales = [
-  ['', `System (${systemLocale})`],
-  ['en-AU', 'English (Australia)'],
-  ['en-US', 'English (United States)'],
-  ['en-GB', 'English (United Kingdom)'],
-  ['de-DE', 'Deutsch (Deutschland)'],
-  ['fr-FR', 'Francais (France)'],
-  ['ja-JP', 'Japanese (Japan)'],
-]
+  ["", `System (${systemLocale})`],
+  ["en-AU", "English (Australia)"],
+  ["en-US", "English (United States)"],
+  ["en-GB", "English (United Kingdom)"],
+  ["de-DE", "Deutsch (Deutschland)"],
+  ["fr-FR", "Francais (France)"],
+  ["ja-JP", "Japanese (Japan)"],
+];
 
 const timezones = [
   [systemTimezone, `System (${systemTimezone})`],
-  ['Australia/Sydney', 'Sydney (Australia/Sydney)'],
-  ['Australia/Lord_Howe', 'Lord Howe (Australia/Lord_Howe)'],
-  ['America/New_York', 'New York (America/New_York)'],
-  ['Europe/London', 'London (Europe/London)'],
-  ['Asia/Tokyo', 'Tokyo (Asia/Tokyo)'],
-  ['UTC', 'UTC'],
+  ["Australia/Sydney", "Sydney (Australia/Sydney)"],
+  ["Australia/Lord_Howe", "Lord Howe (Australia/Lord_Howe)"],
+  ["America/New_York", "New York (America/New_York)"],
+  ["Europe/London", "London (Europe/London)"],
+  ["Asia/Tokyo", "Tokyo (Asia/Tokyo)"],
+  ["UTC", "UTC"],
 ].filter(
   ([timezone], index, options) => options.findIndex(([value]) => value === timezone) === index,
-)
+);
 
-type DayPeriod = 'locale' | '12' | '24'
-type Timezone = string
+type DayPeriod = "locale" | "12" | "24";
+type Timezone = string;
 
-const initialValue: DateTime = DateTime.fromISO('2026-08-24T14:30:00', { zone: 'Australia/Sydney' })
-const minimumPreviewWidth = 100
+const initialValue: DateTime = DateTime.fromISO("2026-08-24T14:30:00", {
+  zone: "Australia/Sydney",
+});
+const minimumPreviewWidth = 100;
 
 function makePersistedSignal<T>(initialValue: T, options: PersistenceOptions<T, undefined>) {
-  return makePersisted(createSignal(initialValue), options)
+  return makePersisted(createSignal(initialValue), options);
 }
 
 function iso(date: DateTime | null): string {
-  return date?.toISO({ precision: 'minutes' }) ?? 'null'
+  return date?.toISO({ precision: "minutes" }) ?? "null";
 }
 
 const App: Component = () => {
   const [timezone, setTimezone] = makePersistedSignal<Timezone>(systemTimezone, {
-    name: 'neodt-configuration-lab-timezone',
-  })
-  const [now, setNow] = createSignal(DateTime.now())
-  const referenceTimeInputReference = () => now().setZone(timezone())
+    name: "neodt-configuration-lab-timezone",
+  });
+  const [now, setNow] = createSignal(DateTime.now());
+  const referenceTimeInputReference = () => now().setZone(timezone());
   const [referenceTime, setReferenceTime] = makePersistedSignal(referenceTimeInputReference(), {
-    name: 'neodt-configuration-lab-reference-time',
-    serialize: value => value.toISO() ?? '',
-    deserialize: value => DateTime.fromISO(value, {
-      zone: timezone(),
-    }),
-  })
+    name: "neodt-configuration-lab-reference-time",
+    serialize: (value) => value.toISO() ?? "",
+    deserialize: (value) =>
+      DateTime.fromISO(value, {
+        zone: timezone(),
+      }),
+  });
   const [locale, setLocale] = makePersistedSignal<string | undefined>(undefined, {
-    name: 'neodt-configuration-lab-locale',
-  })
-  const [dayPeriod, setDayPeriod] = makePersistedSignal<DayPeriod>('locale', {
-    name: 'neodt-configuration-lab-day-period',
-  })
+    name: "neodt-configuration-lab-locale",
+  });
+  const [dayPeriod, setDayPeriod] = makePersistedSignal<DayPeriod>("locale", {
+    name: "neodt-configuration-lab-day-period",
+  });
   const [value, setValue] = makePersistedSignal<DateTime | null>(initialValue, {
-    name: 'neodt-configuration-lab-value',
-    serialize: value => iso(value),
-    deserialize: value => (value === 'null' ? null : DateTime.fromISO(value)),
-  })
+    name: "neodt-configuration-lab-value",
+    serialize: (value) => iso(value),
+    deserialize: (value) => (value === "null" ? null : DateTime.fromISO(value)),
+  });
   const [showTimeOffset, setShowTimeOffset] = makePersistedSignal(false, {
-    name: 'neodt-configuration-lab-show-time-offset',
-  })
+    name: "neodt-configuration-lab-show-time-offset",
+  });
   const [readonly, setReadonly] = makePersistedSignal(false, {
-    name: 'neodt-configuration-lab-readonly',
-  })
+    name: "neodt-configuration-lab-readonly",
+  });
   const [disabled, setDisabled] = makePersistedSignal(false, {
-    name: 'neodt-configuration-lab-disabled',
-  })
+    name: "neodt-configuration-lab-disabled",
+  });
   const [previewWidth, setPreviewWidth] = makePersistedSignal(320, {
-    name: 'neodt-configuration-lab-preview-width',
-  })
-  let previewInputArea: HTMLDivElement | undefined
-  let dragStart: { pointerId: number; x: number; width: number } | undefined
+    name: "neodt-configuration-lab-preview-width",
+  });
+  let previewInputArea: HTMLDivElement | undefined;
+  let dragStart: { pointerId: number; x: number; width: number } | undefined;
 
   const maximumPreviewWidth = () =>
-    Math.max(minimumPreviewWidth, (previewInputArea?.clientWidth ?? minimumPreviewWidth) - 60)
+    Math.max(minimumPreviewWidth, (previewInputArea?.clientWidth ?? minimumPreviewWidth) - 60);
   const clampPreviewWidth = (width: number) =>
-    Math.round(Math.max(minimumPreviewWidth, Math.min(width, maximumPreviewWidth())))
+    Math.round(Math.max(minimumPreviewWidth, Math.min(width, maximumPreviewWidth())));
 
   onMount(() => {
     const updateMaximumWidth = () => {
-      setPreviewWidth(width => {
-        const nextWidth = clampPreviewWidth(width)
-        return nextWidth === width ? width : nextWidth
-      })
-    }
-    const observer = new ResizeObserver(updateMaximumWidth)
-    if (previewInputArea) observer.observe(previewInputArea)
-    updateMaximumWidth()
-    const timer = window.setInterval(() => setNow(DateTime.now()), 60_000)
+      setPreviewWidth((width) => {
+        const nextWidth = clampPreviewWidth(width);
+        return nextWidth === width ? width : nextWidth;
+      });
+    };
+    const observer = new ResizeObserver(updateMaximumWidth);
+    if (previewInputArea) observer.observe(previewInputArea);
+    updateMaximumWidth();
+    const timer = window.setInterval(() => setNow(DateTime.now()), 60_000);
     onCleanup(() => {
-      observer.disconnect()
-      window.clearInterval(timer)
-    })
-  })
+      observer.disconnect();
+      window.clearInterval(timer);
+    });
+  });
 
   const formatOptions = createMemo<Intl.DateTimeFormatOptions>(() => {
-    if (dayPeriod() === '12') return { hour12: true }
-    if (dayPeriod() === '24') return { hour12: false }
-    return {}
-  })
+    if (dayPeriod() === "12") return { hour12: true };
+    if (dayPeriod() === "24") return { hour12: false };
+    return {};
+  });
 
   const code = createMemo(() => {
     const optionLines = [
       `  referenceTime={referenceTime()}`,
       locale() ? `  locale="${locale()}"` : undefined,
-      dayPeriod() === 'locale'
+      dayPeriod() === "locale"
         ? undefined
-        : `  formatOptions={{ hour12: ${dayPeriod() === '12'} }}`,
-      showTimeOffset() ? '  showTimeOffset' : undefined,
-      readonly() ? '  readonly' : undefined,
-      disabled() ? '  disabled' : undefined,
-      '  value={value()}',
-      '  onValueChange={setValue}',
-    ].filter(Boolean)
-    return `import Neodt from 'neodt'\n\n<Neodt\n${optionLines.join('\n')}\n/>`
-  })
+        : `  formatOptions={{ hour12: ${dayPeriod() === "12"} }}`,
+      showTimeOffset() ? "  showTimeOffset" : undefined,
+      readonly() ? "  readonly" : undefined,
+      disabled() ? "  disabled" : undefined,
+      "  value={value()}",
+      "  onValueChange={setValue}",
+    ].filter(Boolean);
+    return `import Neodt from 'neodt'\n\n<Neodt\n${optionLines.join("\n")}\n/>`;
+  });
 
   const reset = () => {
-    setReferenceTime(DateTime.now())
-    setTimezone(systemTimezone)
-    setLocale(undefined)
-    setDayPeriod('locale')
-    setValue(initialValue)
-    setShowTimeOffset(false)
-    setReadonly(false)
-    setDisabled(false)
-    setPreviewWidth(320)
-  }
+    setReferenceTime(DateTime.now());
+    setTimezone(systemTimezone);
+    setLocale(undefined);
+    setDayPeriod("locale");
+    setValue(initialValue);
+    setShowTimeOffset(false);
+    setReadonly(false);
+    setDisabled(false);
+    setPreviewWidth(320);
+  };
 
   const setReferenceTimezone = (nextTimezone: Timezone) => {
-    setTimezone(nextTimezone)
-    setReferenceTime(referenceTime().setZone(nextTimezone))
-  }
+    setTimezone(nextTimezone);
+    setReferenceTime(referenceTime().setZone(nextTimezone));
+  };
 
   return (
     <main class={styles.page}>
@@ -168,10 +172,10 @@ const App: Component = () => {
           </h1>
           <p class={styles.lede}>
             neodt is a familiar, timezone-aware datetime input for Solid. It speaks your users'
-            language, works naturally with a keyboard, and gives your app a robust{' '}
+            language, works naturally with a keyboard, and gives your app a robust{" "}
             <a href="https://github.com/moment/luxon/" target="_blank" rel="noreferrer">
               Luxon <code>DateTime</code>
-            </a>{' '}
+            </a>{" "}
             instead of a string to untangle.
           </p>
           <div class={styles.install}>
@@ -241,7 +245,7 @@ const App: Component = () => {
                 class={styles.previewInput}
                 referenceTime={referenceTimeInputReference()}
                 value={referenceTime()}
-                onValueChange={next => next && setReferenceTime(next)}
+                onValueChange={(next) => next && setReferenceTime(next)}
                 showTimeOffset
               />
             </div>
@@ -249,7 +253,7 @@ const App: Component = () => {
               <span class={styles.fieldLabel}>Timezone</span>
               <select
                 value={timezone()}
-                onChange={event => setReferenceTimezone(event.currentTarget.value as Timezone)}
+                onChange={(event) => setReferenceTimezone(event.currentTarget.value as Timezone)}
               >
                 <For each={timezones}>
                   {([name, label]) => <option value={name}>{label}</option>}
@@ -260,8 +264,8 @@ const App: Component = () => {
               <label class={styles.field}>
                 <span class={styles.fieldLabel}>Locale</span>
                 <select
-                  value={locale() ?? ''}
-                  onChange={event => setLocale(event.currentTarget.value || undefined)}
+                  value={locale() ?? ""}
+                  onChange={(event) => setLocale(event.currentTarget.value || undefined)}
                 >
                   <For each={locales}>
                     {([name, label]) => <option value={name}>{label}</option>}
@@ -272,7 +276,7 @@ const App: Component = () => {
                 <span class={styles.fieldLabel}>Clock</span>
                 <select
                   value={dayPeriod()}
-                  onChange={event => setDayPeriod(event.currentTarget.value as DayPeriod)}
+                  onChange={(event) => setDayPeriod(event.currentTarget.value as DayPeriod)}
                 >
                   <option value="locale">Locale dependent</option>
                   <option value="12">12 hour / AM PM</option>
@@ -285,24 +289,24 @@ const App: Component = () => {
                 <input
                   type="checkbox"
                   checked={showTimeOffset()}
-                  onChange={event => setShowTimeOffset(event.currentTarget.checked)}
-                />{' '}
+                  onChange={(event) => setShowTimeOffset(event.currentTarget.checked)}
+                />{" "}
                 Time offset
               </label>
               <label>
                 <input
                   type="checkbox"
                   checked={readonly()}
-                  onChange={event => setReadonly(event.currentTarget.checked)}
-                />{' '}
+                  onChange={(event) => setReadonly(event.currentTarget.checked)}
+                />{" "}
                 Readonly
               </label>
               <label>
                 <input
                   type="checkbox"
                   checked={disabled()}
-                  onChange={event => setDisabled(event.currentTarget.checked)}
-                />{' '}
+                  onChange={(event) => setDisabled(event.currentTarget.checked)}
+                />{" "}
                 Disabled
               </label>
             </div>
@@ -313,7 +317,10 @@ const App: Component = () => {
               <code>{referenceTime().zoneName}</code>
             </div>
             <label>Appointment time</label>
-            <div class={styles.resizablePreviewInput} ref={element => (previewInputArea = element)}>
+            <div
+              class={styles.resizablePreviewInput}
+              ref={(element) => (previewInputArea = element)}
+            >
               <div class={styles.previewInputSizer} style={{ width: `${previewWidth()}px` }}>
                 <Neodt
                   class={styles.previewInput}
@@ -331,19 +338,25 @@ const App: Component = () => {
                   type="button"
                   aria-label="Resize preview input"
                   aria-valuetext={`${previewWidth()}px`}
-                  onPointerDown={event => {
-                    dragStart = { pointerId: event.pointerId, x: event.clientX, width: previewWidth() }
-                    event.currentTarget.setPointerCapture(event.pointerId)
-                    event.preventDefault()
+                  onPointerDown={(event) => {
+                    dragStart = {
+                      pointerId: event.pointerId,
+                      x: event.clientX,
+                      width: previewWidth(),
+                    };
+                    event.currentTarget.setPointerCapture(event.pointerId);
+                    event.preventDefault();
                   }}
-                  onPointerMove={event => {
-                    if (dragStart?.pointerId !== event.pointerId) return
-                    setPreviewWidth(clampPreviewWidth(dragStart.width + event.clientX - dragStart.x))
+                  onPointerMove={(event) => {
+                    if (dragStart?.pointerId !== event.pointerId) return;
+                    setPreviewWidth(
+                      clampPreviewWidth(dragStart.width + event.clientX - dragStart.x),
+                    );
                   }}
-                  onPointerUp={event => {
-                    if (dragStart?.pointerId !== event.pointerId) return
-                    dragStart = undefined
-                    event.currentTarget.releasePointerCapture(event.pointerId)
+                  onPointerUp={(event) => {
+                    if (dragStart?.pointerId !== event.pointerId) return;
+                    dragStart = undefined;
+                    event.currentTarget.releasePointerCapture(event.pointerId);
                   }}
                   onLostPointerCapture={() => (dragStart = undefined)}
                 >
@@ -396,7 +409,7 @@ const App: Component = () => {
         <a href="#top">Back to top ↑</a>
       </footer>
     </main>
-  )
-}
+  );
+};
 
-export default App
+export default App;

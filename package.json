@@ -1,7 +1,15 @@
 {
   "name": "neodt",
   "version": "0.0.0",
+  "private": false,
   "description": "A configurable, locale-aware datetime-local input for Solid.",
+  "keywords": [
+    "solid"
+  ],
+  "homepage": "https://github.com/{{me}}/{{name_of_lib}}#readme",
+  "bugs": {
+    "url": "https://github.com/{{me}}/{{name_of_lib}}/issues"
+  },
   "license": "MIT",
   "author": "{{me}}",
   "contributors": [],
@@ -9,22 +17,18 @@
     "type": "git",
     "url": "git+https://github.com/{{me}}/{{name_of_lib}}.git"
   },
-  "homepage": "https://github.com/{{me}}/{{name_of_lib}}#readme",
-  "bugs": {
-    "url": "https://github.com/{{me}}/{{name_of_lib}}/issues"
-  },
   "files": [
     "dist"
   ],
-  "private": false,
+  "type": "module",
   "sideEffects": [
     "**/*.css"
   ],
-  "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "browser": {},
+  "types": "./dist/index.d.ts",
+  "typesVersions": {},
   "exports": {
     "solid": {
       "development": "./dist/dev.jsx",
@@ -41,7 +45,6 @@
       "default": "./dist/index.js"
     }
   },
-  "typesVersions": {},
   "scripts": {
     "dev": "vite serve dev",
     "dev:build": "vite build dev --config dev/vite.config.ts",
@@ -51,48 +54,41 @@
     "test:client": "vitest",
     "test:ssr": "pnpm run test:client --mode ssr",
     "prepublishOnly": "pnpm build",
-    "format": "prettier --ignore-path .gitignore -w \"src/**/*.{js,ts,json,css,tsx,jsx}\" \"dev/**/*.{js,ts,json,css,tsx,jsx}\"",
+    "format": "oxfmt --write .",
     "lint": "concurrently pnpm:lint:*",
-    "lint:code": "eslint --ignore-path .gitignore --max-warnings 0 src/**/*.{js,ts,tsx,jsx}",
+    "lint:code": "oxlint --deny-warnings",
     "lint:types": "tsc --noEmit",
     "check": "pnpm lint && pnpm test && pnpm dev:typecheck && pnpm dev:build",
     "update-deps": "pnpm up -Li"
-  },
-  "peerDependencies": {
-    "solid-js": "^1.6.0"
-  },
-  "devDependencies": {
-    "@types/luxon": "^3.7.4",
-    "@types/node": "^20.12.12",
-    "@typescript-eslint/eslint-plugin": "^7.9.0",
-    "@typescript-eslint/parser": "^7.9.0",
-    "concurrently": "^8.2.2",
-    "esbuild": "^0.21.3",
-    "esbuild-plugin-solid": "^0.6.0",
-    "eslint": "^8.56.0",
-    "eslint-plugin-eslint-comments": "^3.2.0",
-    "eslint-plugin-no-only-tests": "^3.1.0",
-    "jsdom": "^24.0.0",
-    "prettier": "3.0.0",
-    "solid-js": "^1.8.17",
-    "tsup": "^8.0.2",
-    "tsup-preset-solid": "^2.2.0",
-    "typescript": "^5.4.5",
-    "vite": "^5.2.11",
-    "vite-plugin-solid": "^2.10.2",
-    "vitest": "^1.6.0"
-  },
-  "keywords": [
-    "solid"
-  ],
-  "packageManager": "pnpm@9.1.1",
-  "engines": {
-    "node": ">=18",
-    "pnpm": ">=9.0.0"
   },
   "dependencies": {
     "@solid-primitives/resize-observer": "^2.2.0",
     "@solid-primitives/storage": "^4.4.0",
     "luxon": "^3.7.2"
-  }
+  },
+  "devDependencies": {
+    "@types/luxon": "^3.7.4",
+    "@types/node": "^20.12.12",
+    "concurrently": "^8.2.2",
+    "esbuild": "^0.21.3",
+    "esbuild-plugin-solid": "^0.6.0",
+    "jsdom": "^24.0.0",
+    "oxfmt": "^0.64.0",
+    "oxlint": "^1.79.0",
+    "solid-js": "^1.8.17",
+    "tsup": "^8.0.2",
+    "tsup-preset-solid": "^2.2.0",
+    "typescript": "^7.0.2",
+    "vite": "^5.2.11",
+    "vite-plugin-solid": "^2.10.2",
+    "vitest": "^1.6.0"
+  },
+  "peerDependencies": {
+    "solid-js": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=24",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.1.1"
 }

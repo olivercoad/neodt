@@ -382,9 +382,16 @@ describe('Neodt', () => {
           ?.textContent,
       ).toBe('+10:30')
       expect(styles).toMatch(
-        /\.datetime-neo__content:is\(:hover, :focus-within\)\s+\.datetime-neo__timezone-minutes\[data-zero\]/,
+        /\.datetime-neo:is\(:hover, :focus-within\) \.datetime-neo__content:not\(\[data-wrapped\]\) \.datetime-neo__timezone-minutes\[data-zero\]/,
       )
-      expect(styles).toMatch(/opacity 220ms ease 220ms/)
+      expect(styles).toMatch(
+        /\.datetime-neo:not\(:hover\):not\(:focus-within\) \.datetime-neo__content\[data-wrapped\] \.datetime-neo__timezone-minutes\[data-zero\]/,
+      )
+      expect(styles).toMatch(/clip-path 220ms ease/)
+      expect(styles).toMatch(/margin-right 220ms ease/)
+      expect(styles).toMatch(/opacity 220ms ease/)
+      expect(styles).toMatch(/clip-path: inset\(0 100% 0 0\)/)
+      expect(styles).toMatch(/transition-delay: 150ms/)
     }))
 
   it('associates the picker label with the native input and opens it from Space', () =>

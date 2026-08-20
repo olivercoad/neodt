@@ -23,7 +23,7 @@
   overflow: hidden;
   position: absolute;
   top: 100%;
-  /* visibility: hidden; */
+  visibility: hidden;
   white-space: nowrap;
   width: max-content;
   display: flex;
@@ -229,10 +229,31 @@
     opacity 220ms ease 220ms;
 }
 
-.datetime-neo:is(:hover, :focus-within) {
-  .datetime-neo__content .datetime-neo__timezone-minutes[data-zero] {
-    display: none;
-  }
+.datetime-neo__timezone-minutes[data-zero] {
+  clip-path: inset(0);
+  display: inline-block;
+  margin-right: 0;
+  opacity: 1;
+  transition:
+    clip-path 220ms ease,
+    margin-right 220ms ease,
+    opacity 220ms ease;
+}
+
+.datetime-neo:is(:hover, :focus-within) .datetime-neo__content:not([data-wrapped]) .datetime-neo__timezone-minutes[data-zero] {
+  clip-path: inset(0 100% 0 0);
+  margin-right: -2.5ch;
+  opacity: 0;
+}
+
+.datetime-neo:not(:hover):not(:focus-within) .datetime-neo__content .datetime-neo__timezone-minutes[data-zero] {
+  transition-delay: 150ms;
+}
+
+.datetime-neo:not(:hover):not(:focus-within) .datetime-neo__content[data-wrapped] .datetime-neo__timezone-minutes[data-zero] {
+  clip-path: inset(0 100% 0 0);
+  margin-right: -2.5ch;
+  opacity: 0;
 }
 
 .datetime-neo__content[data-wrapped] {
@@ -410,6 +431,15 @@
   padding-top: 0;
   padding-bottom: 0;
   margin: 0;
+  transition-delay: 0ms;
+}
+
+.datetime-neo:not(:hover):not(:focus-within) .datetime-neo__content[data-wrapped] .datetime-neo__timezone {
+  transition-delay: 150ms;
+}
+
+.datetime-neo:not(:hover):not(:focus-within) .datetime-neo__content[data-wrapped] .datetime-neo__actions {
+  transition-delay: 100ms;
 }
 
 :is(.datetime-neo[data-empty]:not(:hover):not(:focus-within) .datetime-neo__timezone,

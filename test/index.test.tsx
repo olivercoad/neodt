@@ -1019,7 +1019,7 @@ describe("Neodt", () => {
       }),
     ));
 
-  it("does not create a native text selection when a segment receives focus", () =>
+  it("creates a single native text selection when a segment receives focus", () =>
     createRoot((dispose) => {
       const control = (
         <DateTimeLocal referenceTime={referenceTime} value={date("2026-08-17T15:30")} />
@@ -1028,7 +1028,7 @@ describe("Neodt", () => {
       const segment = control.querySelector<HTMLElement>(".datetime-neo__segment")!;
       window.getSelection()?.removeAllRanges();
       segment.focus();
-      expect(window.getSelection()?.rangeCount).toBe(0);
+      expect(window.getSelection()?.rangeCount).toBe(1);
       control.remove();
       dispose();
     }));

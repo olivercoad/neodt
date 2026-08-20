@@ -70,7 +70,7 @@
     "@types/luxon": "^3.7.4",
     "@types/node": "^26.2.0",
     "concurrently": "^8.2.2",
-    "jsdom": "^24.0.0",
+    "jsdom": "^30.0.1",
     "oxfmt": "^0.64.0",
     "oxlint": "^1.79.0",
     "solid-js": "^1.8.17",

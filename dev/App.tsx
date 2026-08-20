@@ -5,8 +5,7 @@ import Neodt from 'src'
 import styles from './App.module.css'
 
 const systemLocale = new Intl.DateTimeFormat().resolvedOptions().locale
-const initialReference: DateTime = DateTime.now()
-const systemTimezone = initialReference.zoneName ?? 'UTC'
+const systemTimezone = DateTime.now().zoneName ?? 'UTC'
 
 const locales = [
   ['', `System (${systemLocale})`],
@@ -48,7 +47,9 @@ const App: Component = () => {
   const [timezone, setTimezone] = makePersistedSignal<Timezone>(systemTimezone, {
     name: 'neodt-configuration-lab-timezone',
   })
-  const [referenceTime, setReferenceTime] = makePersistedSignal(initialReference, {
+  const [now, setNow] = createSignal(DateTime.now())
+  const referenceTimeInputReference = () => now().setZone(timezone())
+  const [referenceTime, setReferenceTime] = makePersistedSignal(referenceTimeInputReference(), {
     name: 'neodt-configuration-lab-reference-time',
     serialize: value => value.toISO() ?? '',
     deserialize: value => DateTime.fromISO(value, {
@@ -96,7 +97,11 @@ const App: Component = () => {
     const observer = new ResizeObserver(updateMaximumWidth)
     if (previewInputArea) observer.observe(previewInputArea)
     updateMaximumWidth()
-    onCleanup(() => observer.disconnect())
+    const timer = window.setInterval(() => setNow(DateTime.now()), 60_000)
+    onCleanup(() => {
+      observer.disconnect()
+      window.clearInterval(timer)
+    })
   })
 
   const formatOptions = createMemo<Intl.DateTimeFormatOptions>(() => {
@@ -122,7 +127,7 @@ const App: Component = () => {
   })
 
   const reset = () => {
-    setReferenceTime(initialReference)
+    setReferenceTime(DateTime.now())
     setTimezone(systemTimezone)
     setLocale(undefined)
     setDayPeriod('locale')
@@ -182,7 +187,7 @@ const App: Component = () => {
             <label>Meeting starts</label>
             <Neodt
               class={styles.compareInput}
-              referenceTime={DateTime.now()}
+              referenceTime={now()}
               defaultValue={initialValue}
               locale={navigator.language}
             />
@@ -234,7 +239,7 @@ const App: Component = () => {
               </span>
               <Neodt
                 class={styles.previewInput}
-                referenceTime={referenceTime()}
+                referenceTime={referenceTimeInputReference()}
                 value={referenceTime()}
                 onValueChange={next => next && setReferenceTime(next)}
                 showTimeOffset

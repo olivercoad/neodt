@@ -102,13 +102,17 @@ function naturalPreview(
     .join('')
 }
 
-function timeOffset(date: DateTime): string {
-  const offset = date.offset
+function timeOffset(date: DateTime) {
+  const offset = Math.round(date.offset)
   const sign = offset < 0 ? '-' : '+'
   const minutes = Math.abs(offset)
   const hours = Math.floor(minutes / 60)
   const remainder = minutes % 60
-  return `${sign}${hours}${remainder ? `:${remainder.toString().padStart(2, '0')}` : ''}`
+  return {
+    hours: `${sign}${hours}`,
+    minutes: `:${remainder.toString().padStart(2, '0')}`,
+    hasZeroMinutes: remainder === 0,
+  }
 }
 
 function splitDateAndTime(parts: DisplayPart[]) {
@@ -983,7 +987,7 @@ function Neodt(props: NeodtProps): JSX.Element {
     const offset = measurement
       ? referenceZone().isUniversal
         ? timeOffset(local.referenceTime)
-        : '+12:45'
+        : { hours: '+88', minutes: ':88', hasZeroMinutes: false }
       : timeOffset(
           naturalMode()
             ? naturalDate() ?? local.referenceTime
@@ -997,7 +1001,13 @@ function Neodt(props: NeodtProps): JSX.Element {
         <span class="datetime-neo__trailing">
           {local.showTimeOffset && (
             <span class="datetime-neo__timezone" aria-hidden={!measurement || undefined}>
-              {offset}
+              <span>{offset.hours}</span>
+              <span
+                class="datetime-neo__timezone-minutes"
+                data-zero={offset.hasZeroMinutes ? '' : undefined}
+              >
+                {offset.minutes}
+              </span>
             </span>
           )}
           {!local.readonly && !local.disabled && (

@@ -330,7 +330,7 @@ describe('Neodt', () => {
       expect(control.querySelector('.datetime-neo__timezone')).toBeNull()
     }))
 
-  it('shows the selected offset when showTimeOffset is enabled', () =>
+  it('shows the selected offset including zero minutes when showTimeOffset is enabled', () =>
     createRoot(() => {
       const sydneyReference = DateTime.fromISO('2026-08-17T15:30:00', { zone: 'Australia/Sydney' })
       const control = (
@@ -342,12 +342,15 @@ describe('Neodt', () => {
         />
       ) as HTMLSpanElement
       const timezone = control.querySelector('.datetime-neo__timezone')
-      expect(timezone?.textContent).toBe('+10')
+      expect(timezone?.textContent).toBe('+10:00')
+      expect(
+        timezone?.querySelector('.datetime-neo__timezone-minutes[data-zero]')?.textContent,
+      ).toBe(':00')
       expect(timezone?.parentElement?.classList.contains('datetime-neo__trailing')).toBe(true)
       expect(timezone?.parentElement?.querySelector('.datetime-neo__actions')).not.toBeNull()
     }))
 
-  it('uses compact offsets and fixed universal-zone offsets for measurements', () =>
+  it('rounds offsets to minutes and keeps minutes in measurement layouts', () =>
     createRoot(() => {
       const fourHourReference = DateTime.fromISO('2026-08-17T15:30:00', { zone: 'UTC+4' })
       const fourHourControl = (
@@ -358,11 +361,11 @@ describe('Neodt', () => {
           value={fourHourReference}
         />
       ) as HTMLSpanElement
-      expect(fourHourControl.querySelector('.datetime-neo__timezone')?.textContent).toBe('+4')
+      expect(fourHourControl.querySelector('.datetime-neo__timezone')?.textContent).toBe('+4:00')
       expect(
         fourHourControl.querySelector('.datetime-neo__measurement .datetime-neo__timezone')
           ?.textContent,
-      ).toBe('+4')
+      ).toBe('+4:00')
 
       const halfHourReference = DateTime.fromISO('2026-08-17T15:30:00', { zone: 'UTC+10:30' })
       const halfHourControl = (
@@ -378,6 +381,10 @@ describe('Neodt', () => {
         halfHourControl.querySelector('.datetime-neo__measurement .datetime-neo__timezone')
           ?.textContent,
       ).toBe('+10:30')
+      expect(styles).toMatch(
+        /\.datetime-neo__content:is\(:hover, :focus-within\)\s+\.datetime-neo__timezone-minutes\[data-zero\]/,
+      )
+      expect(styles).toMatch(/opacity 220ms ease 220ms/)
     }))
 
   it('associates the picker label with the native input and opens it from Space', () =>
@@ -579,7 +586,7 @@ describe('Neodt', () => {
     input.value = 'January 1, 2027 at 9am'
     input.dispatchEvent(new InputEvent('input', { bubbles: true }))
     await nextRender()
-      expect(control.querySelector('.datetime-neo__timezone')?.textContent).toBe('+11')
+    expect(control.querySelector('.datetime-neo__timezone')?.textContent).toBe('+11:00')
     control.remove()
     dispose!()
   })

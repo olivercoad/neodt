@@ -38,5 +38,6 @@ export default defineConfig((config) => {
     preset.writePackageJson(package_fields);
   }
 
-  return preset.generateTsupOptions(parsed_options);
+  // rollup-plugin-dts does not yet support TypeScript 7; declarations are emitted by tsc instead.
+  return preset.generateTsupOptions(parsed_options).map((options) => ({ ...options, dts: false }));
 });

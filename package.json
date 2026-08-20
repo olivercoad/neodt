@@ -49,7 +49,7 @@
     "dev": "vite serve dev",
     "dev:build": "vite build dev --config dev/vite.config.ts",
     "dev:typecheck": "tsc --noEmit -p dev/tsconfig.json",
-    "build": "tsup",
+    "build": "tsup && tsc -p tsconfig.build.json",
     "test": "concurrently pnpm:test:*",
     "test:client": "vitest",
     "test:ssr": "pnpm run test:client --mode ssr",
@@ -68,20 +68,18 @@
   },
   "devDependencies": {
     "@types/luxon": "^3.7.4",
-    "@types/node": "^20.12.12",
+    "@types/node": "^26.2.0",
     "concurrently": "^8.2.2",
-    "esbuild": "^0.21.3",
-    "esbuild-plugin-solid": "^0.6.0",
     "jsdom": "^24.0.0",
     "oxfmt": "^0.64.0",
     "oxlint": "^1.79.0",
     "solid-js": "^1.8.17",
-    "tsup": "^8.0.2",
+    "tsup": "^8.5.1",
     "tsup-preset-solid": "^2.2.0",
     "typescript": "^7.0.2",
-    "vite": "^5.2.11",
-    "vite-plugin-solid": "^2.10.2",
-    "vitest": "^1.6.0"
+    "vite": "^8.2.2",
+    "vite-plugin-solid": "^2.11.14",
+    "vitest": "^4.1.11"
   },
   "peerDependencies": {
     "solid-js": "^1.6.0"

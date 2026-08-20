@@ -11,6 +11,9 @@ importers:
       '@solid-primitives/resize-observer':
         specifier: ^2.2.0
         version: 2.2.0(solid-js@1.8.17)
+      '@solid-primitives/storage':
+        specifier: ^4.4.0
+        version: 4.4.0(solid-js@1.8.17)
       luxon:
         specifier: ^3.7.2
         version: 3.7.2
@@ -825,6 +828,18 @@ packages:
     resolution: {integrity: sha512-LgtVaVBtB7EbmS4+M0b8xY5Iq6pUWXBsIC4VgtrFKDGDdyCaDt88sHk0fUlx1Enxm/XZnZyLXJABRoa39RjJqA==}
     peerDependencies:
       solid-js: ^1.6.12
+
+  '@solid-primitives/storage@4.4.0':
+    resolution: {integrity: sha512-+u0dpTqrUG7h+IMfmGLCx7vx2Q0Eon6paBgzcWhEP/dauElpGU3ElpZZOZgw8YKR1+J4X4ENiAL0na3VH8RWMg==}
+    peerDependencies:
+      '@tauri-apps/plugin-store': '*'
+      solid-js: ^1.6.12
+      solid-start: '*'
+    peerDependenciesMeta:
+      '@tauri-apps/plugin-store':
+        optional: true
+      solid-start:
+        optional: true
 
   '@solid-primitives/utils@6.4.1':
     resolution: {integrity: sha512-ISSB5QX1qP2ynrheIpYwc4oKR5Ny4siNuUyf1qZniy+Il+p/PtDB0QK1Dnle8noiHpwRD3gpPdubOC3qI/Zamg==}
@@ -2805,6 +2820,11 @@ snapshots:
       solid-js: 1.8.17
 
   '@solid-primitives/static-store@0.1.4(solid-js@1.8.17)':
+    dependencies:
+      '@solid-primitives/utils': 6.4.1(solid-js@1.8.17)
+      solid-js: 1.8.17
+
+  '@solid-primitives/storage@4.4.0(solid-js@1.8.17)':
     dependencies:
       '@solid-primitives/utils': 6.4.1(solid-js@1.8.17)
       solid-js: 1.8.17

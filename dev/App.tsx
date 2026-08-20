@@ -1,11 +1,12 @@
-import { createMemo, createSignal, For, Show, type Component } from 'solid-js'
+import { makePersisted, type PersistenceOptions } from '@solid-primitives/storage'
+import { createMemo, createSignal, For, onCleanup, onMount, type Component } from 'solid-js'
 import { DateTime } from 'luxon'
 import Neodt from 'src'
 import styles from './App.module.css'
 
 const systemLocale = new Intl.DateTimeFormat().resolvedOptions().locale
-const initialReference = DateTime.now()
-const systemTimezone = initialReference.zoneName
+const initialReference: DateTime = DateTime.now()
+const systemTimezone = initialReference.zoneName ?? 'UTC'
 
 const locales = [
   ['', `System (${systemLocale})`],
@@ -31,21 +32,69 @@ const timezones = [
 type DayPeriod = 'locale' | '12' | '24'
 type Timezone = string
 
-const initialValue = DateTime.fromISO('2026-08-24T14:30:00', { zone: 'Australia/Sydney' })
+const initialValue: DateTime = DateTime.fromISO('2026-08-24T14:30:00', { zone: 'Australia/Sydney' })
+const minimumPreviewWidth = 100
+
+function makePersistedSignal<T>(initialValue: T, options: PersistenceOptions<T, undefined>) {
+  return makePersisted(createSignal(initialValue), options)
+}
 
 function iso(date: DateTime | null): string {
   return date?.toISO({ precision: 'minutes' }) ?? 'null'
 }
 
 const App: Component = () => {
-  const [referenceTime, setReferenceTime] = createSignal<DateTime>(initialReference)
-  const [timezone, setTimezone] = createSignal<Timezone>(systemTimezone)
-  const [locale, setLocale] = createSignal<string | undefined>()
-  const [dayPeriod, setDayPeriod] = createSignal<DayPeriod>('locale')
-  const [value, setValue] = createSignal<DateTime | null>(initialValue)
-  const [showTimeOffset, setShowTimeOffset] = createSignal(false)
-  const [readonly, setReadonly] = createSignal(false)
-  const [disabled, setDisabled] = createSignal(false)
+  const [referenceTime, setReferenceTime] = makePersistedSignal(initialReference, {
+    name: 'neodt-configuration-lab-reference-time',
+    serialize: value => value.toISO() ?? '',
+    deserialize: value => DateTime.fromISO(value),
+  })
+  const [timezone, setTimezone] = makePersistedSignal<Timezone>(systemTimezone, {
+    name: 'neodt-configuration-lab-timezone',
+  })
+  const [locale, setLocale] = makePersistedSignal<string | undefined>(undefined, {
+    name: 'neodt-configuration-lab-locale',
+  })
+  const [dayPeriod, setDayPeriod] = makePersistedSignal<DayPeriod>('locale', {
+    name: 'neodt-configuration-lab-day-period',
+  })
+  const [value, setValue] = makePersistedSignal<DateTime | null>(initialValue, {
+    name: 'neodt-configuration-lab-value',
+    serialize: value => iso(value),
+    deserialize: value => (value === 'null' ? null : DateTime.fromISO(value)),
+  })
+  const [showTimeOffset, setShowTimeOffset] = makePersistedSignal(false, {
+    name: 'neodt-configuration-lab-show-time-offset',
+  })
+  const [readonly, setReadonly] = makePersistedSignal(false, {
+    name: 'neodt-configuration-lab-readonly',
+  })
+  const [disabled, setDisabled] = makePersistedSignal(false, {
+    name: 'neodt-configuration-lab-disabled',
+  })
+  const [previewWidth, setPreviewWidth] = makePersistedSignal(320, {
+    name: 'neodt-configuration-lab-preview-width',
+  })
+  let previewInputArea: HTMLDivElement | undefined
+  let dragStart: { pointerId: number; x: number; width: number } | undefined
+
+  const maximumPreviewWidth = () =>
+    Math.max(minimumPreviewWidth, (previewInputArea?.clientWidth ?? minimumPreviewWidth) - 60)
+  const clampPreviewWidth = (width: number) =>
+    Math.round(Math.max(minimumPreviewWidth, Math.min(width, maximumPreviewWidth())))
+
+  onMount(() => {
+    const updateMaximumWidth = () => {
+      setPreviewWidth(width => {
+        const nextWidth = clampPreviewWidth(width)
+        return nextWidth === width ? width : nextWidth
+      })
+    }
+    const observer = new ResizeObserver(updateMaximumWidth)
+    if (previewInputArea) observer.observe(previewInputArea)
+    updateMaximumWidth()
+    onCleanup(() => observer.disconnect())
+  })
 
   const formatOptions = createMemo<Intl.DateTimeFormatOptions>(() => {
     if (dayPeriod() === '12') return { hour12: true }
@@ -78,6 +127,7 @@ const App: Component = () => {
     setShowTimeOffset(false)
     setReadonly(false)
     setDisabled(false)
+    setPreviewWidth(320)
   }
 
   const setReferenceTimezone = (nextTimezone: Timezone) => {
@@ -255,17 +305,45 @@ const App: Component = () => {
               <code>{referenceTime().zoneName}</code>
             </div>
             <label>Appointment time</label>
-            <Neodt
-              class={styles.previewInput}
-              referenceTime={referenceTime()}
-              value={value()}
-              {...(locale() ? { locale: locale() } : {})}
-              formatOptions={formatOptions()}
-              showTimeOffset={showTimeOffset()}
-              readonly={readonly()}
-              disabled={disabled()}
-              onValueChange={setValue}
-            />
+            <div class={styles.resizablePreviewInput} ref={element => (previewInputArea = element)}>
+              <div class={styles.previewInputSizer} style={{ width: `${previewWidth()}px` }}>
+                <Neodt
+                  class={styles.previewInput}
+                  referenceTime={referenceTime()}
+                  value={value()}
+                  {...(locale() ? { locale: locale() } : {})}
+                  formatOptions={formatOptions()}
+                  showTimeOffset={showTimeOffset()}
+                  readonly={readonly()}
+                  disabled={disabled()}
+                  onValueChange={setValue}
+                />
+                <button
+                  class={styles.resizeHandle}
+                  type="button"
+                  aria-label="Resize preview input"
+                  aria-valuetext={`${previewWidth()}px`}
+                  onPointerDown={event => {
+                    dragStart = { pointerId: event.pointerId, x: event.clientX, width: previewWidth() }
+                    event.currentTarget.setPointerCapture(event.pointerId)
+                    event.preventDefault()
+                  }}
+                  onPointerMove={event => {
+                    if (dragStart?.pointerId !== event.pointerId) return
+                    setPreviewWidth(clampPreviewWidth(dragStart.width + event.clientX - dragStart.x))
+                  }}
+                  onPointerUp={event => {
+                    if (dragStart?.pointerId !== event.pointerId) return
+                    dragStart = undefined
+                    event.currentTarget.releasePointerCapture(event.pointerId)
+                  }}
+                  onLostPointerCapture={() => (dragStart = undefined)}
+                >
+                  <span class={styles.resizeGrip} aria-hidden="true" />
+                  <span>{previewWidth()}px</span>
+                </button>
+              </div>
+            </div>
             <div class={styles.valueLine}>
               <span>Current value</span>
               <code>{iso(value())}</code>

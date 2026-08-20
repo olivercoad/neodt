@@ -92,6 +92,7 @@
   },
   "dependencies": {
     "@solid-primitives/resize-observer": "^2.2.0",
+    "@solid-primitives/storage": "^4.4.0",
     "luxon": "^3.7.2"
   }
 }

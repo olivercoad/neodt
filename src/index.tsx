@@ -283,6 +283,8 @@ function Neodt(props: NeodtProps): JSX.Element {
   const controlSize =
     typeof ResizeObserver === 'undefined' ? { width: 0 } : createElementSize(control)
   const [measurements, setMeasurements] = createSignal<HTMLSpanElement>()
+  const measurementsSize =
+    typeof ResizeObserver === 'undefined' ? { width: 0 } : createElementSize(measurements)
   const nativeInputId = createUniqueId()
   let hasOpenedNaturalInput = false
   const naturalPlaceholderAnimation = createNaturalPlaceholder(setNaturalPlaceholder)
@@ -349,6 +351,7 @@ function Neodt(props: NeodtProps): JSX.Element {
     widestParts()
     local.showTimeOffset
     measurements()
+    measurementsSize.width
     queueMicrotask(() => {
       const availableWidth = control()?.clientWidth ?? 0
       const requiredWidth = Math.max(

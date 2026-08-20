@@ -128,12 +128,13 @@
   min-width: 0;
   outline: 0;
   padding: var(--datetime-neo-segment-padding);
+  field-sizing: content;
 }
 
 .datetime-neo__natural-field {
   display: grid;
   flex: 1 1 auto;
-  min-width: 0;
+  width: fit-content;
 }
 
 .datetime-neo__natural-field>* {
@@ -146,7 +147,7 @@
   display: flex;
   font: inherit;
   line-height: var(--datetime-neo-segment-line-height);
-  min-width: 0;
+  min-width: fit-content;
   overflow: hidden;
   padding: var(--datetime-neo-segment-padding);
   pointer-events: none;
@@ -202,10 +203,11 @@
 
 .datetime-neo__natural-entry {
   flex: 1 1 auto;
+  max-width: 100%;
 }
 
 .datetime-neo__natural-result {
-  flex: 0 1 auto;
+  flex: 0 3 auto;
   margin-left: auto;
 }
 

@@ -82,6 +82,11 @@
   display: none;
 }
 
+/* Measurements can change after render and when the control reflows. */
+.datetime-neo[data-layout-changing] :is(.datetime-neo__editor, .datetime-neo__timezone, .datetime-neo__timezone-minutes) {
+  transition: none;
+}
+
 .datetime-neo__editor[data-overflowing] {
   mask-image: linear-gradient(to right,
       black 0%,
@@ -102,7 +107,6 @@
     width: 100%;
   }
 }
-
 
 .datetime-neo__value {
   opacity: 1;

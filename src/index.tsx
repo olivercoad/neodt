@@ -272,6 +272,7 @@ function Neodt(props: NeodtProps): JSX.Element {
   const [editor, setEditor] = createSignal<HTMLSpanElement>()
   const [editorHasHiddenEnd, setEditorHasHiddenEnd] = createSignal(false)
   const [wrap, setWrap] = createSignal(false)
+  const [layoutChanging, setLayoutChanging] = createSignal(true)
   let nativeInput: HTMLInputElement | undefined
   let naturalInput: HTMLInputElement | undefined
   const [actions, setActions] = createSignal<HTMLSpanElement>()
@@ -358,6 +359,24 @@ function Neodt(props: NeodtProps): JSX.Element {
       )
       setWrap(availableWidth > 0 && requiredWidth > availableWidth)
     })
+  })
+
+  let layoutSettledFrame: number | undefined
+  createEffect(() => {
+    actionSize.width
+    wrap()
+    setLayoutChanging(true)
+    if (layoutSettledFrame !== undefined) cancelAnimationFrame(layoutSettledFrame)
+    // Keep layout transitions disabled for a painted frame while measurements settle.
+    layoutSettledFrame = requestAnimationFrame(() => {
+      layoutSettledFrame = requestAnimationFrame(() => {
+        layoutSettledFrame = undefined
+        setLayoutChanging(false)
+      })
+    })
+  })
+  onCleanup(() => {
+    if (layoutSettledFrame !== undefined) cancelAnimationFrame(layoutSettledFrame)
   })
 
   const emitValue = (next: DateTime | undefined) => {
@@ -826,6 +845,7 @@ function Neodt(props: NeodtProps): JSX.Element {
       data-natural={naturalMode() ? '' : undefined}
       data-readonly={local.readonly ? '' : undefined}
       data-time-offset={local.showTimeOffset ? '' : undefined}
+      data-layout-changing={layoutChanging() ? '' : undefined}
       style={{ '--datetime-neo-actions-width': `${actionSize.width ?? 0}px` }}
     >
       <span

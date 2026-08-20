@@ -392,6 +392,7 @@ describe('Neodt', () => {
       expect(styles).toMatch(/opacity 220ms ease/)
       expect(styles).toMatch(/clip-path: inset\(0 100% 0 0\)/)
       expect(styles).toMatch(/transition-delay: 150ms/)
+      expect(styles).toMatch(/\.datetime-neo\[data-layout-changing\].*transition:\s*none/s)
     }))
 
   it('associates the picker label with the native input and opens it from Space', () =>

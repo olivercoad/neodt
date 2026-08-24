@@ -4,6 +4,8 @@
     "target": "ESNext",
     "module": "ESNext",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "declaration": true,
+    "declarationMap": true,
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "esModuleInterop": true,

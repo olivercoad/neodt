@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "ignorePatterns": ["node_modules", "dist", "dev", "tsup.config.ts", "vitest.config.ts"],
+  "ignorePatterns": ["node_modules", "dist", "dev", "vitest.config.ts"],
   "rules": {
     "prefer-const": "warn",
     "no-console": "warn",

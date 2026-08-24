@@ -4,13 +4,13 @@
   "private": false,
   "description": "A configurable, locale-aware datetime-local input for Solid.",
   "keywords": [
-    "solid",
-    "solidjs",
     "date",
-    "time",
+    "date-time-picker",
     "datetime",
     "datetime-local",
-    "date-time-picker"
+    "solid",
+    "solidjs",
+    "time"
   ],
   "homepage": "https://neodt.olisworld.com",
   "bugs": {
@@ -32,28 +32,11 @@
   "sideEffects": [
     "**/*.css"
   ],
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": {
-      "solid": {
-        "development": "./dist/dev.jsx",
-        "import": "./dist/index.jsx"
-      },
-      "development": {
-        "import": {
-          "types": "./dist/index.d.ts",
-          "default": "./dist/dev.js"
-        }
-      },
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      }
-    },
-    "./styles.css": "./dist/index.css",
-    "./package.json": "./package.json"
+    ".": "./dist/index.jsx",
+    "./package.json": "./package.json",
+    "./style.css": "./dist/style.css"
   },
   "publishConfig": {
     "access": "public"
@@ -62,7 +45,7 @@
     "dev": "vite serve dev",
     "dev:build": "vite build dev --config dev/vite.config.ts",
     "dev:typecheck": "tsc --noEmit -p dev/tsconfig.json",
-    "build": "tsup && tsc -p tsconfig.build.json",
+    "build": "tsdown",
     "test": "concurrently pnpm:test:*",
     "test:client": "vitest",
     "test:ssr": "pnpm run test:client --mode ssr",
@@ -80,6 +63,7 @@
     "luxon": "^3.7.2"
   },
   "devDependencies": {
+    "@tsdown/css": "^0.22.14",
     "@types/luxon": "^3.7.4",
     "@types/node": "^26.2.0",
     "concurrently": "^8.2.2",
@@ -87,8 +71,7 @@
     "oxfmt": "^0.64.0",
     "oxlint": "^1.79.0",
     "solid-js": "^1.8.17",
-    "tsup": "^8.5.1",
-    "tsup-preset-solid": "^2.2.0",
+    "tsdown": "^0.22.14",
     "typescript": "^7.0.2",
     "vite": "^8.2.2",
     "vite-plugin-solid": "^2.11.14",

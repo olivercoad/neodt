@@ -34,18 +34,18 @@ function Appointment() {
 
 `referenceTime: DateTime` is required. It provides the timezone, is used to fill empty segments, and determines how two-digit years are interpreted. Selected values are always normalized to this zone.
 
-| Prop | Description |
-| --- | --- |
-| `value?: DateTime \| null` | Controlled value. Pass `null` to clear the field. |
-| `defaultValue?: DateTime` | Initial uncontrolled value. |
-| `onValueChange?: (value: DateTime \| null) => void` | Called after a complete value is changed or cleared. |
-| `locale?: Intl.LocalesArgument` | Locale for segment order and labels. Defaults to the browser locale. |
-| `formatOptions?: Intl.DateTimeFormatOptions` | Formatting options, including `hour12` and `hourCycle`. |
-| `showTimeOffset?: boolean` | Shows the selected date's UTC offset. |
-| `readonly?: boolean` | Displays a value without allowing edits. |
-| `disabled?: boolean` | Prevents focus and editing. |
-| `calendarIcon?: JSX.Element` | Replaces the native date-time picker button icon. |
-| `magicIcon?: JSX.Element` | Replaces the natural-language entry button icon. |
+| Prop                                                | Description                                                          |
+| --------------------------------------------------- | -------------------------------------------------------------------- |
+| `value?: DateTime \| null`                          | Controlled value. Pass `null` to clear the field.                    |
+| `defaultValue?: DateTime`                           | Initial uncontrolled value.                                          |
+| `onValueChange?: (value: DateTime \| null) => void` | Called after a complete value is changed or cleared.                 |
+| `locale?: Intl.LocalesArgument`                     | Locale for segment order and labels. Defaults to the browser locale. |
+| `formatOptions?: Intl.DateTimeFormatOptions`        | Formatting options, including `hour12` and `hourCycle`.              |
+| `showTimeOffset?: boolean`                          | Shows the selected date's UTC offset.                                |
+| `readonly?: boolean`                                | Displays a value without allowing edits.                             |
+| `disabled?: boolean`                                | Prevents focus and editing.                                          |
+| `calendarIcon?: JSX.Element`                        | Replaces the native date-time picker button icon.                    |
+| `magicIcon?: JSX.Element`                           | Replaces the natural-language entry button icon.                     |
 
 All standard `span` attributes, including `class`, `classList`, and ARIA attributes, are forwarded to the root element. This is a JavaScript-managed SPA control and does not provide native form submission.
 

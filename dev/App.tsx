@@ -127,7 +127,7 @@ const App: Component = () => {
       "  value={value()}",
       "  onValueChange={setValue}",
     ].filter(Boolean);
-    return `import Neodt from 'neodt'\n\n<Neodt\n${optionLines.join("\n")}\n/>`;
+    return `import Neodt from '@olicoad/neodt'\n\n<Neodt\n${optionLines.join("\n")}\n/>`;
   });
 
   const reset = () => {
@@ -156,7 +156,7 @@ const App: Component = () => {
         <div class={styles.navLinks}>
           <a href="#comparison">Compare</a>
           <a href="#playground">Playground</a>
-          <a href="https://github.com" target="_blank" rel="noreferrer">
+          <a href="https://github.com/olivercoad/neodt" target="_blank" rel="noreferrer">
             GitHub ↗
           </a>
         </div>
@@ -179,11 +179,11 @@ const App: Component = () => {
             instead of a string to untangle.
           </p>
           <div class={styles.install}>
-            <code>pnpm add neodt luxon</code>
+            <code>pnpm add @olicoad/neodt luxon</code>
             <span>Solid 1.6+</span>
           </div>
         </div>
-        <div class={styles.compareGrid}>
+        <div id="comparison" class={styles.compareGrid}>
           <article class={styles.compareCard}>
             <div class={styles.cardHead}>
               <span class={styles.dot} /> neodt <b>Recommended</b>

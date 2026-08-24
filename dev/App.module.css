@@ -51,6 +51,7 @@ footer {
   width: 1.7rem;
 }
 .navLinks {
+  align-items: center;
   display: flex;
   gap: 1.5rem;
 }
@@ -61,11 +62,31 @@ footer a {
   font-size: 0.72rem;
   text-decoration: none;
 }
+.navLinks a {
+  align-items: center;
+  display: inline-flex;
+  line-height: 1;
+}
+.navLinks a:not(:last-child) {
+  padding: 0.5rem 0;
+}
+.navLinks a:hover {
+  color: var(--ink);
+}
+.navLinks a:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 0.25rem;
+}
 .navLinks a:last-child {
   border: 1px solid var(--line);
   border-radius: 99px;
   color: var(--ink);
   padding: 0.5rem 0.7rem;
+}
+.navLinks a:last-child:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: white;
 }
 .hero {
   border-bottom: 1px solid var(--line);

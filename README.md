@@ -7,14 +7,14 @@ A locale-aware, keyboard-editable segmented date and time input for Solid.
 ## Install
 
 ```bash
-pnpm add neodt
+pnpm add @olicoad/neodt
 ```
 
 ## Usage
 
 ```tsx
 import { DateTime } from "luxon";
-import Neodt from "neodt";
+import Neodt from "@olicoad/neodt";
 
 function Appointment() {
   const [value, setValue] = createSignal<DateTime | null>(null);
@@ -56,8 +56,8 @@ The control supports mouse, touch, and keyboard editing: Arrow Left/Right move b
 The main `neodt` entry imports the component CSS, so Vite and standard Solid build setups need no extra configuration. For applications that exclude dependency side effects, or that centralize stylesheet imports, import the public stylesheet explicitly:
 
 ```tsx
-import "neodt/styles.css";
-import Neodt from "neodt";
+import "@olicoad/neodt/style.css";
+import Neodt from "@olicoad/neodt";
 ```
 
 Scope theme variables on the component or an ancestor:
@@ -84,7 +84,7 @@ import {
   parseNaturalDate,
   type NaturalDateCompletion,
   type NaturalDateParseOptions,
-} from "neodt";
+} from "@olicoad/neodt";
 ```
 
 `parseNaturalDate(value, options)` returns a Luxon `DateTime` or `undefined`. Its options require `referenceTime` and `zone`, with an optional `locale`. `getNaturalDateCompletions(value, maximum?)` returns completion labels and replacement text.

@@ -1161,6 +1161,9 @@ function Neodt(props: NeodtProps): JSX.Element {
   }
 }
 
+export { Neodt };
 export default Neodt;
 export { getNaturalDateCompletions } from "./natural-completion";
 export { parseNaturalDate } from "./natural-parser";
+export type { NaturalDateCompletion } from "./natural-completion";
+export type { NaturalDateParseOptions } from "./natural-parser";

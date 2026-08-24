@@ -1,24 +1,32 @@
 {
   "name": "neodt",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": false,
   "description": "A configurable, locale-aware datetime-local input for Solid.",
   "keywords": [
-    "solid"
+    "solid",
+    "solidjs",
+    "date",
+    "time",
+    "datetime",
+    "datetime-local",
+    "date-time-picker"
   ],
-  "homepage": "https://github.com/{{me}}/{{name_of_lib}}#readme",
+  "homepage": "https://neodt.olisworld.com",
   "bugs": {
-    "url": "https://github.com/{{me}}/{{name_of_lib}}/issues"
+    "url": "https://github.com/olivercoad/neodt/issues"
   },
   "license": "MIT",
-  "author": "{{me}}",
+  "author": "olicoad",
   "contributors": [],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/{{me}}/{{name_of_lib}}.git"
+    "url": "git+https://github.com/olivercoad/neodt.git"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "type": "module",
   "sideEffects": [
@@ -26,24 +34,29 @@
   ],
   "main": "./dist/index.js",
   "module": "./dist/index.js",
-  "browser": {},
   "types": "./dist/index.d.ts",
-  "typesVersions": {},
   "exports": {
-    "solid": {
-      "development": "./dist/dev.jsx",
-      "import": "./dist/index.jsx"
-    },
-    "development": {
+    ".": {
+      "solid": {
+        "development": "./dist/dev.jsx",
+        "import": "./dist/index.jsx"
+      },
+      "development": {
+        "import": {
+          "types": "./dist/index.d.ts",
+          "default": "./dist/dev.js"
+        }
+      },
       "import": {
         "types": "./dist/index.d.ts",
-        "default": "./dist/dev.js"
+        "default": "./dist/index.js"
       }
     },
-    "import": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
+    "./styles.css": "./dist/index.css",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "dev": "vite serve dev",
@@ -53,7 +66,7 @@
     "test": "concurrently pnpm:test:*",
     "test:client": "vitest",
     "test:ssr": "pnpm run test:client --mode ssr",
-    "prepublishOnly": "pnpm build",
+    "prepack": "pnpm build",
     "format": "oxfmt --write .",
     "lint": "concurrently pnpm:lint:*",
     "lint:code": "oxlint --deny-warnings",
@@ -86,7 +99,7 @@
   },
   "engines": {
     "node": ">=24",
-    "pnpm": ">=9.0.0"
+    "pnpm": ">=11.0.0"
   },
-  "packageManager": "pnpm@9.1.1"
+  "packageManager": "pnpm@11.23.0"
 }

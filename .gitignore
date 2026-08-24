@@ -1,4 +1,5 @@
 dist
+*.tgz
 .wrangler
 .output
 .vercel

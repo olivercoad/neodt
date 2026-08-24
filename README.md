@@ -1,11 +1,13 @@
 # neodt
 
-A configurable, locale-aware segmented date and time input for Solid SPAs.
+A locale-aware, keyboard-editable segmented date and time input for Solid.
+
+**Links**: [GitHub](https://github.com/olivercoad/neodt) | [Issues](https://github.com/olivercoad/neodt/issues) | [Demo](https://neodt.olisworld.com)
 
 ## Install
 
 ```bash
-pnpm add neodt solid-js
+pnpm add neodt
 ```
 
 ## Usage
@@ -15,23 +17,50 @@ import { DateTime } from "luxon";
 import Neodt from "neodt";
 
 function Appointment() {
+  const [value, setValue] = createSignal<DateTime | null>(null);
+
   return (
     <Neodt
-      referenceTime={DateTime.fromISO("2026-08-17T12:00:00Z")}
-      locale="en-GB"
-      onValueChange={(value) => console.log(value)}
+      referenceTime={DateTime.now().setZone("Australia/Sydney")}
+      locale="en-AU"
+      value={value()}
+      onValueChange={setValue}
     />
   );
 }
 ```
 
-`referenceTime` is required and supplies the timezone, as well as the date and time used for empty values and interpreting two-digit years. `value`, `defaultValue`, and `onValueChange` use Luxon `DateTime` instances. A controlled `null` value clears the field; `onValueChange` receives `null` when the user clears it. Values are normalized to the timezone of `referenceTime`. Use `value` with `onValueChange` for controlled usage, or `defaultValue` for uncontrolled usage. Pass `showTimeOffset` to display the selected date's UTC offset beside the visible date and time.
+## API
 
-The component is intended for JavaScript-managed SPA state and does not include native form submission. The visible field uses locale-ordered date/time segments. Click a segment to select it, use left/right arrow keys to move between segments, up/down to increment or decrement the selected value, and type numeric values to replace numeric segments. Click the calendar button, or press Space while a segment is focused, to open the browser's native date-time picker. Click the magic button, or press `@` while a segment is focused, to enter natural-language date entry. It uses neodt's Luxon-backed parser for dates, relative expressions, holidays, and first-class clock values such as `tomorrow 9:30am`, `in 2 hours`, and `5pm America/New_York`. It parses a single point only; ranges are intentionally unsupported. Pass `calendarIcon` or `magicIcon` as a `JSX.Element` to replace the respective default icon.
+`referenceTime: DateTime` is required. It provides the timezone, is used to fill empty segments, and determines how two-digit years are interpreted. Selected values are always normalized to this zone.
 
-## Styling
+| Prop | Description |
+| --- | --- |
+| `value?: DateTime \| null` | Controlled value. Pass `null` to clear the field. |
+| `defaultValue?: DateTime` | Initial uncontrolled value. |
+| `onValueChange?: (value: DateTime \| null) => void` | Called after a complete value is changed or cleared. |
+| `locale?: Intl.LocalesArgument` | Locale for segment order and labels. Defaults to the browser locale. |
+| `formatOptions?: Intl.DateTimeFormatOptions` | Formatting options, including `hour12` and `hourCycle`. |
+| `showTimeOffset?: boolean` | Shows the selected date's UTC offset. |
+| `readonly?: boolean` | Displays a value without allowing edits. |
+| `disabled?: boolean` | Prevents focus and editing. |
+| `calendarIcon?: JSX.Element` | Replaces the native date-time picker button icon. |
+| `magicIcon?: JSX.Element` | Replaces the natural-language entry button icon. |
 
-The package imports its base CSS automatically. Customize it with CSS variables:
+All standard `span` attributes, including `class`, `classList`, and ARIA attributes, are forwarded to the root element. This is a JavaScript-managed SPA control and does not provide native form submission.
+
+The control supports mouse, touch, and keyboard editing: Arrow Left/Right move between segments, Arrow Up/Down change a segment, and numeric input replaces numeric segments. Space opens the native picker; `@` opens natural-language input. Natural-language input accepts a single point in time, such as `tomorrow 9:30am`, `in 2 hours`, or `5pm America/New_York`; date ranges are not supported.
+
+## Styles
+
+The main `neodt` entry imports the component CSS, so Vite and standard Solid build setups need no extra configuration. For applications that exclude dependency side effects, or that centralize stylesheet imports, import the public stylesheet explicitly:
+
+```tsx
+import "neodt/styles.css";
+import Neodt from "neodt";
+```
+
+Scope theme variables on the component or an ancestor:
 
 ```css
 .booking-time {
@@ -39,58 +68,85 @@ The package imports its base CSS automatically. Customize it with CSS variables:
   --datetime-neo-foreground: #f6f0dd;
   --datetime-neo-border: #789271;
   --datetime-neo-focus: #d4a529;
+  --datetime-neo-highlight-foreground: #fff;
 }
 ```
 
-Use `class` and `classList` normally. Editable portions use the `datetime-neo__segment` class and locale punctuation uses `datetime-neo__separator`.
+The root has the `datetime-neo` class. Useful internal hooks include `datetime-neo__segment`, `datetime-neo__separator`, and `datetime-neo__trigger`.
+
+## Utilities
+
+The natural-language parser and completion helper are public exports for building adjacent UI:
+
+```ts
+import {
+  getNaturalDateCompletions,
+  parseNaturalDate,
+  type NaturalDateCompletion,
+  type NaturalDateParseOptions,
+} from "neodt";
+```
+
+`parseNaturalDate(value, options)` returns a Luxon `DateTime` or `undefined`. Its options require `referenceTime` and `zone`, with an optional `locale`. `getNaturalDateCompletions(value, maximum?)` returns completion labels and replacement text.
 
 ## Development
 
-Install dependencies with pnpm, then start the interactive demo at `http://localhost:3000`:
+Use Node.js 24 or later and pnpm 11 or later.
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-The demo in `dev/` exercises locale formatting, controlled values, segment editing, and CSS-variable theming.
-
-Use the following commands to validate local changes:
+The demo is served at `http://localhost:3000`. Validate changes with:
 
 ```bash
-pnpm lint           # Library TypeScript and ESLint checks
-pnpm test           # Client and SSR tests
-pnpm dev:typecheck  # Demo TypeScript check
-pnpm dev:build      # Production build for the demo
-pnpm build          # Package distribution build
-pnpm check          # All of the above validation except the package build
+pnpm check
+pnpm build
+pnpm pack --dry-run
 ```
 
-## More Development
+## Publishing And Deployment
 
-Some features that could be interesting to explore
+GitHub Actions publishes the npm package when a pushed `v*` tag exactly matches `package.json`'s version. Vercel deploys the linked GitHub repository: commits to `main` create production deployments and pull requests create preview deployments.
 
-### Min/Max datetimes
+### Release procedure
 
-Enforce picked datetime to be between optional min and max props.
+1. Set the intended version in `package.json` and update `pnpm-lock.yaml` with `pnpm install --lockfile-only`.
+2. Run `pnpm check && pnpm build && pnpm pack --dry-run`.
+3. Commit the release, push it to `main`, then create and push the matching annotated tag. eg For the first release:
+
+```bash
+git tag -a v0.1.0 -m "Release v0.1.0"
+git push origin v0.1.0
+```
+
+The `Publish npm package` workflow verifies the tag/version match, validates the package, and publishes it with npm provenance. Vercel handles demo deployments through its Git integration.
+
+## Further Development
+
+Some features that could be interesting to explore:
+
+### Min/Max Datetimes
+
+Enforce picked datetimes between optional minimum and maximum props.
 
 ### Temporal API
 
-- Could take a peer dependency on `temporal-polyfill` and importing from `'temporal-polyfill/fns'`
-- Or another option could be to take a prop to receive a temporal ponyfill.
-- Is it possible to keep luxon as an **optional** peer dependency so that user decides whether to bundle luxon or a polyfill/ponyfill?
-- Add support for acting in Plain mode as well as the existing Zoned mode.
+- Take an optional peer dependency on `temporal-polyfill`, importing from `temporal-polyfill/fns`.
+- OR, accept a Temporal ponyfill through a prop.
+- Consider if we could support multiple datetime adapters without consumers having to bundle them all
+- Support Plain mode as well as the existing Zoned mode.
 
-### Precision and step size
+### Precision and Step Size
 
-Support configuring precision.
+Support configurable precision and step size:
 
 - Seconds
-- Milliseconds?
-- Date only
+- Milliseconds
+- Date-only values
 - Step size
 
-### Other frameworks
+### Other Frameworks
 
-Not every project will want to install solidjs.
-Perhaps zagjs or mitosis could help make a framework agnostic implementation.
+Not every project will want to install Solid. Zag or Mitosis may help make the component framework agnostic.

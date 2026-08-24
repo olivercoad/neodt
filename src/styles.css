@@ -16,6 +16,7 @@
   color: var(--datetime-neo-foreground);
   display: inline-flex;
   position: relative;
+  width: 250px;
 }
 
 .datetime-neo__measurements {

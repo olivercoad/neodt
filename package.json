@@ -1,6 +1,6 @@
 {
   "name": "@olicoad/neodt",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": false,
   "description": "A configurable, locale-aware datetime-local input for Solid.",
   "keywords": [
@@ -47,7 +47,7 @@
     "dev:typecheck": "tsc --noEmit -p dev/tsconfig.json",
     "build": "tsdown",
     "test": "concurrently pnpm:test:*",
-    "test:client": "vitest",
+    "test:client": "LANG=C.UTF-8 LC_ALL=C.UTF-8 vitest",
     "test:ssr": "pnpm run test:client --mode ssr",
     "prepack": "pnpm build",
     "format": "oxfmt --write .",

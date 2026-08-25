@@ -7,6 +7,7 @@
 ### Fixed
 
 - Fix parent sometimes getting scrollbars unnecessarily
+- Fix ghost text alignment when custom line-height is 1
 
 ## [0.1.3] - 2026-06-25
 

@@ -214,6 +214,12 @@ describe("Neodt", () => {
       /\.datetime-neo__natural-input\s*\{[^}]*line-height:\s*var\(--datetime-neo-segment-line-height\)[^}]*padding:\s*var\(--datetime-neo-segment-padding\)/s,
     );
     expect(styles).toMatch(
+      /\.datetime-neo__natural-ghost\s*\{[^}]*line-height:\s*var\(--datetime-neo-segment-line-height\)[^}]*padding:\s*var\(--datetime-neo-segment-padding\)/s,
+    );
+    expect(styles).toMatch(
+      /\.datetime-neo__natural-field > \*\s*\{[^}]*align-self:\s*baseline[^}]*grid-area:\s*1 \/ 1/s,
+    );
+    expect(styles).toMatch(
       /\.datetime-neo__natural-preview\s*\{[^}]*line-height:\s*var\(--datetime-neo-segment-line-height\)[^}]*padding:\s*var\(--datetime-neo-segment-padding\)/s,
     );
 

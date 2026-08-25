@@ -147,6 +147,7 @@
 }
 
 .datetime-neo__natural-field > * {
+  align-self: baseline;
   grid-area: 1 / 1;
 }
 
@@ -175,6 +176,7 @@
   margin-left: 0.45em;
   opacity: 0.5;
   padding: 0 0.25em;
+  text-box: text; /* Better padding for top/bottom */
 }
 
 .datetime-neo__natural-input::placeholder {

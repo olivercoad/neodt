@@ -20,10 +20,10 @@
 }
 
 .datetime-neo__measurements {
-  left: 0;
+  right: 0;
+  bottom: 0;
   overflow: hidden;
   position: absolute;
-  top: 100%;
   visibility: hidden;
   white-space: nowrap;
   width: max-content;

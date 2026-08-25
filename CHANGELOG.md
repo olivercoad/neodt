@@ -4,6 +4,10 @@
 
 - Changelog
 
+### Fixed
+
+- Fix parent sometimes getting scrollbars unnecessarily
+
 ## [0.1.3] - 2026-06-25
 
 ### Fixed

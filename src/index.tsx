@@ -1039,9 +1039,16 @@ function Neodt(props: NeodtProps): JSX.Element {
             </span>
           )}
           {!local.readonly && !local.disabled && (
-            <span ref={measurement ? undefined : setActions} class="datetime-neo__actions">
+            <span
+              ref={(element) => {
+                if (!measurement) setActions(element);
+              }}
+              class="datetime-neo__actions"
+            >
               <button
-                ref={measurement ? undefined : (element) => (actionButtons[0] = element)}
+                ref={(element) => {
+                  if (!measurement) actionButtons[0] = element;
+                }}
                 class="datetime-neo__trigger"
                 type="button"
                 tabindex={measurement ? -1 : activeItem() === editableSegments().length ? 0 : -1}
@@ -1105,7 +1112,9 @@ function Neodt(props: NeodtProps): JSX.Element {
               </button>
               {!naturalMode() && (
                 <label
-                  ref={measurement ? undefined : (element) => (actionButtons[1] = element)}
+                  ref={(element) => {
+                    if (!measurement) actionButtons[1] = element;
+                  }}
                   class="datetime-neo__trigger"
                   for={nativeInputId}
                   tabindex={

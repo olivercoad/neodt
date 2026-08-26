@@ -28,4 +28,4 @@ body:
       placeholder: |
         e.g. https://stackblitz.com/edit/...... OR Github Repo
     validations:
-      required: true
+      required: false

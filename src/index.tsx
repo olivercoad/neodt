@@ -842,6 +842,10 @@ function Neodt(props: NeodtProps): JSX.Element {
       </span>
     );
 
+  createEffect(() => {
+    control()?.style.setProperty("--datetime-neo-actions-width", `${actionSize.width ?? 0}px`);
+  });
+
   return (
     <span
       ref={setControl}
@@ -854,7 +858,6 @@ function Neodt(props: NeodtProps): JSX.Element {
       data-readonly={local.readonly ? "" : undefined}
       data-time-offset={local.showTimeOffset ? "" : undefined}
       data-layout-changing={layoutChanging() ? "" : undefined}
-      style={{ "--datetime-neo-actions-width": `${actionSize.width ?? 0}px` }}
     >
       <span
         class="datetime-neo__content"

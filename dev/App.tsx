@@ -183,11 +183,7 @@ const App: Component = () => {
           <div class={styles.install}>
             <code>pnpm add @olicoad/neodt luxon</code>
             <span>Solid 1.6+</span>
-            <a
-              href="https://www.npmjs.com/package/@olicoad/neodt"
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a href="https://www.npmjs.com/package/@olicoad/neodt" target="_blank" rel="noreferrer">
               v{packageJson.version} on npm ↗
             </a>
           </div>

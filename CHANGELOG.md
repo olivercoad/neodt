@@ -1,8 +1,14 @@
 ## [Unreleased]
 
+## [0.1.5] - 2026-06-26
+
 ### Added
 
 - Links to npm in readme and demo site
+
+### Fixed
+
+- Fix `style` not being passed through from props
 
 ## [0.1.4] - 2026-06-26
 

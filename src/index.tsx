@@ -44,6 +44,8 @@ export interface NeodtProps extends JSX.HTMLAttributes<HTMLSpanElement> {
   disabled?: boolean;
   /** Called whenever the selected date and time changes, or `null` when cleared. */
   onValueChange?: (value: DateTime | null) => void;
+  /** Force object sytax for style and string does not work for some reason */
+  style?: JSX.CSSProperties;
 }
 
 const editableTypes = new Set<SegmentName>(["year", "month", "day", "hour", "minute", "dayPeriod"]);

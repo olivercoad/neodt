@@ -1,8 +1,11 @@
 ## [Unreleased]
 
+## [0.1.6] - 2026-06-26
+
 ### Fixed
 
 - Controlled value transtion from null to valid date not working
+- Passing string to style prop doesn't work. Now typescript forces object style.
 
 ## [0.1.5] - 2026-06-26
 

@@ -3,6 +3,7 @@
 ### Added
 
 - Changelog
+- Social media metadata for demo site (Open Graph and Twitter cards)
 
 ### Fixed
 

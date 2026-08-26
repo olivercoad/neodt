@@ -80,7 +80,7 @@ const App: Component = () => {
   const [disabled, setDisabled] = makePersistedSignal(false, {
     name: "neodt-configuration-lab-disabled",
   });
-  const [previewWidth, setPreviewWidth] = makePersistedSignal(320, {
+  const [previewWidth, setPreviewWidth] = makePersistedSignal(260, {
     name: "neodt-configuration-lab-preview-width",
   });
   let previewInputArea: HTMLDivElement | undefined;
@@ -139,7 +139,7 @@ const App: Component = () => {
     setShowTimeOffset(false);
     setReadonly(false);
     setDisabled(false);
-    setPreviewWidth(320);
+    setPreviewWidth(260);
   };
 
   const setReferenceTimezone = (nextTimezone: Timezone) => {

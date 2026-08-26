@@ -23,14 +23,7 @@
   <text x="88" y="348" fill="#152230" font-family="Arial, sans-serif" font-size="84" font-weight="700" letter-spacing="-5">Time, made editable.</text>
   <text x="92" y="420" fill="#63717d" font-family="Arial, sans-serif" font-size="26">A configurable, locale-aware date and time input for Solid.</text>
 
-  <g filter="url(#shadow)" transform="translate(784 394)">
-    <rect width="330" height="134" rx="18" fill="#ffffff" stroke="#d8dee3" stroke-width="3" />
-    <text x="28" y="39" fill="#63717d" font-family="Courier New, monospace" font-size="15" font-weight="700" letter-spacing="1.5">SCHEDULED FOR</text>
-    <text x="27" y="91" fill="#152230" font-family="Arial, sans-serif" font-size="31" font-weight="700">24 Aug 2026</text>
-    <text x="27" y="118" fill="#3367f0" font-family="Arial, sans-serif" font-size="21">2:30 PM AEST</text>
-    <circle cx="293" cy="67" r="18" fill="#d9fbe6" />
-    <path d="M284 67l7 7 13-16" fill="none" stroke="#217449" stroke-linecap="round" stroke-linejoin="round" stroke-width="5" />
-  </g>
+  <image x="672" y="448" width="440" height="81" href="neodt-focused-preview.png" />
 
   <text x="88" y="556" fill="#63717d" font-family="Courier New, monospace" font-size="19">neodt.olisworld.com</text>
 </svg>

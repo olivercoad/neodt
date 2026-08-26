@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Fixed
+
+- Controlled value transtion from null to valid date not working
+
 ## [0.1.5] - 2026-06-26
 
 ### Added

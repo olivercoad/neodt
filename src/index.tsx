@@ -246,6 +246,17 @@ function Neodt(props: NeodtProps): JSX.Element {
   const [cleared, setCleared] = createSignal<Set<SegmentName>>(
     new Set(value() ? [] : ["year", "month", "day", "hour", "minute", "dayPeriod"]),
   );
+  let previousControlledValue = local.value;
+  createEffect(() => {
+    const controlledValue = local.value;
+    if (controlledValue === undefined) return;
+    const wasEmpty = previousControlledValue === null;
+    previousControlledValue = controlledValue;
+    if (!controlledValue || !wasEmpty) return;
+    setTyped(undefined);
+    setDraftDate(controlledValue.setZone(referenceZone()).startOf("minute"));
+    setCleared(new Set<SegmentName>());
+  });
   const segments = createMemo(() =>
     partsFor(
       toLocalValue(cleared().size ? draftDate() : (value() ?? draftDate())),

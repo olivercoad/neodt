@@ -834,6 +834,34 @@ describe("Neodt", () => {
       expect(control.hasAttribute("data-empty")).toBe(true);
     }));
 
+  it("renders a date assigned after a controlled null value", async () => {
+    let dispose: (() => void) | undefined;
+    let setValue: (value: DateTime | null) => void;
+    const control = createRoot((rootDispose) => {
+      dispose = rootDispose;
+      const [value, setControlledValue] = createSignal<DateTime | null>(null);
+      setValue = setControlledValue;
+      return (
+        <DateTimeLocal
+          referenceTime={referenceTime}
+          locale="en-GB"
+          value={value()}
+        />
+      ) as HTMLSpanElement;
+    });
+    document.body.append(control);
+
+    expect(control.querySelectorAll(".datetime-neo__placeholder")).toHaveLength(5);
+    setValue!(date("2026-09-01T08:45"));
+    await nextRender();
+
+    expect(control.querySelectorAll(".datetime-neo__placeholder")).toHaveLength(0);
+    expect(control.querySelector(".datetime-neo__value")?.textContent).toBe("01/09/2026, 08:45");
+    expect(control.hasAttribute("data-empty")).toBe(false);
+    control.remove();
+    dispose!();
+  });
+
   it("sets the draft day period directly with a and p keys", async () =>
     await new Promise<void>((resolve) =>
       createRoot((dispose) => {

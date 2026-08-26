@@ -842,11 +842,7 @@ describe("Neodt", () => {
       const [value, setControlledValue] = createSignal<DateTime | null>(null);
       setValue = setControlledValue;
       return (
-        <DateTimeLocal
-          referenceTime={referenceTime}
-          locale="en-GB"
-          value={value()}
-        />
+        <DateTimeLocal referenceTime={referenceTime} locale="en-GB" value={value()} />
       ) as HTMLSpanElement;
     });
     document.body.append(control);

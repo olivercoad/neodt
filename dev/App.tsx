@@ -3,6 +3,8 @@ import { DateTime } from "luxon";
 import { createMemo, createSignal, For, onCleanup, onMount, type Component } from "solid-js";
 import Neodt from "src";
 
+import packageJson from "../package.json";
+
 import styles from "./App.module.css";
 
 const systemLocale = new Intl.DateTimeFormat().resolvedOptions().locale;
@@ -181,6 +183,13 @@ const App: Component = () => {
           <div class={styles.install}>
             <code>pnpm add @olicoad/neodt luxon</code>
             <span>Solid 1.6+</span>
+            <a
+              href="https://www.npmjs.com/package/@olicoad/neodt"
+              target="_blank"
+              rel="noreferrer"
+            >
+              v{packageJson.version} on npm ↗
+            </a>
           </div>
         </div>
         <div id="comparison" class={styles.compareGrid}>

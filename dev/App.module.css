@@ -159,6 +159,20 @@ p {
   color: var(--muted);
   font-size: 0.75rem;
 }
+.install a {
+  color: var(--blue);
+  font-family: ui-monospace, monospace;
+  font-size: 0.72rem;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+.install a:hover {
+  color: var(--ink);
+}
+.install a:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 0.25rem;
+}
 .compareGrid {
   align-self: center;
   display: grid;

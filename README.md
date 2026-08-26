@@ -2,7 +2,7 @@
 
 A locale-aware, keyboard-editable segmented date and time input for Solid.
 
-**Links**: [GitHub](https://github.com/olivercoad/neodt) | [Issues](https://github.com/olivercoad/neodt/issues) | [Demo](https://neodt.olisworld.com)
+**Links**: [npm](https://www.npmjs.com/package/@olicoad/neodt) | [GitHub](https://github.com/olivercoad/neodt) | [Issues](https://github.com/olivercoad/neodt/issues) | [Demo](https://neodt.olisworld.com)
 
 ## Install
 

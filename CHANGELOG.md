@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Added
+
+- Links to npm in readme and demo site
+
 ## [0.1.4] - 2026-06-26
 
 ### Added

@@ -842,11 +842,7 @@ describe("Neodt", () => {
       const [value, setControlledValue] = createSignal<DateTime | null>(null);
       setValue = setControlledValue;
       return (
-        <DateTimeLocal
-          referenceTime={referenceTime}
-          locale="en-GB"
-          value={value()}
-        />
+        <DateTimeLocal referenceTime={referenceTime} locale="en-GB" value={value()} />
       ) as HTMLSpanElement;
     });
     document.body.append(control);
@@ -1329,6 +1325,31 @@ describe("Neodt", () => {
         nextRender().then(() => {
           expect(localValue(value())).toBe("2015-08-17T15:30");
           expect(year.textContent).toBe("2015");
+          control.remove();
+          dispose();
+          resolve();
+        });
+      }),
+    ));
+
+  it("retains all replacement digits after clearing a controlled segment", async () =>
+    await new Promise<void>((resolve) =>
+      createRoot((dispose) => {
+        const [value, setValue] = createSignal<DateTime | null>(date("2026-08-17T15:30"));
+        const control = (
+          <DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />
+        ) as HTMLSpanElement;
+        document.body.append(control);
+        const year = control.querySelector<HTMLButtonElement>('[aria-label="year"]')!;
+        year.focus();
+        key(year, "Backspace");
+        key(year, "2");
+        key(year, "0");
+        key(year, "2");
+        key(year, "2");
+        nextRender().then(() => {
+          expect(localValue(value())).toBe("2022-08-17T15:30");
+          expect(year.textContent).toBe("2022");
           control.remove();
           dispose();
           resolve();

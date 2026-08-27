@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Fixed
+
+- Fix #3, a regression where controlled fields would not maintain typed values on transition from null
+
 ## [0.1.6] - 2026-06-26
 
 ### Fixed

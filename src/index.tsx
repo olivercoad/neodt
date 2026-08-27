@@ -255,7 +255,6 @@ function Neodt(props: NeodtProps): JSX.Element {
     const wasEmpty = previousControlledValue === null;
     previousControlledValue = controlledValue;
     if (!controlledValue || !wasEmpty) return;
-    setTyped(undefined);
     setDraftDate(controlledValue.setZone(referenceZone()).startOf("minute"));
     setCleared(new Set<SegmentName>());
   });

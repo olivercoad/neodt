@@ -1,6 +1,6 @@
 {
   "name": "@olicoad/neodt",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "private": false,
   "description": "A configurable, locale-aware datetime-local input for Solid.",
   "keywords": [

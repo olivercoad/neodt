@@ -417,11 +417,11 @@ function Neodt(props: NeodtProps): JSX.Element {
     setTyped(undefined);
   };
 
-  const clearSegment = (segment: SegmentName) => {
+  const clearSegments = (segments: SegmentName[]) => {
     if (local.disabled || local.readonly) return;
     setTyped(undefined);
     if (value()) setDraftDate(value()!.startOf("minute"));
-    setCleared((previous) => new Set(previous).add(segment));
+    setCleared((previous) => new Set([...previous, ...segments]));
     emitValue(undefined);
   };
 
@@ -709,6 +709,20 @@ function Neodt(props: NeodtProps): JSX.Element {
       setAllSegmentsSelected(true);
       return;
     }
+    if (event.key === "Backspace" || event.key === "Delete") {
+      event.preventDefault();
+      const backspaceEmptySegment = event.key === "Backspace" && isCleared(segment.type);
+      if (allSegmentsSelected() || (backspaceEmptySegment && index === 0)) {
+        clearSegments(["year", "month", "day", "hour", "minute", "dayPeriod"]);
+        selectSegment(0, true);
+      } else if (backspaceEmptySegment) {
+        clearSegments([editableSegments()[index - 1]!.type]);
+        selectSegment(index - 1, true);
+      } else {
+        clearSegments([segment.type]);
+      }
+      return;
+    }
     if (!(event.ctrlKey || event.metaKey)) setAllSegmentsSelected(false);
     if (event.key === " ") {
       event.preventDefault();
@@ -749,11 +763,6 @@ function Neodt(props: NeodtProps): JSX.Element {
     if (event.key === "End") {
       event.preventDefault();
       selectControlItem(editableSegments().length + actionButtons.length - 1, true);
-      return;
-    }
-    if (event.key === "Backspace" || event.key === "Delete") {
-      event.preventDefault();
-      clearSegment(segment.type);
       return;
     }
     // Numeric segments expose a decimal keyboard on mobile; its decimal key advances instead of

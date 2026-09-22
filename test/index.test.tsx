@@ -1677,6 +1677,148 @@ describe("Neodt", () => {
       }),
     ));
 
+  it.each(
+    ["Backspace", "Delete"].flatMap((deleteKey) =>
+      ["ctrlKey", "metaKey"].flatMap((modifier) =>
+        [false, true].map((controlled) => ({ deleteKey, modifier, controlled })),
+      ),
+    ),
+  )(
+    "clears all segments with $modifier+A then $deleteKey (controlled: $controlled)",
+    async ({ deleteKey, modifier, controlled }) => {
+      let dispose: (() => void) | undefined;
+      const onValueChange = vi.fn();
+      const control = createRoot((rootDispose) => {
+        dispose = rootDispose;
+        const [value, setValue] = createSignal<DateTime | null>(date("2026-08-17T15:30"));
+        return (
+          <DateTimeLocal
+            referenceTime={referenceTime}
+            locale={controlled ? "en-US" : "en-GB"}
+            value={controlled ? value() : undefined}
+            defaultValue={controlled ? undefined : value()!}
+            onValueChange={(next) => {
+              onValueChange(next);
+              setValue(next);
+            }}
+          />
+        ) as HTMLSpanElement;
+      });
+      document.body.append(control);
+      try {
+        const segments = control.querySelectorAll<HTMLElement>(
+          '.datetime-neo__segment[role="spinbutton"]',
+        );
+        const year = control.querySelector<HTMLElement>('[aria-label="year"]')!;
+        year.focus();
+        // Leave an unfinished year edit to ensure clearing also resets pending digits.
+        key(year, "2");
+        key(year, "4");
+        year.dispatchEvent(
+          new KeyboardEvent("keydown", { key: "a", [modifier]: true, bubbles: true }),
+        );
+        onValueChange.mockClear();
+        const deletion = new KeyboardEvent("keydown", {
+          key: deleteKey,
+          bubbles: true,
+          cancelable: true,
+        });
+        year.dispatchEvent(deletion);
+        await nextRender();
+
+        expect(deletion.defaultPrevented).toBe(true);
+        expect(onValueChange).toHaveBeenCalledExactlyOnceWith(null);
+        expect(control.querySelectorAll(".datetime-neo__placeholder")).toHaveLength(
+          segments.length,
+        );
+        expect(control.querySelector(".datetime-neo__segment--all-selected")).toBeNull();
+        expect(document.activeElement).toBe(segments[0]);
+        expect(segments[0]?.getAttribute("aria-selected")).toBe("true");
+
+        key(segments[0]!, "1");
+        await nextRender();
+        expect(segments[0]?.querySelector(".datetime-neo__placeholder")).toBeNull();
+        expect(control.querySelectorAll(".datetime-neo__placeholder")).toHaveLength(
+          segments.length - 1,
+        );
+        expect(onValueChange).toHaveBeenLastCalledWith(null);
+      } finally {
+        control.remove();
+        dispose!();
+      }
+    },
+  );
+
+  it.each([
+    { locale: "en-US", controlled: false },
+    { locale: "en-US", controlled: true },
+    { locale: "en-GB", controlled: false },
+    { locale: "en-GB", controlled: true },
+  ])(
+    "backspaces through empty segments and clears all from the first ($locale, controlled: $controlled)",
+    async ({ locale, controlled }) => {
+      let dispose: (() => void) | undefined;
+      const onValueChange = vi.fn();
+      const control = createRoot((rootDispose) => {
+        dispose = rootDispose;
+        const [value, setValue] = createSignal<DateTime | null>(date("2026-08-17T15:30"));
+        return (
+          <DateTimeLocal
+            referenceTime={referenceTime}
+            locale={locale}
+            value={controlled ? value() : undefined}
+            defaultValue={controlled ? undefined : value()!}
+            onValueChange={(next) => {
+              onValueChange(next);
+              setValue(next);
+            }}
+          />
+        ) as HTMLSpanElement;
+      });
+      document.body.append(control);
+      try {
+        const segments = control.querySelectorAll<HTMLElement>(
+          '.datetime-neo__segment[role="spinbutton"]',
+        );
+        segments[2]!.focus();
+        key(segments[2]!, "Backspace");
+        await nextRender();
+        expect(document.activeElement).toBe(segments[2]);
+        expect(control.querySelectorAll(".datetime-neo__placeholder")).toHaveLength(1);
+
+        key(segments[2]!, "Delete");
+        await nextRender();
+        expect(document.activeElement).toBe(segments[2]);
+        expect(control.querySelectorAll(".datetime-neo__placeholder")).toHaveLength(1);
+
+        for (const index of [2, 1]) {
+          onValueChange.mockClear();
+          key(segments[index]!, "Backspace");
+          await nextRender();
+          expect(document.activeElement).toBe(segments[index - 1]);
+          expect(segments[index - 1]?.querySelector(".datetime-neo__placeholder")).not.toBeNull();
+          expect(control.querySelectorAll(".datetime-neo__placeholder")).toHaveLength(4 - index);
+          expect(onValueChange).toHaveBeenCalledExactlyOnceWith(null);
+        }
+
+        // Time segments are still filled until Backspace is pressed on the empty first segment.
+        for (let repeat = 0; repeat < 2; repeat += 1) {
+          onValueChange.mockClear();
+          key(segments[0]!, "Backspace");
+          await nextRender();
+          expect(document.activeElement).toBe(segments[0]);
+          expect(control.querySelectorAll(".datetime-neo__placeholder")).toHaveLength(
+            segments.length,
+          );
+          expect(onValueChange).toHaveBeenCalledExactlyOnceWith(null);
+        }
+      } finally {
+        control.remove();
+        dispose!();
+      }
+    },
+  );
+
   it("clears individual segments with backspace or delete and renders contextual placeholders", async () =>
     await new Promise<void>((resolve) =>
       createRoot((dispose) => {

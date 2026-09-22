@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [0.1.8] - 2026-09-22
+
+- Fix #2, clear all segments easily by multiple backspace or by deleting when all segments selected
+
 ## [0.1.7] - 2026-06-26
 
 ### Fixed

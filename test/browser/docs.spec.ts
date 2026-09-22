@@ -315,3 +315,58 @@ for (const input of ["pointer", "keyboard"] as const) {
     expect((await grip.boundingBox())!.y).toBeLessThan(bounds.y - 90);
   });
 }
+
+test("selected documentation pages expose section links and theme deep links", async ({ page }) => {
+  await page.goto("/#/docs/getting-started");
+  const nav = page.getByRole("navigation", { name: "Documentation" });
+  await nav.getByRole("link", { name: "A controlled field", exact: true }).click();
+  await expect(page).toHaveURL(/#\/docs\/getting-started\/a-controlled-field$/);
+  await expect(page.locator("#a-controlled-field")).toBeInViewport();
+  await nav.getByRole("link", { name: "Styling gallery", exact: true }).click();
+  await expect(nav.getByRole("link", { name: "A controlled field", exact: true })).toHaveCount(0);
+  for (const heading of await page.locator("main h2").all()) {
+    await expect(
+      nav.getByRole("link", { name: (await heading.textContent())!, exact: true }),
+    ).toHaveAttribute("href", `#/docs/styling/${await heading.getAttribute("id")}`);
+  }
+  const css = page
+    .getByRole("article", { name: "Paper & ink" })
+    .getByRole("textbox", { name: "Editable CSS" });
+  await css.fill((await css.inputValue()) + "\n/* preserved across sections */");
+  await nav.getByRole("link", { name: "Midnight", exact: true }).click();
+  await expect(page.locator("#theme-midnight")).toBeInViewport();
+  await expect(css).toHaveValue(/preserved across sections/);
+  await expect(nav.getByRole("link", { name: "Midnight", exact: true })).toHaveAttribute(
+    "aria-current",
+    "location",
+  );
+  await page.reload();
+  await expect(page).toHaveTitle("Styling gallery · neodt");
+  await expect(page.locator("#theme-midnight")).toBeInViewport();
+  await nav.getByRole("link", { name: "Paper & ink", exact: true }).click();
+  await page.goBack();
+  await expect(page.locator("#theme-midnight")).toBeInViewport();
+});
+
+test("section highlighting follows scrolling in both directions", async ({ page }) => {
+  await page.goto("/#/docs/styling/theme-midnight");
+  const nav = page.getByRole("navigation", { name: "Documentation" });
+  const active = nav.locator('a[aria-current="location"]');
+  await expect(active).toHaveText("Midnight");
+  for (const id of ["theme-mint", "theme-compact", "theme-paper", "theme-midnight"]) {
+    await page.locator(`#${id}`).evaluate((heading) => heading.scrollIntoView());
+    await expect(active).toHaveAttribute("href", `#/docs/styling/${id}`);
+  }
+  // Scrolling does not add history entries or replace the shared deep link.
+  await expect(page).toHaveURL(/#\/docs\/styling\/theme-midnight$/);
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await expect(active).toHaveText("Keep layout predictable");
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(active).toHaveCount(0);
+  await nav.getByRole("link", { name: "API reference", exact: true }).click();
+  await expect(
+    nav.getByRole("link", { name: "Natural-language parser", exact: true }),
+  ).toBeVisible();
+  await page.locator("#natural-language-parser").evaluate((heading) => heading.scrollIntoView());
+  await expect(active).toHaveText("Natural-language parser");
+});

@@ -19,6 +19,8 @@
 .layout aside nav {
   position: sticky;
   top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
   display: grid;
   gap: 0.4rem;
 }
@@ -33,6 +35,24 @@
   background: #e8eefc;
   color: #234cae;
   font-weight: 700;
+}
+.navPage > a {
+  display: block;
+}
+.sectionLinks {
+  list-style: none;
+  margin: 0.25rem 0 0.5rem 0.8rem;
+  padding: 0 0 0 0.6rem;
+  border-left: 1px solid var(--line);
+}
+.layout aside .sectionLinks a {
+  display: block;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.78rem;
+}
+.layout aside a:hover {
+  color: #234cae;
+  background: #e8eefc;
 }
 .eyebrow {
   color: var(--blue);
@@ -55,6 +75,7 @@
   font-weight: 600;
 }
 .content h2 {
+  scroll-margin-top: 2rem;
   font-size: 1.45rem;
   letter-spacing: -0.03em;
   margin: 2.5rem 0 0.7rem;
@@ -261,6 +282,8 @@
   }
   .layout aside nav {
     position: static;
+    max-height: none;
+    overflow-y: visible;
     grid-template-columns: 1fr 1fr;
   }
   .layout aside .eyebrow {

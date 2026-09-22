@@ -8,15 +8,20 @@ export default function Site() {
   const update = () => setHash(location.hash);
   window.addEventListener("hashchange", update);
   onCleanup(() => window.removeEventListener("hashchange", update));
-  const page = () => (hash().startsWith("#/docs/") ? hash().slice(7) : undefined);
+  const page = () => (hash().startsWith("#/docs/") ? hash().slice(7).split("/")[0] : undefined);
+  const section = () => (page() ? hash().slice(7).split("/")[1] : undefined);
   createEffect(() => {
     const id = page();
     document.title = id
       ? `${pages.find(([slug]) => slug === id)?.[1] ?? "Documentation"} · neodt`
       : "neodt — A datetime input for Solid";
-    if (id) window.scrollTo(0, 0);
-    else if (hash())
-      requestAnimationFrame(() => document.getElementById(hash().slice(1))?.scrollIntoView());
+    const target = id ? section() : hash().slice(1);
+    const frame = requestAnimationFrame(() => {
+      const heading = target ? document.getElementById(target) : null;
+      if (heading) heading.scrollIntoView();
+      else if (id) window.scrollTo(0, 0);
+    });
+    onCleanup(() => cancelAnimationFrame(frame));
   });
   return (
     <Show when={page()} fallback={<App />}>

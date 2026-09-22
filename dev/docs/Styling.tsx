@@ -256,7 +256,7 @@ export default function Styling(props: { options: StylingOptions }) {
           )}
         </For>
       </div>
-      <h2>Theme variables</h2>
+      <h2 id="theme-variables">Theme variables</h2>
       <div class={styles.tableScroll}>
         <table>
           <thead>
@@ -296,7 +296,7 @@ export default function Styling(props: { options: StylingOptions }) {
         background and border; use a class such as <code>.theme-paper[data-readonly]</code> to
         customise those.
       </p>
-      <h2>Keep layout predictable</h2>
+      <h2 id="keep-layout-predictable">Keep layout predictable</h2>
       <p>
         Width, font, border radius, colours, and the shared spacing variables are the easiest
         customisations. Try a narrow width and both editing modes after changing font metrics. The

@@ -1,4 +1,14 @@
-import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  Match,
+  on,
+  onCleanup,
+  Show,
+  Switch,
+} from "solid-js";
 
 import Code from "../code/Code";
 import { locales } from "../locales";
@@ -49,7 +59,7 @@ function GettingStarted() {
       <p class={styles.intro}>
         A segmented date and time input for Solid, with locale-aware formatting and Luxon values.
       </p>
-      <h2>Install</h2>
+      <h2 id="install">Install</h2>
       <pre>
         <code>pnpm add @olicoad/neodt luxon</code>
       </pre>
@@ -57,7 +67,7 @@ function GettingStarted() {
         Use Solid 1.6 or later with a build setup that compiles JSX in dependencies, such as Vite
         with vite-plugin-solid. The package ships preserved JSX and imports its own stylesheet.
       </p>
-      <h2>A controlled field</h2>
+      <h2 id="a-controlled-field">A controlled field</h2>
       <pre>
         <Code value={example} language="tsx" />
       </pre>
@@ -66,7 +76,7 @@ function GettingStarted() {
         anchor for relative phrases and two-digit years. Keep it stable for a predictable editing
         session; update it when your application needs a new reference.
       </p>
-      <h2>Values and forms</h2>
+      <h2 id="values-and-forms">Values and forms</h2>
       <p>
         Pass <code>null</code> for a controlled empty field. Clearing a segment emits{" "}
         <code>null</code>; the remaining segments stay visible while the user completes the date.
@@ -78,7 +88,7 @@ function GettingStarted() {
         <code>aria-label</code> or <code>aria-labelledby</code>. For form submission, mirror the
         value into a hidden input as above and handle validation in your application.
       </p>
-      <h2>Styles and rendering</h2>
+      <h2 id="styles-and-rendering">Styles and rendering</h2>
       <p>
         If your build removes dependency side effects, explicitly import{" "}
         <code>@olicoad/neodt/style.css</code>. Put your theme after the default stylesheet. Explore
@@ -180,14 +190,14 @@ function Api() {
           </tbody>
         </table>
       </div>
-      <h2>Timezone behaviour</h2>
+      <h2 id="timezone-behaviour">Timezone behaviour</h2>
       <p>
         Values are normalised to the zone of <code>referenceTime</code>. Locale controls
         presentation, not the timezone. The offset shown belongs to the selected date, so it can
         change across daylight saving transitions. Calendar arithmetic and ambiguous or nonexistent
         local times follow Luxon’s behaviour.
       </p>
-      <h2>Natural-language parser</h2>
+      <h2 id="natural-language-parser">Natural-language parser</h2>
       <pre>
         <Code
           language="tsx"
@@ -207,14 +217,14 @@ const suggestions = getNaturalDateCompletions("tom", 5);`}
         associated types are <code>NaturalDateParseOptions</code> and{" "}
         <code>NaturalDateCompletion</code>.
       </p>
-      <h2>Controlled updates</h2>
+      <h2 id="controlled-updates">Controlled updates</h2>
       <p>
         Parent value replacements reset the displayed draft. Passing null clears every segment.
         While typing an incomplete date, the control emits null and keeps the local draft; passing
         emitted values back through onValueChange preserves ongoing numeric entry. Use
         aria-describedby and aria-invalid to associate application validation with the segments.
       </p>
-      <h2>Current boundaries</h2>
+      <h2 id="current-boundaries">Current boundaries</h2>
       <p>
         This is a JavaScript-managed date and time control with minute precision. It does not
         provide native form validation, min/max limits, date ranges, or a custom calendar popup.
@@ -274,7 +284,7 @@ function Interaction() {
           </tbody>
         </table>
       </div>
-      <h2>Say what you mean</h2>
+      <h2 id="say-what-you-mean">Say what you mean</h2>
       <p>
         Try <code>tomorrow 9:30am</code>, <code>in 2 hours</code>, or{" "}
         <code>5pm America/New_York</code>. Relative phrases use the supplied reference time. The
@@ -287,7 +297,7 @@ function Interaction() {
         the input. If there is no suggestion to accept, Tab moves focus normally. Empty or invalid
         text does not commit a new date.
       </p>
-      <h2>Accessibility and motion</h2>
+      <h2 id="accessibility-and-motion">Accessibility and motion</h2>
       <p>
         Give every control an accessible name. Focus and selection colours should remain readable in
         your theme. Reduced-motion preferences disable the control’s transitions and animated
@@ -304,6 +314,60 @@ function Interaction() {
 }
 
 export default function Docs(props: { page: string }) {
+  let content!: HTMLElement;
+  const [sections, setSections] = createSignal<{ id: string; label: string }[]>([]);
+  const [activeSection, setActiveSection] = createSignal<string>();
+  createEffect(
+    on(
+      () => props.page,
+      () => {
+        setActiveSection(undefined);
+        let headings: HTMLElement[] = [];
+        let frame: number | undefined;
+        const updateActiveSection = () => {
+          frame = undefined;
+          let active: string | undefined;
+          for (const heading of headings) {
+            const offset = parseFloat(getComputedStyle(heading).scrollMarginTop) || 0;
+            if (heading.getBoundingClientRect().top > offset + 1) break;
+            active = heading.id;
+          }
+          // The final section may be too short to reach the top of the viewport.
+          if (
+            window.scrollY > 0 &&
+            window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1
+          ) {
+            active = headings.at(-1)?.id;
+          }
+          setActiveSection(active);
+        };
+        const scheduleUpdate = () => {
+          if (frame === undefined) frame = requestAnimationFrame(updateActiveSection);
+        };
+        const observer = new ResizeObserver(scheduleUpdate);
+        // Read the outline after the selected page has rendered.
+        frame = requestAnimationFrame(() => {
+          headings = Array.from(content.querySelectorAll<HTMLElement>("h2[id]"));
+          setSections(
+            headings.map((heading) => ({
+              id: heading.id,
+              label: heading.textContent ?? "",
+            })),
+          );
+          observer.observe(content);
+          updateActiveSection();
+        });
+        window.addEventListener("scroll", scheduleUpdate, { passive: true });
+        window.addEventListener("resize", scheduleUpdate);
+        onCleanup(() => {
+          if (frame !== undefined) cancelAnimationFrame(frame);
+          observer.disconnect();
+          window.removeEventListener("scroll", scheduleUpdate);
+          window.removeEventListener("resize", scheduleUpdate);
+        });
+      },
+    ),
+  );
   const [locale, setLocale] = createSignal("en-GB");
   const [hour12, setHour12] = createSignal("locale");
   const [showTimeOffset, setShowTimeOffset] = createSignal(true);
@@ -321,9 +385,27 @@ export default function Docs(props: { page: string }) {
             <span class={styles.eyebrow}>DOCUMENTATION</span>
             <For each={pages}>
               {([id, label]) => (
-                <a href={`#/docs/${id}`} aria-current={props.page === id ? "page" : undefined}>
-                  {label}
-                </a>
+                <div class={styles.navPage}>
+                  <a href={`#/docs/${id}`} aria-current={props.page === id ? "page" : undefined}>
+                    {label}
+                  </a>
+                  <Show when={props.page === id}>
+                    <ul class={styles.sectionLinks}>
+                      <For each={sections()}>
+                        {(section) => (
+                          <li>
+                            <a
+                              href={`#/docs/${id}/${section.id}`}
+                              aria-current={activeSection() === section.id ? "location" : undefined}
+                            >
+                              {section.label}
+                            </a>
+                          </li>
+                        )}
+                      </For>
+                    </ul>
+                  </Show>
+                </div>
               )}
             </For>
             <Show when={props.page === "styling"}>
@@ -357,7 +439,7 @@ export default function Docs(props: { page: string }) {
             </Show>
           </nav>
         </aside>
-        <main id="docs-content" class={styles.content}>
+        <main ref={content} id="docs-content" class={styles.content}>
           <Switch
             fallback={
               <>

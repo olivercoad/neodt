@@ -20,10 +20,7 @@
 - Segmented spinbuttons expose numeric values, localized value text, calendar ranges, readonly state, and validation descriptions to assistive technology; removed unsupported selection/group ARIA states.
 - Native picker events respect readonly/disabled state and avoid duplicate notifications for accepted input/change pairs.
 - Prevent Ctrl/Cmd/Alt keyboard shortcuts from accidentally editing the date.
-
-- Synced gallery resizing holds upstream card heights during a drag and restores layout without moving the active grip.
-- Midnight gallery theme retains a readable dark surface in readonly mode.
-- Natural-language rows collapsing when the preview is empty, and inconsistent native input height with custom line-height.
+- Fix #1, natural-language rows collapsing when the preview is empty, and inconsistent native input height with custom line-height.
 - Accessible labels forwarded to the editor group and an explicit name for natural-language input.
 - Readonly state applied to an already-open natural-language input.
 - Missing native `showPicker` support no longer throws on invocation.

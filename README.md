@@ -55,6 +55,8 @@ function Appointment() {
 | `calendarIcon?: JSX.Element`                        | Replaces the native date-time picker button icon.                    |
 | `magicIcon?: JSX.Element`                           | Replaces the natural-language entry button icon.                     |
 
+Controlled updates from the parent replace the displayed draft; setting `value` to `null` clears every segment. During editing, incomplete segments emit `null` while retaining the local draft. Echoing emitted values through `onValueChange` preserves ongoing numeric entry.
+
 All standard `span` attributes, including `class`, `classList`, and ARIA attributes, are forwarded to the root element. This is a JavaScript-managed SPA control and does not provide native form submission.
 
 The control supports mouse, touch, and keyboard editing: Arrow Left/Right move between segments, Arrow Up/Down change a segment, and numeric input replaces numeric segments. Space opens the native picker; `@` opens natural-language input. Natural-language input accepts a single point in time, such as `tomorrow 9:30am`, `in 2 hours`, or `5pm America/New_York`; date ranges are not supported.

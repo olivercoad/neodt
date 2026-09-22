@@ -1,5 +1,5 @@
 import { createElementSize } from "@solid-primitives/resize-observer";
-import { DateTime, Zone } from "luxon";
+import type { DateTime } from "luxon";
 import {
   createEffect,
   createMemo,
@@ -7,19 +7,36 @@ import {
   createUniqueId,
   Index,
   onCleanup,
+  on,
   splitProps,
   type JSX,
 } from "solid-js";
 
+import {
+  closestYear,
+  digitLimit,
+  isCompleteSegment,
+  naturalPreview,
+  nearestLeapYear,
+  parseLocal,
+  partsFor,
+  placeholderFor,
+  sameDateValue,
+  segmentAria,
+  segmentNames,
+  splitDateAndTime,
+  timeOffset,
+  toLocalValue,
+  type DisplayPart,
+  type Segment,
+  type SegmentName,
+} from "./date-segments";
+import { CalendarIcon, CancelIcon, ConfirmIcon, MagicIcon } from "./icons";
 import { getNaturalDateCompletions } from "./natural-completion";
 import { parseNaturalDate } from "./natural-parser";
 import { createNaturalPlaceholder } from "./natural-placeholder";
 
 import "./styles.css";
-
-type SegmentName = "year" | "month" | "day" | "hour" | "minute" | "dayPeriod";
-type Segment = { type: SegmentName; value: string; editable: true };
-type DisplayPart = Segment | { type: string; value: string; editable: false };
 
 export interface NeodtProps extends JSX.HTMLAttributes<HTMLSpanElement> {
   /** Date and time used as the basis for empty values and two-digit years. */
@@ -48,164 +65,7 @@ export interface NeodtProps extends JSX.HTMLAttributes<HTMLSpanElement> {
   style?: JSX.CSSProperties;
 }
 
-const editableTypes = new Set<SegmentName>(["year", "month", "day", "hour", "minute", "dayPeriod"]);
-const timeTypes = new Set<SegmentName>(["hour", "minute", "dayPeriod"]);
 const systemLocale = new Intl.DateTimeFormat().resolvedOptions().locale;
-
-function parseLocal(value: string, zone: Zone): DateTime | undefined {
-  if (!value) return undefined;
-  const date = DateTime.fromISO(value, { zone });
-  return date.isValid ? date : undefined;
-}
-
-function toLocalValue(date: DateTime): string {
-  return date.toFormat("yyyy-MM-dd'T'HH:mm");
-}
-
-function localeName(locale: Intl.LocalesArgument | undefined): string | undefined {
-  return Array.isArray(locale) ? locale[0] : locale?.toString();
-}
-
-function partsFor(
-  value: string,
-  zone: Zone,
-  locale: Intl.LocalesArgument | undefined,
-  options: Intl.DateTimeFormatOptions | undefined,
-): DisplayPart[] {
-  const date =
-    parseLocal(value, zone) ??
-    DateTime.fromObject({ year: 2001, month: 2, day: 3, hour: 4, minute: 5 }, { zone });
-  const localizedDate = localeName(locale) ? date.setLocale(localeName(locale)!) : date;
-  return localizedDate
-    .toLocaleParts({
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      ...options,
-    })
-    .map((part) =>
-      editableTypes.has(part.type as SegmentName)
-        ? {
-            type: part.type as SegmentName,
-            value: part.type === "year" ? part.value.padStart(4, "0") : part.value,
-            editable: true,
-          }
-        : { type: part.type, value: part.value, editable: false },
-    );
-}
-
-function naturalPreview(
-  date: DateTime,
-  locale: Intl.LocalesArgument | undefined,
-  options: Intl.DateTimeFormatOptions | undefined,
-): string {
-  return partsFor(toLocalValue(date), date.zone, locale, options)
-    .map((part) => part.value)
-    .join("");
-}
-
-function timeOffset(date: DateTime) {
-  const offset = Math.round(date.offset);
-  const sign = offset < 0 ? "-" : "+";
-  const minutes = Math.abs(offset);
-  const hours = Math.floor(minutes / 60);
-  const remainder = minutes % 60;
-  return {
-    hours: `${sign}${hours}`,
-    minutes: `:${remainder.toString().padStart(2, "0")}`,
-    hasZeroMinutes: remainder === 0,
-  };
-}
-
-function splitDateAndTime(parts: DisplayPart[]) {
-  const firstEditableType = parts.find((part) => part.editable)?.type;
-  const firstIsTime = timeTypes.has(firstEditableType as SegmentName);
-  const splitAt = parts.findIndex(
-    (part) => part.editable && timeTypes.has(part.type as SegmentName) !== firstIsTime,
-  );
-  return {
-    first: splitAt < 1 ? parts : parts.slice(0, splitAt),
-    second: splitAt < 1 ? [] : parts.slice(splitAt),
-  };
-}
-
-function digitLimit(segment: SegmentName): number {
-  return segment === "year" ? 4 : segment === "dayPeriod" ? 0 : 2;
-}
-
-function placeholderFor(segment: SegmentName): string {
-  if (segment === "year") return "yyyy";
-  if (segment === "month") return "mm";
-  if (segment === "day") return "dd";
-  return "--";
-}
-
-function isCompleteSegment(segment: SegmentName, digits: string, hour12: boolean): boolean {
-  if (digits.length === digitLimit(segment)) return true;
-  const maximum =
-    segment === "month"
-      ? 12
-      : segment === "day"
-        ? 31
-        : segment === "hour"
-          ? hour12
-            ? 12
-            : 23
-          : segment === "minute"
-            ? 59
-            : undefined;
-  return maximum !== undefined && Number(digits) * 10 > maximum;
-}
-
-function closestYear(twoDigitYear: string, referenceTime: DateTime): number {
-  const candidate = Math.floor(referenceTime.year / 100) * 100 + Number(twoDigitYear);
-  if (candidate - referenceTime.year > 50) return candidate - 100;
-  if (referenceTime.year - candidate > 50) return candidate + 100;
-  return candidate;
-}
-
-function nearestLeapYear(year: number): number {
-  for (let distance = 0; ; distance += 1) {
-    const earlier = year - distance;
-    if (earlier >= 1 && DateTime.fromObject({ year: earlier }).isInLeapYear) return earlier;
-    const later = year + distance;
-    if (DateTime.fromObject({ year: later }).isInLeapYear) return later;
-  }
-}
-
-function CalendarIcon(): JSX.Element {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M7 2v3m10-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />
-    </svg>
-  );
-}
-
-function MagicIcon(): JSX.Element {
-  return (
-    <span class="datetime-neo__magic-icon" aria-hidden="true">
-      @
-    </span>
-  );
-}
-
-function ConfirmIcon(): JSX.Element {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="m5 12 4.5 4.5L19 7" />
-    </svg>
-  );
-}
-
-function CancelIcon(): JSX.Element {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="m6 6 12 12M18 6 6 18" />
-    </svg>
-  );
-}
 
 /** A locale-aware, keyboard-editable local date and time control for Solid SPAs. */
 function Neodt(props: NeodtProps): JSX.Element {
@@ -226,6 +86,12 @@ function Neodt(props: NeodtProps): JSX.Element {
     "aria-label",
   ]);
   const locale = () => local.locale ?? systemLocale;
+  const hourFormat = createMemo(() =>
+    new Intl.DateTimeFormat(locale(), {
+      hour: "numeric",
+      ...local.formatOptions,
+    }).resolvedOptions(),
+  );
   const [uncontrolledValue, setUncontrolledValue] = createSignal<DateTime | undefined>(
     local.defaultValue,
   );
@@ -246,18 +112,28 @@ function Neodt(props: NeodtProps): JSX.Element {
   );
   const nativeValue = () => toLocalValue(value() ?? draftDate());
   const [cleared, setCleared] = createSignal<Set<SegmentName>>(
-    new Set(value() ? [] : ["year", "month", "day", "hour", "minute", "dayPeriod"]),
+    new Set(value() ? [] : segmentNames),
   );
   let previousControlledValue = local.value;
-  createEffect(() => {
-    const controlledValue = local.value;
-    if (controlledValue === undefined) return;
-    const wasEmpty = previousControlledValue === null;
-    previousControlledValue = controlledValue;
-    if (!controlledValue || !wasEmpty) return;
-    setDraftDate(controlledValue.setZone(referenceZone()).startOf("minute"));
-    setCleared(new Set<SegmentName>());
-  });
+  let emittedValue: DateTime | null | undefined;
+  createEffect(
+    on(
+      () => local.value,
+      (controlledValue) => {
+        if (sameDateValue(controlledValue, previousControlledValue)) return;
+        previousControlledValue = controlledValue;
+        const isEcho = sameDateValue(controlledValue, emittedValue);
+        emittedValue = undefined;
+        if (controlledValue === undefined || isEcho) return;
+        setTyped(undefined);
+        setAllSegmentsSelected(false);
+        setDraftDate(
+          (controlledValue ?? local.referenceTime).setZone(referenceZone()).startOf("minute"),
+        );
+        setCleared(new Set<SegmentName>(controlledValue ? [] : segmentNames));
+      },
+    ),
+  );
   const segments = createMemo(() =>
     partsFor(
       toLocalValue(cleared().size ? draftDate() : (value() ?? draftDate())),
@@ -398,6 +274,7 @@ function Neodt(props: NeodtProps): JSX.Element {
 
   const emitValue = (next: DateTime | undefined) => {
     if (local.value === undefined) setUncontrolledValue(next);
+    emittedValue = next ?? null;
     local.onValueChange?.(next ?? null);
   };
 
@@ -409,6 +286,17 @@ function Neodt(props: NeodtProps): JSX.Element {
   const hasClearedSegment = (segmentsToCheck = cleared()) =>
     editableSegments().some((segment) => segmentsToCheck.has(segment.type));
 
+  const completeSegments = (date: DateTime, completed: readonly SegmentName[]) => {
+    if (cleared().size === 0) {
+      emitValue(date);
+      return;
+    }
+    const nextCleared = new Set(cleared());
+    for (const segment of completed) nextCleared.delete(segment);
+    setCleared(nextCleared);
+    emitValue(hasClearedSegment(nextCleared) ? undefined : date);
+  };
+
   const commitTypedYear = () => {
     const pending = typed();
     if (pending?.digits.length === 2 && editableSegments()[pending.index]?.type === "year") {
@@ -417,7 +305,7 @@ function Neodt(props: NeodtProps): JSX.Element {
     setTyped(undefined);
   };
 
-  const clearSegments = (segments: SegmentName[]) => {
+  const clearSegments = (segments: readonly SegmentName[]) => {
     if (local.disabled || local.readonly) return;
     setTyped(undefined);
     if (value()) setDraftDate(value()!.startOf("minute"));
@@ -447,6 +335,29 @@ function Neodt(props: NeodtProps): JSX.Element {
     setTyped(undefined);
     setActiveItem(next);
     if (focus) actionButtons[next - segmentCount]?.focus();
+  };
+
+  const navigateControl = (event: KeyboardEvent, index: number): boolean => {
+    let next: number;
+    switch (event.key) {
+      case "ArrowLeft":
+        next = index - 1;
+        break;
+      case "ArrowRight":
+        next = index + 1;
+        break;
+      case "Home":
+        next = 0;
+        break;
+      case "End":
+        next = editableSegments().length + actionButtons.length - 1;
+        break;
+      default:
+        return false;
+    }
+    event.preventDefault();
+    selectControlItem(next, true);
+    return true;
   };
 
   const changeSegment = (segment: SegmentName, amount: number) => {
@@ -482,14 +393,7 @@ function Neodt(props: NeodtProps): JSX.Element {
         break;
     }
     setDraftDate(date);
-    if (cleared().size === 0) {
-      emitValue(date);
-      return;
-    }
-    const nextCleared = new Set(cleared());
-    nextCleared.delete(segment);
-    setCleared(nextCleared);
-    emitValue(hasClearedSegment(nextCleared) ? undefined : date);
+    completeSegments(date, [segment]);
   };
 
   const setDayPeriod = (morning: boolean) => {
@@ -500,10 +404,7 @@ function Neodt(props: NeodtProps): JSX.Element {
       return;
     }
     if (!isCleared("dayPeriod")) return;
-    const nextCleared = new Set(cleared());
-    nextCleared.delete("dayPeriod");
-    setCleared(nextCleared);
-    emitValue(hasClearedSegment(nextCleared) ? undefined : date);
+    completeSegments(date, ["dayPeriod"]);
   };
 
   const dayPeriodForInput = (input: string) => {
@@ -538,10 +439,7 @@ function Neodt(props: NeodtProps): JSX.Element {
       if (number <= (date.daysInMonth ?? 31)) date = date.set({ day: number });
     }
     if (segment === "hour") {
-      const hour12 = new Intl.DateTimeFormat(locale(), {
-        hour: "numeric",
-        ...local.formatOptions,
-      }).resolvedOptions().hour12;
+      const { hour12 } = hourFormat();
       if (hour12 && number >= 1 && number <= 12)
         date = date.set({ hour: (date.hour >= 12 ? 12 : 0) + (number % 12) });
       if (hour12 && number >= 13 && number <= 23) {
@@ -552,15 +450,7 @@ function Neodt(props: NeodtProps): JSX.Element {
     }
     if (segment === "minute" && number >= 0 && number <= 59) date = date.set({ minute: number });
     setDraftDate(date);
-    if (cleared().size === 0) {
-      emitValue(date);
-      return;
-    }
-    const nextCleared = new Set(cleared());
-    nextCleared.delete(segment);
-    if (setDayPeriodToPm) nextCleared.delete("dayPeriod");
-    setCleared(nextCleared);
-    emitValue(hasClearedSegment(nextCleared) ? undefined : date);
+    completeSegments(date, setDayPeriodToPm ? [segment, "dayPeriod"] : [segment]);
   };
 
   const openPicker = () => {
@@ -597,10 +487,6 @@ function Neodt(props: NeodtProps): JSX.Element {
     exitNaturalInput();
   };
 
-  const closeNaturalInput = () => {
-    exitNaturalInput();
-  };
-
   const updateNaturalText = (next: string) => {
     const hadText = Boolean(naturalText());
     setNaturalText(next);
@@ -631,8 +517,15 @@ function Neodt(props: NeodtProps): JSX.Element {
   };
 
   const updateFromNativeInput = (next: string) => {
+    if (local.disabled || local.readonly) return;
+    if (
+      next
+        ? !hasClearedSegment() && value() && next === toLocalValue(value()!)
+        : cleared().size === segmentNames.length
+    )
+      return;
     if (!next) {
-      setCleared(new Set<SegmentName>(["year", "month", "day", "hour", "minute", "dayPeriod"]));
+      setCleared(new Set<SegmentName>(segmentNames));
       setTyped(undefined);
       emitValue(undefined);
       return;
@@ -694,15 +587,12 @@ function Neodt(props: NeodtProps): JSX.Element {
     const digits = `${previous}${digit}`.slice(-digitLimit(segment.type));
     setTyped({ index, digits });
     setSegment(segment.type, digits);
-    const hour12 =
-      new Intl.DateTimeFormat(locale(), {
-        hour: "numeric",
-        ...local.formatOptions,
-      }).resolvedOptions().hour12 ?? false;
+    const hour12 = hourFormat().hour12 ?? false;
     if (isCompleteSegment(segment.type, digits, hour12)) selectSegment(index + 1, true);
   };
 
   const onSegmentKeyDown = (event: KeyboardEvent, index: number, segment: Segment) => {
+    if (local.disabled || local.readonly) return;
     // Let the segmented editor support select-all without selecting the whole page.
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "a") {
       event.preventDefault();
@@ -713,7 +603,7 @@ function Neodt(props: NeodtProps): JSX.Element {
       event.preventDefault();
       const backspaceEmptySegment = event.key === "Backspace" && isCleared(segment.type);
       if (allSegmentsSelected() || (backspaceEmptySegment && index === 0)) {
-        clearSegments(["year", "month", "day", "hour", "minute", "dayPeriod"]);
+        clearSegments(segmentNames);
         selectSegment(0, true);
       } else if (backspaceEmptySegment) {
         clearSegments([editableSegments()[index - 1]!.type]);
@@ -723,7 +613,8 @@ function Neodt(props: NeodtProps): JSX.Element {
       }
       return;
     }
-    if (!(event.ctrlKey || event.metaKey)) setAllSegmentsSelected(false);
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    setAllSegmentsSelected(false);
     if (event.key === " ") {
       event.preventDefault();
       openPicker();
@@ -735,16 +626,7 @@ function Neodt(props: NeodtProps): JSX.Element {
       return;
     }
     // Arrow keys traverse segments horizontally and adjust the selected value vertically.
-    if (event.key === "ArrowLeft") {
-      event.preventDefault();
-      selectControlItem(index - 1, true);
-      return;
-    }
-    if (event.key === "ArrowRight") {
-      event.preventDefault();
-      selectControlItem(index + 1, true);
-      return;
-    }
+    if (navigateControl(event, index)) return;
     if (event.key === "ArrowUp") {
       event.preventDefault();
       changeSegment(segment.type, 1);
@@ -753,16 +635,6 @@ function Neodt(props: NeodtProps): JSX.Element {
     if (event.key === "ArrowDown") {
       event.preventDefault();
       changeSegment(segment.type, -1);
-      return;
-    }
-    if (event.key === "Home") {
-      event.preventDefault();
-      selectControlItem(0, true);
-      return;
-    }
-    if (event.key === "End") {
-      event.preventDefault();
-      selectControlItem(editableSegments().length + actionButtons.length - 1, true);
       return;
     }
     // Numeric segments expose a decimal keyboard on mobile; its decimal key advances instead of
@@ -801,6 +673,14 @@ function Neodt(props: NeodtProps): JSX.Element {
     part().editable ? (
       (() => {
         const segment = () => part() as Segment;
+        const aria = createMemo(() =>
+          segmentAria(
+            cleared().size ? draftDate() : (value() ?? draftDate()),
+            segment().type,
+            cleared(),
+            hourFormat().hourCycle,
+          ),
+        );
         const index = () =>
           editableSegments().findIndex((candidate) => candidate.type === segment().type);
         return (
@@ -820,7 +700,15 @@ function Neodt(props: NeodtProps): JSX.Element {
             }
             aria-disabled={local.disabled || undefined}
             aria-label={part().type}
-            aria-selected={selected() === index()}
+            aria-readonly={local.readonly || undefined}
+            aria-valuenow={isCleared(segment().type) ? undefined : aria().value}
+            aria-valuemin={aria().min}
+            aria-valuemax={aria().max}
+            aria-valuetext={
+              isCleared(segment().type) ? "Empty" : displaySegmentValue(index(), segment())
+            }
+            aria-describedby={rest["aria-describedby"]}
+            aria-invalid={rest["aria-invalid"]}
             onFocus={() => selectSegment(index())}
             onBlur={commitTypedYear}
             onClick={() => selectSegment(index())}
@@ -894,7 +782,6 @@ function Neodt(props: NeodtProps): JSX.Element {
             local["aria-label"] ?? (rest["aria-labelledby"] ? undefined : "Date and time")
           }
           aria-labelledby={rest["aria-labelledby"]}
-          aria-readonly={local.readonly || undefined}
           data-overflowing={editorHasHiddenEnd() ? "" : undefined}
           onScroll={updateEditorOverflow}
           onCopy={copyDateTime}
@@ -954,7 +841,7 @@ function Neodt(props: NeodtProps): JSX.Element {
                       }
                       if (event.key === "Escape") {
                         event.preventDefault();
-                        closeNaturalInput();
+                        exitNaturalInput();
                         return;
                       }
                     }}
@@ -1002,6 +889,7 @@ function Neodt(props: NeodtProps): JSX.Element {
         disabled={local.disabled}
         readonly={local.readonly}
         tabindex={-1}
+        aria-label="Date and time picker"
         onInput={(event) => updateFromNativeInput(event.currentTarget.value)}
         onChange={(event) => updateFromNativeInput(event.currentTarget.value)}
       />
@@ -1093,30 +981,7 @@ function Neodt(props: NeodtProps): JSX.Element {
                 onKeyDown={
                   measurement
                     ? undefined
-                    : (event) => {
-                        if (event.key === "ArrowLeft") {
-                          event.preventDefault();
-                          selectControlItem(editableSegments().length - 1, true);
-                          return;
-                        }
-                        if (event.key === "ArrowRight") {
-                          event.preventDefault();
-                          selectControlItem(editableSegments().length + 1, true);
-                          return;
-                        }
-                        if (event.key === "Home") {
-                          event.preventDefault();
-                          selectControlItem(0, true);
-                          return;
-                        }
-                        if (event.key === "End") {
-                          event.preventDefault();
-                          selectControlItem(
-                            editableSegments().length + actionButtons.length - 1,
-                            true,
-                          );
-                        }
-                      }
+                    : (event) => navigateControl(event, editableSegments().length)
                 }
                 onClick={
                   measurement
@@ -1125,7 +990,7 @@ function Neodt(props: NeodtProps): JSX.Element {
                         naturalMode()
                           ? naturalDate()
                             ? confirmNaturalInput()
-                            : closeNaturalInput()
+                            : exitNaturalInput()
                           : openNaturalInput()
                 }
               >
@@ -1163,28 +1028,7 @@ function Neodt(props: NeodtProps): JSX.Element {
                             openPicker();
                             return;
                           }
-                          if (event.key === "ArrowLeft") {
-                            event.preventDefault();
-                            selectControlItem(editableSegments().length, true);
-                            return;
-                          }
-                          if (event.key === "ArrowRight") {
-                            event.preventDefault();
-                            selectControlItem(editableSegments().length + 2, true);
-                            return;
-                          }
-                          if (event.key === "Home") {
-                            event.preventDefault();
-                            selectControlItem(0, true);
-                            return;
-                          }
-                          if (event.key === "End") {
-                            event.preventDefault();
-                            selectControlItem(
-                              editableSegments().length + actionButtons.length - 1,
-                              true,
-                            );
-                          }
+                          navigateControl(event, editableSegments().length + 1);
                         }
                   }
                 >

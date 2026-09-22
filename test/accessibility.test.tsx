@@ -48,3 +48,72 @@ it("does not throw when the browser has no native picker API", () => {
     window.removeEventListener("error", onError);
   }
 });
+
+it("exposes numeric values, localized text, and changing calendar ranges", () => {
+  const [value, setValue] = createSignal(referenceTime.set({ month: 2, day: 28 }));
+  dispose = render(
+    () => (
+      <Neodt
+        referenceTime={referenceTime}
+        value={value()}
+        locale="en-US"
+        formatOptions={{ month: "long", hour12: true }}
+        aria-describedby="help"
+        aria-invalid="true"
+      />
+    ),
+    document.body,
+  );
+  const field = (name: string) =>
+    document.querySelector(`[role="spinbutton"][aria-label="${name}"]`)!;
+  expect(field("month").getAttribute("aria-valuenow")).toBe("2");
+  expect(field("month").getAttribute("aria-valuetext")).toBe("February");
+  expect(field("day").getAttribute("aria-valuemax")).toBe("28");
+  expect(field("hour").getAttribute("aria-valuenow")).toBe("3");
+  expect(field("hour").getAttribute("aria-valuemin")).toBe("1");
+  expect(field("hour").getAttribute("aria-valuemax")).toBe("12");
+  expect(field("dayPeriod").getAttribute("aria-valuetext")).toBe("PM");
+  expect(field("day").getAttribute("aria-describedby")).toBe("help");
+  expect(field("day").getAttribute("aria-invalid")).toBe("true");
+  setValue(value().set({ year: 2028 }));
+  expect(field("day").getAttribute("aria-valuemax")).toBe("29");
+});
+
+it("exposes readonly on the spinbuttons", () => {
+  dispose = render(() => <Neodt referenceTime={referenceTime} readonly />, document.body);
+  expect(document.querySelector('[role="spinbutton"]')?.getAttribute("aria-readonly")).toBe("true");
+});
+
+it("keeps editing and accessible hour ranges in sync when formatting changes", () => {
+  const [options, setOptions] = createSignal<Intl.DateTimeFormatOptions>({ hourCycle: "h23" });
+  const [locale, setLocale] = createSignal("en-US");
+  const [value, setValue] = createSignal<DateTime | null>(referenceTime);
+  dispose = render(
+    () => (
+      <Neodt
+        referenceTime={referenceTime}
+        value={value()}
+        onValueChange={setValue}
+        locale={locale()}
+        formatOptions={options()}
+      />
+    ),
+    document.body,
+  );
+  const hour = () => document.querySelector<HTMLElement>('[role="spinbutton"][aria-label="hour"]')!;
+  expect(hour().getAttribute("aria-valuenow")).toBe("15");
+  expect(hour().getAttribute("aria-valuemax")).toBe("23");
+  setOptions({ hour12: true });
+  expect(hour().getAttribute("aria-valuenow")).toBe("3");
+  expect(hour().getAttribute("aria-valuemax")).toBe("12");
+  for (const digit of "11")
+    hour().dispatchEvent(new KeyboardEvent("keydown", { key: digit, bubbles: true }));
+  expect(value()!.hour).toBe(23);
+  setOptions({});
+  setLocale("en-GB");
+  expect(hour().getAttribute("aria-valuenow")).toBe("23");
+  expect(hour().getAttribute("aria-valuemax")).toBe("23");
+  for (const digit of "00")
+    hour().dispatchEvent(new KeyboardEvent("keydown", { key: digit, bubbles: true }));
+  expect(value()!.hour).toBe(0);
+});

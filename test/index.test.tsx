@@ -943,11 +943,11 @@ describe("Neodt", () => {
         );
         segments[1]?.focus();
         nextRender().then(() => {
-          expect(segments[1]?.getAttribute("aria-selected")).toBe("true");
+          expect(segments[1]?.classList.contains("datetime-neo__segment--selected")).toBe(true);
           key(segments[1]!, "ArrowRight");
           nextRender().then(() => {
             expect(document.activeElement).toBe(segments[2]);
-            expect(segments[2]?.getAttribute("aria-selected")).toBe("true");
+            expect(segments[2]?.classList.contains("datetime-neo__segment--selected")).toBe(true);
             key(segments[2]!, "ArrowLeft");
             nextRender().then(() => {
               expect(document.activeElement).toBe(segments[1]);
@@ -1113,8 +1113,10 @@ describe("Neodt", () => {
         nextRender().then(() => {
           expect(event.defaultPrevented).toBe(false);
           expect(document.activeElement).toBe(firstSegment);
-          expect(firstSegment.getAttribute("aria-selected")).toBe("true");
-          expect(segments[segments.length - 1]?.getAttribute("aria-selected")).toBe("false");
+          expect(firstSegment.classList.contains("datetime-neo__segment--selected")).toBe(true);
+          expect(
+            segments[segments.length - 1]?.classList.contains("datetime-neo__segment--selected"),
+          ).toBe(false);
           control.remove();
           dispose();
           resolve();
@@ -1644,7 +1646,7 @@ describe("Neodt", () => {
         );
         expect(control.querySelector(".datetime-neo__segment--all-selected")).toBeNull();
         expect(document.activeElement).toBe(segments[0]);
-        expect(segments[0]?.getAttribute("aria-selected")).toBe("true");
+        expect(segments[0]?.classList.contains("datetime-neo__segment--selected")).toBe(true);
 
         key(segments[0]!, "1");
         await nextRender();

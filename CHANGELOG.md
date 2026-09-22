@@ -2,15 +2,24 @@
 
 ### Added
 
-- Lightweight Prism highlighting for configuration TSX, documentation examples, and live CSS editors, including custom properties, colours, and units.
+- Lightweight syntax highlighting for tsx and css in docs
 
-- Getting started, API, keyboard/natural-language, and styling documentation pages.
-- Four live styling examples with isolated, editable CSS, copy/reset, synced width grips, stacked states, and shared locale/clock/offset controls.
-- Chromium, Firefox, and WebKit regression tests for actual layout, interaction, and documentation behaviour.
-- CSS maintenance notes and a release checklist; non-mutating checks and browser coverage in CI.
-- Reduced-motion support for layout transitions and natural-language placeholders.
+- Getting started, API, keyboard/natural-language, and styling documentation pages
+- Five live styling examples with editable css
+- Playwright tests for actual layout, interaction, and docs
+- CSS maintenance notes and a release checklist; non-mutating checks and browser coverage in CI
+- Reduced-motion support
+
+### Changed
+
+- Separated internal date/segment rules and icons from the component, consolidated segment completion and keyboard navigation, and shared reactive hour-format resolution across editing and accessibility.
+- **Breaking:** Parent-driven controlled resets and replacements now discard stale segments and unfinished typing, while accepted change callbacks preserve incremental entry.
 
 ### Fixed
+
+- Segmented spinbuttons expose numeric values, localized value text, calendar ranges, readonly state, and validation descriptions to assistive technology; removed unsupported selection/group ARIA states.
+- Native picker events respect readonly/disabled state and avoid duplicate notifications for accepted input/change pairs.
+- Prevent Ctrl/Cmd/Alt keyboard shortcuts from accidentally editing the date.
 
 - Synced gallery resizing holds upstream card heights during a drag and restores layout without moving the active grip.
 - Midnight gallery theme retains a readable dark surface in readonly mode.

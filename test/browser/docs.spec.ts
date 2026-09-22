@@ -156,12 +156,16 @@ test("every width grip resizes the entire gallery with pointer and keyboard", as
   await page.goto("/#/docs/styling");
   const preview = page.locator("[data-theme-preview=paper]");
   const grip = page.getByRole("slider", { name: "Resize Paper & ink previews" });
-  await grip.scrollIntoViewIfNeeded();
+  await page.evaluate(() => document.fonts.ready);
+  // Hover waits for layout stability and hit testing before the raw pointer drag.
+  await grip.hover();
   const start = Number(await grip.getAttribute("aria-valuenow"));
   const bounds = (await grip.boundingBox())!;
-  await page.mouse.move(bounds.x + 3, bounds.y + bounds.height / 2);
+  await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
   await page.mouse.down();
-  await page.mouse.move(bounds.x - 47, bounds.y + bounds.height / 2, { steps: 5 });
+  await page.mouse.move(bounds.x + bounds.width / 2 - 50, bounds.y + bounds.height / 2, {
+    steps: 5,
+  });
   await page.mouse.up();
   await expect(grip).toHaveAttribute("aria-valuenow", String(start - 50));
   for (const control of await page.locator("[data-theme-preview] .datetime-neo").all()) {

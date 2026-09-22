@@ -207,6 +207,13 @@ const suggestions = getNaturalDateCompletions("tom", 5);`}
         associated types are <code>NaturalDateParseOptions</code> and{" "}
         <code>NaturalDateCompletion</code>.
       </p>
+      <h2>Controlled updates</h2>
+      <p>
+        Parent value replacements reset the displayed draft. Passing null clears every segment.
+        While typing an incomplete date, the control emits null and keeps the local draft; passing
+        emitted values back through onValueChange preserves ongoing numeric entry. Use
+        aria-describedby and aria-invalid to associate application validation with the segments.
+      </p>
       <h2>Current boundaries</h2>
       <p>
         This is a JavaScript-managed date and time control with minute precision. It does not

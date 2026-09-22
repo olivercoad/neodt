@@ -105,8 +105,7 @@ function ThemeExample(props: {
       </div>
       <div class={styles.exampleColumns}>
         <div class={styles.preview}>
-          <span class={styles.eyebrow}>LIVE PREVIEW</span>
-          <div class={styles.previewStage} ref={stage}>
+          <div ref={stage}>
             <div
               class={styles.previewSizer}
               data-theme-preview={props.theme.id}
@@ -175,9 +174,6 @@ function ThemeExample(props: {
               </button>
             </div>
           </div>
-          <p class={styles.hint}>
-            Focus a segment, use the arrow keys, or press @ to try natural language.
-          </p>
           <span class={styles.usageCode}>
             <Code
               value={`<Neodt

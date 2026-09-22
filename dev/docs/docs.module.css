@@ -232,6 +232,7 @@
 }
 .editorToolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
   padding: 0.9rem 1rem;
@@ -260,10 +261,11 @@
   white-space: pre-wrap;
 }
 .copyStatus {
-  display: block;
-  min-height: 2rem;
-  padding: 0 1rem;
+  flex-basis: 100%;
   font-size: 0.75rem;
+}
+.copyStatus:empty {
+  position: absolute;
 }
 .page :is(a, button, textarea, input, select):focus-visible {
   outline: 2px solid #628eff;

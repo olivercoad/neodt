@@ -68,7 +68,15 @@ function ThemeExample(props: {
 }) {
   const [css, setCss] = createSignal(props.theme.css);
   const [maximumWidth, setMaximumWidth] = createSignal(400);
-  const [copied, setCopied] = createSignal("");
+  const [copied, setCopied] = createSignal(false);
+  const [copyError, setCopyError] = createSignal("");
+  let copyTimer: ReturnType<typeof setTimeout> | undefined;
+  const clearCopyStatus = () => {
+    clearTimeout(copyTimer);
+    setCopied(false);
+    setCopyError("");
+  };
+  onCleanup(() => clearTimeout(copyTimer));
   const minimumWidth = 100;
   let stage!: HTMLDivElement;
   let editor!: HTMLTextAreaElement;
@@ -88,13 +96,15 @@ function ThemeExample(props: {
     onCleanup(() => observer.disconnect());
   });
   const copy = async () => {
+    clearCopyStatus();
     try {
       await navigator.clipboard.writeText(css());
-      setCopied("Copied CSS");
+      setCopied(true);
+      copyTimer = setTimeout(() => setCopied(false), 2000);
     } catch {
       editor.focus();
       editor.select();
-      setCopied("CSS selected. Press Ctrl+C or ⌘C to copy.");
+      setCopyError("CSS selected. Press Ctrl+C or ⌘C to copy.");
     }
   };
   return (
@@ -191,14 +201,17 @@ function ThemeExample(props: {
               type="button"
               onClick={() => {
                 setCss(props.theme.css);
-                setCopied("");
+                clearCopyStatus();
               }}
             >
               Reset
             </button>
-            <button type="button" onClick={copy}>
-              Copy CSS
+            <button type="button" onClick={copy} aria-live="polite">
+              {copied() ? "✓ Copied" : "Copy CSS"}
             </button>
+            <span class={styles.copyStatus} role="status" aria-label="Copy status">
+              {copyError()}
+            </span>
           </div>
           <CodeEditor
             ref={(element) => {
@@ -208,12 +221,9 @@ function ThemeExample(props: {
             value={css()}
             onInput={(value) => {
               setCss(value);
-              setCopied("");
+              clearCopyStatus();
             }}
           />
-          <span class={styles.copyStatus} role="status" aria-label="Copy status">
-            {copied()}
-          </span>
         </div>
       </div>
     </article>

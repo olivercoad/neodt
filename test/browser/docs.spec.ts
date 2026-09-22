@@ -47,8 +47,10 @@ test("theme CSS edits update only that preview, can be copied, and reset", async
     });
   });
   await paper.getByRole("button", { name: "Copy CSS" }).click();
-  await expect(paper.getByRole("status", { name: "Copy status" })).toHaveText("Copied CSS");
+  await expect(paper.getByRole("button", { name: "✓ Copied", exact: true })).toBeVisible();
+  await expect(paper.getByRole("status", { name: "Copy status" })).toBeEmpty();
   expect(await page.locator("html").getAttribute("data-copied")).toBe(await css.inputValue());
+  await expect(paper.getByRole("button", { name: "Copy CSS", exact: true })).toBeVisible();
   await paper.getByRole("button", { name: "Reset" }).click();
   await expect(css).toHaveValue(original);
   await expect(input).toHaveCSS("background-color", "rgb(255, 252, 245)");
@@ -84,7 +86,7 @@ test("docs and every styled preview fit a mobile viewport", async ({ page }) => 
       .getByRole("navigation", { name: "Main navigation" })
       .getByRole("link", { name: "Docs", exact: true }),
   ).toBeVisible();
-  for (const id of ["paper", "midnight", "mint", "compact", "super-compact"]) {
+  for (const id of ["paper", "midnight", "mint", "compact", "seamless"]) {
     const preview = page.locator(`[data-theme-preview=${id}]`);
     const control = preview.locator("[data-preview-state=editable] .datetime-neo");
     await control.scrollIntoViewIfNeeded();
@@ -169,7 +171,7 @@ test("every width grip resizes the entire gallery with pointer and keyboard", as
   await page.mouse.up();
   await expect(grip).toHaveAttribute("aria-valuenow", String(start - 50));
   for (const control of await page.locator("[data-theme-preview] .datetime-neo").all()) {
-    const capped = await control.evaluate((el) => el.classList.contains("theme-super-compact"));
+    const capped = await control.evaluate((el) => el.classList.contains("theme-seamless"));
     expect((await control.boundingBox())!.width).toBeCloseTo(
       capped ? Math.min(start - 50, 240) : start - 50,
       0,
@@ -196,12 +198,10 @@ test("every width grip resizes the entire gallery with pointer and keyboard", as
   await expect.poll(async () => (await preview.boundingBox())!.width).toBeLessThan(300);
 });
 
-test("super-compact previews use compact typography and stay within a 125px sizer", async ({
-  page,
-}) => {
+test("seamless previews use compact typography and stay within a 125px sizer", async ({ page }) => {
   await page.goto("/#/docs/styling");
   await page.evaluate(() => document.fonts.ready);
-  const preview = page.locator("[data-theme-preview=super-compact]");
+  const preview = page.locator("[data-theme-preview=seamless]");
   for (const control of await preview.locator(".datetime-neo").all()) {
     await expect(control).toHaveCSS("font-size", "16px");
     await expect(control).toHaveCSS("line-height", "normal");

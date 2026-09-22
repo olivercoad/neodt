@@ -68,11 +68,11 @@ export const themes = [
 }`,
   },
   {
-    id: "super-compact",
+    id: "seamless",
     name: "Seamless super-compact",
     description:
       "Adapted from a real-world times grid: minimal spacing, a transparent surface, and a width of 110-240px. Designed for not showing time offset.",
-    css: `.theme-super-compact {
+    css: `.theme-seamless {
   font-family: "Roboto Flex", sans-serif;
   font-size: 16px;
   line-height: normal;

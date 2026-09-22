@@ -1,0 +1,281 @@
+.page {
+  --ink: #152230;
+  --muted: #63717d;
+  --line: #d8dee3;
+  --paper: #f8f9fb;
+  --blue: #3367f0;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 13rem minmax(0, 1fr);
+  gap: 3rem;
+  max-width: 76rem;
+  padding: 3.5rem 2rem 6rem;
+  margin: auto;
+}
+.layout aside nav {
+  position: sticky;
+  top: 2rem;
+  display: grid;
+  gap: 0.4rem;
+}
+.layout aside a {
+  padding: 0.7rem 0.8rem;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 0.35rem;
+  font-size: 0.85rem;
+}
+.layout aside a[aria-current] {
+  background: #e8eefc;
+  color: #234cae;
+  font-weight: 700;
+}
+.eyebrow {
+  color: var(--blue);
+  font:
+    700 0.7rem ui-monospace,
+    monospace;
+  letter-spacing: 0.1em;
+  display: block;
+  margin-bottom: 1rem;
+}
+.content {
+  min-width: 0;
+  line-height: 1.7;
+}
+.content h1 {
+  font-size: clamp(2.4rem, 5vw, 4.5rem);
+  line-height: 1.05;
+  letter-spacing: -0.06em;
+  margin: 0 0 1.7rem;
+  font-weight: 600;
+}
+.content h2 {
+  font-size: 1.45rem;
+  letter-spacing: -0.03em;
+  margin: 2.5rem 0 0.7rem;
+}
+.content p {
+  color: #4a5d6d;
+  max-width: 70ch;
+}
+.content .intro {
+  font-size: 1.15rem;
+}
+.content a {
+  color: #235bc4;
+  text-underline-offset: 0.2em;
+}
+.content code,
+.content kbd {
+  font-family: ui-monospace, monospace;
+  font-size: 0.85em;
+}
+.content pre {
+  background: #172633;
+  color: #e2edf5;
+  border-radius: 0.45rem;
+  padding: 1.3rem;
+  overflow: auto;
+  white-space: pre;
+  margin: 1rem 0 1.5rem;
+}
+.tableScroll {
+  overflow-x: auto;
+}
+.content table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.85rem;
+  margin: 1rem 0;
+  text-align: left;
+}
+.content th,
+.content td {
+  border-bottom: 1px solid var(--line);
+  padding: 0.85rem 0.6rem;
+  vertical-align: top;
+}
+.content th {
+  color: var(--muted);
+}
+.example {
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 0.6rem;
+  margin: 2.5rem 0;
+  overflow: hidden;
+}
+.exampleHeading {
+  padding: 1.3rem 1.5rem;
+  border-bottom: 1px solid var(--line);
+}
+.exampleHeading h2 {
+  margin: 0 0 0.3rem;
+}
+.exampleHeading p {
+  font-size: 0.9rem;
+  margin: 0;
+}
+.exampleColumns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.preview {
+  min-width: 0;
+  padding: 1.5rem;
+  background: #f0f4f8;
+  font-size: 0.85rem;
+}
+.previewStage {
+  padding-top: 0.5rem;
+}
+.previewSizer {
+  max-width: calc(100% - 60px);
+  position: relative;
+  display: grid;
+  gap: 1.25rem;
+}
+.variantLabel {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+.resizeHandle {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  cursor: col-resize;
+  display: flex;
+  font-family: ui-monospace, monospace;
+  font-size: 0.65rem;
+  gap: 0.3rem;
+  left: calc(100% + 0.75rem);
+  padding: 0.55rem 0;
+  position: absolute;
+  top: 1.6rem;
+  touch-action: none;
+}
+.resizeGrip {
+  background-image: radial-gradient(circle, currentColor 1px, transparent 1.5px);
+  background-size: 4px 4px;
+  height: 1rem;
+  width: 0.3rem;
+}
+.galleryControls {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 1.5rem 0 0;
+  padding: 1rem 0 0;
+  min-width: 0;
+  display: grid;
+  gap: 1rem;
+  grid-column: 1 / -1;
+  font-size: 0.8rem;
+}
+.galleryControls legend {
+  color: var(--muted);
+  padding-right: 0.5rem;
+}
+.galleryControls label {
+  display: grid;
+  gap: 0.4rem;
+}
+.galleryControls select {
+  min-width: 0;
+  width: 100%;
+  background: white;
+  border: 1px solid #9ba8b6;
+  padding: 0.4rem;
+  border-radius: 0.25rem;
+  color: var(--ink);
+}
+.galleryControls .offsetToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.offsetToggle input {
+  accent-color: var(--blue);
+}
+.preview .hint {
+  font-size: 0.8rem;
+  margin: 1.5rem 0 1rem;
+}
+.cssEditor {
+  min-width: 0;
+  background: #172633;
+  color: #e2edf5;
+  display: flex;
+  flex-direction: column;
+}
+.editorToolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.9rem 1rem;
+  font-size: 0.75rem;
+  border-bottom: 1px solid #3a4d5c;
+}
+.editorToolbar label {
+  margin-right: auto;
+}
+.editorToolbar button {
+  cursor: pointer;
+  background: #294153;
+  color: #edf5ff;
+  border: 1px solid #668099;
+  border-radius: 0.3rem;
+  padding: 0.35rem 0.5rem;
+  white-space: nowrap;
+}
+.usageCode {
+  display: block;
+  background: #172633;
+  border-radius: 0.3rem;
+  padding: 0.65rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+.copyStatus {
+  display: block;
+  min-height: 2rem;
+  padding: 0 1rem;
+  font-size: 0.75rem;
+}
+.page :is(a, button, textarea, input, select):focus-visible {
+  outline: 2px solid #628eff;
+  outline-offset: 3px;
+}
+@media (max-width: 1050px) {
+  .exampleColumns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 720px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 1.5rem 1.25rem 4rem;
+    gap: 2rem;
+  }
+  .layout aside nav {
+    position: static;
+    grid-template-columns: 1fr 1fr;
+  }
+  .layout aside .eyebrow {
+    grid-column: 1 / -1;
+    margin-bottom: 0.2rem;
+  }
+  .layout aside a {
+    padding: 0.5rem;
+  }
+  .content h1 {
+    font-size: 2.6rem;
+  }
+}

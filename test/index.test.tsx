@@ -1,13 +1,9 @@
-import { readFileSync } from "node:fs";
-
 import { DateTime } from "luxon";
 import { createRoot, createSignal } from "solid-js";
 import { isServer } from "solid-js/web";
 import { describe, expect, it, vi } from "vitest";
 
 import Neodt from "../src";
-
-const styles = readFileSync("src/styles.css", "utf8");
 
 const DateTimeLocal = Neodt;
 
@@ -73,7 +69,9 @@ describe("Neodt", () => {
     document.body.append(control);
 
     await nextRender();
-    expect(control.dataset.wrapped).toBeUndefined();
+    expect(control.querySelector(".datetime-neo__content")?.hasAttribute("data-wrapped")).toBe(
+      false,
+    );
     expect(
       control.querySelectorAll(
         ":scope > .datetime-neo__content > .datetime-neo__editor .datetime-neo__row",
@@ -95,12 +93,6 @@ describe("Neodt", () => {
     expect(
       measurement.querySelectorAll(".datetime-neo__trailing .datetime-neo__trigger"),
     ).toHaveLength(2);
-    expect(styles).toMatch(
-      /\.datetime-neo:not\(\[data-time-offset\]\)\s*\{\s*:is\(\s*\.datetime-neo:not\(:hover\):not\(:focus-within\)\s+\.datetime-neo__content\s+\.datetime-neo__editor,\s*\.datetime-neo__measurement\s+\.datetime-neo__editor\s*\)/s,
-    );
-    expect(styles).toMatch(
-      /:is\(\s*\.datetime-neo:not\(:hover\):not\(:focus-within\).*\.datetime-neo__actions,\s*\.datetime-neo__measurement \.datetime-neo__actions/s,
-    );
     dispose!();
     clientWidth.mockRestore();
     scrollWidth.mockRestore();
@@ -154,75 +146,6 @@ describe("Neodt", () => {
     ).toBe("");
     expect(control.querySelector(".datetime-neo__natural-entry")).not.toBeNull();
     expect(control.querySelector(".datetime-neo__natural-result")).not.toBeNull();
-    expect(
-      getComputedStyle(
-        control.querySelector(
-          ".datetime-neo__measurement > .datetime-neo__editor > .datetime-neo__value",
-        )!,
-      ).display,
-    ).not.toBe("grid");
-    control.remove();
-    dispose!();
-    clientWidth.mockRestore();
-    scrollWidth.mockRestore();
-  });
-
-  it("keeps wrapped and natural rows intrinsically matched with consumer metrics", async () => {
-    const clientWidth = vi
-      .spyOn(HTMLElement.prototype, "clientWidth", "get")
-      .mockImplementation(function (this: HTMLElement) {
-        return this.classList.contains("datetime-neo") ? 120 : 0;
-      });
-    const scrollWidth = vi
-      .spyOn(HTMLElement.prototype, "scrollWidth", "get")
-      .mockImplementation(function (this: HTMLElement) {
-        return this.classList.contains("datetime-neo__measurement") ? 300 : 0;
-      });
-    let dispose: (() => void) | undefined;
-    const control = createRoot((rootDispose) => {
-      dispose = rootDispose;
-      return (
-        <DateTimeLocal
-          class="consumer-metrics"
-          referenceTime={referenceTime}
-          locale="en-GB"
-          value={date("2026-08-17T15:30")}
-        />
-      ) as HTMLSpanElement;
-    });
-    document.body.append(control);
-
-    await nextRender();
-    expect(
-      (control.querySelector(".datetime-neo__content") as HTMLElement | null)?.dataset.wrapped,
-    ).toBe("");
-    expect(control.classList).toContain("consumer-metrics");
-
-    control
-      .querySelector<HTMLButtonElement>('[aria-label="Enter date and time naturally"]')!
-      .click();
-    await nextRender();
-
-    expect(control.querySelector(".datetime-neo__natural-input")).not.toBeNull();
-    expect(control.querySelector(".datetime-neo__natural-preview")).not.toBeNull();
-    expect(styles).not.toMatch(/\.datetime-neo(?:\[data-wrapped\])?\s*\{[^}]*min-height/);
-    expect(styles).toMatch(/grid-template-rows:\s*auto auto/g);
-    expect(styles).toMatch(
-      /\.datetime-neo__segment\s*\{[^}]*line-height:\s*var\(--datetime-neo-segment-line-height\)[^}]*padding:\s*var\(--datetime-neo-segment-padding\)/s,
-    );
-    expect(styles).toMatch(
-      /\.datetime-neo__natural-input\s*\{[^}]*line-height:\s*var\(--datetime-neo-segment-line-height\)[^}]*padding:\s*var\(--datetime-neo-segment-padding\)/s,
-    );
-    expect(styles).toMatch(
-      /\.datetime-neo__natural-ghost\s*\{[^}]*line-height:\s*var\(--datetime-neo-segment-line-height\)[^}]*padding:\s*var\(--datetime-neo-segment-padding\)/s,
-    );
-    expect(styles).toMatch(
-      /\.datetime-neo__natural-field > \*\s*\{[^}]*align-self:\s*baseline[^}]*grid-area:\s*1 \/ 1/s,
-    );
-    expect(styles).toMatch(
-      /\.datetime-neo__natural-preview\s*\{[^}]*line-height:\s*var\(--datetime-neo-segment-line-height\)[^}]*padding:\s*var\(--datetime-neo-segment-padding\)/s,
-    );
-
     control.remove();
     dispose!();
     clientWidth.mockRestore();
@@ -399,18 +322,6 @@ describe("Neodt", () => {
         halfHourControl.querySelector(".datetime-neo__measurement .datetime-neo__timezone")
           ?.textContent,
       ).toBe("+10:30");
-      expect(styles).toMatch(
-        /\.datetime-neo:is\(:hover,\s*:focus-within\)\s+\.datetime-neo__content:not\(\[data-wrapped\]\)\s+\.datetime-neo__timezone-minutes\[data-zero\]/,
-      );
-      expect(styles).toMatch(
-        /\.datetime-neo:not\(:hover\):not\(:focus-within\)\s+\.datetime-neo__content\[data-wrapped\]\s+\.datetime-neo__timezone-minutes\[data-zero\]/,
-      );
-      expect(styles).toMatch(/clip-path 220ms ease/);
-      expect(styles).toMatch(/margin-right 220ms ease/);
-      expect(styles).toMatch(/opacity 220ms ease/);
-      expect(styles).toMatch(/clip-path: inset\(0 100% 0 0\)/);
-      expect(styles).toMatch(/transition-delay: 150ms/);
-      expect(styles).toMatch(/\.datetime-neo\[data-layout-changing\].*transition:\s*none/s);
     }));
 
   it("associates the picker label with the native input and opens it from Space", () =>

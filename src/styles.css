@@ -1,3 +1,7 @@
+/* Layout contract: the hidden measurement tree mirrors the idle, single-row
+   editor. Keep its font, segment padding, and trailing content identical to the
+   visible tree. Wrapping is measured in JS and must not change on hover/focus.
+   See docs/layout-testing.md before changing geometry or transition ordering. */
 .datetime-neo {
   --datetime-neo-border: #9ca3af;
   --datetime-neo-focus: #2563eb;
@@ -129,6 +133,10 @@
 }
 
 .datetime-neo__natural-input {
+  /* Native text inputs otherwise impose browser-specific minimum line heights. */
+  appearance: none;
+  box-sizing: content-box;
+  height: 1lh;
   background: transparent;
   border: 0;
   color: inherit;
@@ -152,6 +160,8 @@
 }
 
 .datetime-neo__natural-ghost {
+  box-sizing: content-box;
+  height: 1lh;
   align-items: center;
   color: color-mix(in srgb, currentColor 70%, transparent);
   display: flex;
@@ -194,6 +204,11 @@
   text-overflow: ellipsis;
   text-align: right;
   white-space: nowrap;
+}
+
+/* Reserve a text line even while the phrase is incomplete or invalid. */
+.datetime-neo__natural-preview::before {
+  content: "\200b";
 }
 
 .datetime-neo__natural-prefix {
@@ -512,4 +527,11 @@
   font-size: 1.1em;
   line-height: 1;
   text-box: trim-both cap text;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .datetime-neo *,
+  .datetime-neo[data-layout-changing] * {
+    transition: none !important;
+  }
 }

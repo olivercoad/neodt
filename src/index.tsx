@@ -44,7 +44,7 @@ export interface NeodtProps extends JSX.HTMLAttributes<HTMLSpanElement> {
   disabled?: boolean;
   /** Called whenever the selected date and time changes, or `null` when cleared. */
   onValueChange?: (value: DateTime | null) => void;
-  /** Force object sytax for style and string does not work for some reason */
+  /** Inline styles use Solid’s object syntax so measured layout variables are preserved. */
   style?: JSX.CSSProperties;
 }
 
@@ -565,7 +565,7 @@ function Neodt(props: NeodtProps): JSX.Element {
 
   const openPicker = () => {
     if (local.disabled || local.readonly) return;
-    nativeInput?.showPicker();
+    nativeInput?.showPicker?.();
   };
 
   const openNaturalInput = () => {
@@ -890,7 +890,10 @@ function Neodt(props: NeodtProps): JSX.Element {
           ref={setEditor}
           class="datetime-neo__editor"
           role="group"
-          aria-label={local["aria-label"] ?? "Date and time"}
+          aria-label={
+            local["aria-label"] ?? (rest["aria-labelledby"] ? undefined : "Date and time")
+          }
+          aria-labelledby={rest["aria-labelledby"]}
           aria-readonly={local.readonly || undefined}
           data-overflowing={editorHasHiddenEnd() ? "" : undefined}
           onScroll={updateEditorOverflow}
@@ -917,6 +920,8 @@ function Neodt(props: NeodtProps): JSX.Element {
                   <input
                     ref={(element) => (naturalInput = element)}
                     class="datetime-neo__natural-input"
+                    aria-label="Natural-language date and time"
+                    readonly={local.readonly}
                     type="text"
                     value={naturalText()}
                     placeholder={naturalPlaceholder()}

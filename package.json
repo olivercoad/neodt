@@ -46,7 +46,7 @@
     "dev:build": "vite build dev --config dev/vite.config.ts",
     "dev:typecheck": "tsc --noEmit -p dev/tsconfig.json",
     "build": "tsdown",
-    "test": "concurrently pnpm:test:*",
+    "test": "concurrently pnpm:test:client pnpm:test:ssr",
     "test:client": "TZ=Australia/Melbourne LANG=C.UTF-8 LC_ALL=C.UTF-8 vitest",
     "test:ssr": "pnpm run test:client --mode ssr",
     "prepack": "pnpm build",
@@ -54,8 +54,11 @@
     "lint": "concurrently pnpm:lint:*",
     "lint:code": "oxlint --deny-warnings",
     "lint:types": "tsc --noEmit",
-    "check": "pnpm format && pnpm lint && pnpm test && pnpm dev:typecheck && pnpm dev:build",
-    "update-deps": "pnpm up -Li"
+    "check": "pnpm format:check && pnpm lint && pnpm test && pnpm dev:typecheck && pnpm dev:build",
+    "update-deps": "pnpm up -Li",
+    "test:browser": "playwright test",
+    "format:check": "oxfmt --check .",
+    "check:release": "pnpm check && pnpm test:browser && pnpm build"
   },
   "dependencies": {
     "@solid-primitives/resize-observer": "^2.2.0",
@@ -63,13 +66,16 @@
     "luxon": "^3.7.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tsdown/css": "^0.22.14",
     "@types/luxon": "^3.7.4",
     "@types/node": "^26.2.0",
+    "@types/prismjs": "^1.26.6",
     "concurrently": "^8.2.2",
     "jsdom": "^30.0.1",
     "oxfmt": "^0.64.0",
     "oxlint": "^1.79.0",
+    "prismjs": "^1.30.0",
     "solid-js": "^1.8.17",
     "tsdown": "^0.22.14",
     "typescript": "^7.0.2",

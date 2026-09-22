@@ -233,12 +233,6 @@ p {
   min-width: 0;
   width: 100%;
 }
-.compareInput :global(.datetime-neo__display),
-.referenceInput :global(.datetime-neo__display),
-.previewInput :global(.datetime-neo__display) {
-  min-width: 0;
-  width: 100%;
-}
 .nativeCard input {
   background: white;
   border: 1px solid #aeb8c0;
@@ -480,7 +474,13 @@ footer span:first-child {
     padding-left: 1.25rem;
     padding-right: 1.25rem;
   }
-  .navLinks a:not(:last-child) {
+  .navLinks {
+    gap: 0.65rem;
+  }
+  .navLinks a {
+    font-size: 0.65rem;
+  }
+  .navLinks a:first-child {
     display: none;
   }
   .hero {

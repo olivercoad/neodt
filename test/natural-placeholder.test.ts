@@ -1,8 +1,29 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createNaturalPlaceholder, naturalTextExamples } from "../src/natural-placeholder";
 
 describe("natural text placeholder", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("shows a complete example without timers when reduced motion is requested", () => {
+    vi.useFakeTimers();
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    vi.stubGlobal("matchMedia", () => ({ matches: true }));
+    const onChange = vi.fn();
+    const placeholder = createNaturalPlaceholder(onChange);
+    placeholder.start();
+    expect(onChange).toHaveBeenLastCalledWith("now");
+    expect(vi.getTimerCount()).toBe(0);
+    placeholder.startNext();
+    expect(onChange).toHaveBeenLastCalledWith("tomorrow at 9:30am");
+    placeholder.stop();
+    expect(onChange).toHaveBeenLastCalledWith("");
+  });
+
   it("cycles through diverse supported input formats", () => {
     expect(naturalTextExamples).toEqual(
       expect.arrayContaining([

@@ -7,12 +7,13 @@ A locale-aware, keyboard-editable segmented date and time input for Solid.
 ## Install
 
 ```bash
-pnpm add @olicoad/neodt
+pnpm add @olicoad/neodt luxon
 ```
 
 ## Usage
 
 ```tsx
+import { createSignal } from "solid-js";
 import { DateTime } from "luxon";
 import Neodt from "@olicoad/neodt";
 
@@ -29,6 +30,13 @@ function Appointment() {
   );
 }
 ```
+
+## Documentation
+
+- [Getting started](https://neodt.olisworld.com/#/docs/getting-started)
+- [API reference](https://neodt.olisworld.com/#/docs/api)
+- [Live styling gallery](https://neodt.olisworld.com/#/docs/styling) — editable CSS, copy/reset, synced width grips, and shared formatting controls
+- [Keyboard and natural language](https://neodt.olisworld.com/#/docs/interaction)
 
 ## API
 
@@ -60,7 +68,7 @@ import "@olicoad/neodt/style.css";
 import Neodt from "@olicoad/neodt";
 ```
 
-Scope theme variables on the component or an ancestor:
+Set theme variables on a class applied to the component, after the default stylesheet. Defaults are declared on the root itself, so ancestor variables alone do not override them:
 
 ```css
 .booking-time {
@@ -101,10 +109,12 @@ pnpm dev
 The demo is served at `http://localhost:3000`. Validate changes with:
 
 ```bash
-pnpm check
-pnpm build
+pnpm exec playwright install --with-deps chromium firefox webkit
+pnpm check:release
 pnpm pack --dry-run
 ```
+
+`pnpm check` runs non-mutating formatting, lint, type, unit/SSR, and docs build checks. `pnpm test:browser` checks real layouts in Chromium, Firefox, and WebKit. See [layout testing](docs/layout-testing.md) for CSS invariants and debugging, and [release preparation](docs/releasing.md) for the v1 checklist.
 
 ## Publishing And Deployment
 
@@ -113,7 +123,7 @@ GitHub Actions publishes the npm package when a pushed `v*` tag exactly matches 
 ### Release procedure
 
 1. Set the intended version in `package.json` and update `pnpm-lock.yaml` with `pnpm install --lockfile-only`.
-2. Run `pnpm check && pnpm build && pnpm pack --dry-run`.
+2. Run `pnpm check:release && pnpm pack --dry-run`.
 3. Commit the release, push it to `main`, then create and push the matching annotated tag. eg For the first release:
 
 ```bash

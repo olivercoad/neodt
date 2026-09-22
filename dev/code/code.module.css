@@ -1,0 +1,110 @@
+.highlight {
+  color: #e2edf5;
+}
+.highlight :global(.token.comment),
+.highlight :global(.token.prolog),
+.highlight :global(.token.doctype),
+.highlight :global(.token.cdata) {
+  color: #a0adba;
+}
+.highlight :global(.token.punctuation) {
+  color: #ccd7e1;
+}
+.highlight :global(.token.property),
+.highlight :global(.token.variable),
+.highlight :global(.token.attr-name) {
+  color: #92d8ff;
+}
+.highlight :global(.token.selector),
+.highlight :global(.token.tag),
+.highlight :global(.token.class-name) {
+  color: #8ee5cc;
+}
+.highlight :global(.token.string),
+.highlight :global(.token.attr-value) {
+  color: #f5c78f;
+}
+.highlight :global(.token.keyword),
+.highlight :global(.token.atrule),
+.highlight :global(.token.important) {
+  color: #d6adff;
+}
+.highlight :global(.token.number),
+.highlight :global(.token.color),
+.highlight :global(.token.unit),
+.highlight :global(.token.boolean),
+.highlight :global(.token.constant) {
+  color: #ffc0ce;
+}
+.highlight :global(.token.function) {
+  color: #f3df9b;
+}
+.highlight :global(.token.operator),
+.highlight :global(.token.entity),
+.highlight :global(.token.url) {
+  color: #b3deef;
+}
+
+.editor {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 20rem;
+  flex: 1;
+  background: #172633;
+}
+/* Match every metric in both layers. Tokens change colour only, never font metrics. */
+.editor .overlay,
+.editor textarea {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 1rem;
+  font:
+    0.75rem/1.7 ui-monospace,
+    monospace;
+  font-variant-ligatures: none;
+  letter-spacing: normal;
+  text-align: left;
+  tab-size: 2;
+  white-space: pre;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.editor .overlay {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: transparent;
+  color: #e2edf5;
+}
+.editor .overlay code {
+  font: inherit;
+}
+.editor textarea {
+  position: relative;
+  min-height: 20rem;
+  height: 100%;
+  resize: vertical;
+  overflow: auto;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  caret-color: #e2edf5;
+  background: transparent;
+}
+.editor textarea::selection {
+  background: #527bb580;
+}
+@media (forced-colors: active) {
+  .editor .overlay {
+    visibility: hidden;
+  }
+  .editor textarea {
+    color: CanvasText;
+    -webkit-text-fill-color: CanvasText;
+    caret-color: CanvasText;
+  }
+}

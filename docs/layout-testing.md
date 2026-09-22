@@ -1,0 +1,38 @@
+# Maintaining the layout
+
+The layout is part of the component’s behaviour. Test it in a browser; jsdom does not perform layout and cannot establish whether rows, offsets, or action buttons fit.
+
+## Run the checks
+
+```bash
+pnpm install --frozen-lockfile
+pnpm exec playwright install --with-deps chromium firefox webkit
+pnpm check
+pnpm test:browser
+```
+
+For a faster iteration, use `pnpm test:browser --project chromium`. For the interactive runner, use `pnpm test:browser --ui`. `pnpm check:release` runs the static checks, unit/SSR tests, documentation build, browser tests, and package build. `pnpm check` does not rewrite source files; run `pnpm format` to fix formatting explicitly.
+
+The browser suite uses `dev/layout.html`, a development-only Vite entry with a fixed reference time, system fonts, and no saved demo settings. It imports the actual component and stylesheet. This fixture is not an input to the documentation production build. Query parameters select width, locale, offset, timezone, empty state, readonly/disabled state, and custom font metrics.
+
+## Contracts to preserve
+
+- Hidden measurements mirror the **idle single-row** layout, including typography, separators, and trailing content. They must not wrap or make the parent scroll.
+- The component picks one or two rows from available width and the widest measurement. Hover, focus, and natural-language entry must not independently change that choice.
+- Actions reveal without increasing the control’s height or escaping its bounds. Their measured width is published as `--datetime-neo-actions-width`; consumers should not override it.
+- Whole-hour offset minutes collapse in the appropriate idle/active state. Half- and quarter-hour offset minutes stay visible.
+- Date/time rows, natural input, completion text, and the parsed preview share segment metrics. An empty parsed preview still occupies one line; native input minimum heights must not override a theme’s line-height.
+- At very narrow widths, focusing a segment scrolls it into view inside the editor. The overflow mask must reflect whether more content is hidden at the end.
+- Measurements can update after a font, locale, state, offset, or width change. Layout transitions are suspended while measurement changes settle, then restored. Reduced-motion users receive no transitions.
+
+`src/styles.css` documents the measurement relationship at its entry point. The selectors around `data-wrapped`, hover/focus, and zero offset minutes intentionally differ. Avoid merging apparently similar rules without running the browser suite.
+
+## What the tests assert
+
+`test/browser/layout.spec.ts` checks rendered row coordinates, containment, focus scrolling, visibility/opacity, intrinsic heights, runtime font/locale changes, disabled/readonly states, natural entry, and reduced motion. Assertions poll observable results while transitions settle. A one-pixel tolerance accommodates fractional layout rounding; it should not conceal overlap or clipped content.
+
+`test/browser/docs.spec.ts` checks navigation, live CSS isolation, copying and its fallback, reset, and mobile overflow. Unit tests continue to cover parsing, keyboard editing, controlled state, and DOM structure; they no longer match CSS source text with regular expressions.
+
+On failure, Playwright saves a screenshot and trace in `test-results/`. Open `pnpm exec playwright show-report` or use `pnpm exec playwright show-trace <trace.zip>` to inspect the failing layout. These artifacts are uploaded by CI.
+
+The suite deliberately uses geometry contracts instead of pixel snapshots tied to one operating system and font rasteriser. Add a regression assertion for the user-visible failure when fixing layout. For visual-only changes, inspect the fixture and styling gallery as well. Native OS picker surfaces, physical touch devices, and screen-reader output still need manual checks.

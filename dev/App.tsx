@@ -4,21 +4,13 @@ import { createMemo, createSignal, For, onCleanup, onMount, type Component } fro
 import Neodt from "src";
 
 import packageJson from "../package.json";
+import Code from "./code/Code";
+import { locales } from "./locales";
+import SiteNav from "./SiteNav";
 
 import styles from "./App.module.css";
 
-const systemLocale = new Intl.DateTimeFormat().resolvedOptions().locale;
 const systemTimezone = DateTime.now().zoneName ?? "UTC";
-
-const locales = [
-  ["", `System (${systemLocale})`],
-  ["en-AU", "English (Australia)"],
-  ["en-US", "English (United States)"],
-  ["en-GB", "English (United Kingdom)"],
-  ["de-DE", "Deutsch (Deutschland)"],
-  ["fr-FR", "Francais (France)"],
-  ["ja-JP", "Japanese (Japan)"],
-];
 
 const timezones = [
   [systemTimezone, `System (${systemTimezone})`],
@@ -151,18 +143,7 @@ const App: Component = () => {
 
   return (
     <main class={styles.page}>
-      <nav class={styles.nav} aria-label="Main navigation">
-        <a class={styles.brand} href="#top">
-          <span>n</span> neodt
-        </a>
-        <div class={styles.navLinks}>
-          <a href="#comparison">Compare</a>
-          <a href="#playground">Playground</a>
-          <a href="https://github.com/olivercoad/neodt" target="_blank" rel="noreferrer">
-            GitHub ↗
-          </a>
-        </div>
-      </nav>
+      <SiteNav />
 
       <section id="top" class={styles.hero}>
         <div class={styles.heroCopy}>
@@ -343,6 +324,13 @@ const App: Component = () => {
                   type="button"
                   aria-label="Resize preview input"
                   aria-valuetext={`${previewWidth()}px`}
+                  onKeyDown={(event) => {
+                    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+                    event.preventDefault();
+                    setPreviewWidth(
+                      clampPreviewWidth(previewWidth() + (event.key === "ArrowRight" ? 10 : -10)),
+                    );
+                  }}
                   onPointerDown={(event) => {
                     dragStart = {
                       pointerId: event.pointerId,
@@ -381,7 +369,7 @@ const App: Component = () => {
               <span>TSX</span>
             </div>
             <pre>
-              <code>{code()}</code>
+              <Code value={code()} language="tsx" />
             </pre>
           </div>
         </div>

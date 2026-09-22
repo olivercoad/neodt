@@ -34,6 +34,13 @@ export function createNaturalPlaceholder(onChange: (value: string) => void) {
   const start = () => {
     stop();
     const example = naturalTextExamples[exampleIndex]!;
+    if (
+      typeof matchMedia === "function" &&
+      matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      onChange(example);
+      return;
+    }
     let length = 0;
 
     const erase = () => {

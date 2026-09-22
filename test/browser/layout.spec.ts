@@ -1,0 +1,214 @@
+import { expect, test, type Locator, type Page } from "@playwright/test";
+
+const control = (page: Page) => page.locator("#host > .datetime-neo");
+const content = (page: Page) => control(page).locator(":scope > .datetime-neo__content");
+const editor = (page: Page) => content(page).locator(".datetime-neo__editor");
+
+async function box(locator: Locator) {
+  const bounds = await locator.boundingBox();
+  expect(bounds).not.toBeNull();
+  return bounds!;
+}
+
+async function rows(page: Page, wrapped: boolean) {
+  if (wrapped) await expect(content(page)).toHaveAttribute("data-wrapped", "");
+  else await expect(content(page)).not.toHaveAttribute("data-wrapped");
+  // Check rendered geometry, not just the component's layout flag.
+  await expect
+    .poll(async () => {
+      const first = await box(content(page).getByRole("spinbutton", { name: "day", exact: true }));
+      const second = await box(
+        content(page).getByRole("spinbutton", { name: "minute", exact: true }),
+      );
+      return second.y - first.y;
+    })
+    .toBeGreaterThanOrEqual(wrapped ? 10 : -1);
+  if (!wrapped) {
+    await expect
+      .poll(async () => {
+        const first = await box(
+          content(page).getByRole("spinbutton", { name: "day", exact: true }),
+        );
+        const second = await box(
+          content(page).getByRole("spinbutton", { name: "minute", exact: true }),
+        );
+        return Math.abs(second.y - first.y);
+      })
+      .toBeLessThan(1);
+  }
+}
+
+async function contained(inner: Locator, outer: Locator) {
+  await expect
+    .poll(async () => {
+      const i = await box(inner);
+      const o = await box(outer);
+      return Math.max(
+        o.x - i.x,
+        i.x + i.width - o.x - o.width,
+        o.y - i.y,
+        i.y + i.height - o.y - o.height,
+      );
+    })
+    .toBeLessThanOrEqual(1);
+}
+
+for (const locale of ["en-GB", "en-US", "de-DE", "ja-JP"]) {
+  test(`${locale}: resize, focus and natural entry preserve the chosen rows`, async ({ page }) => {
+    await page.goto(`/layout.html?locale=${locale}&offset`);
+    await rows(page, false);
+    await page.getByLabel("Width", { exact: true }).fill("210");
+    await rows(page, true);
+    await content(page).getByRole("spinbutton").first().focus();
+    await rows(page, true);
+    await contained(content(page).locator(".datetime-neo__actions"), control(page));
+    await content(page).getByRole("button", { name: "Enter date and time naturally" }).click();
+    await expect(content(page)).toHaveAttribute("data-wrapped", "");
+    const input = content(page).locator(".datetime-neo__natural-input");
+    await input.fill("tomorrow 9am");
+    await expect(content(page).locator(".datetime-neo__natural-preview")).not.toBeEmpty();
+    await contained(content(page).locator(".datetime-neo__natural-result"), editor(page));
+    await input.press("Escape");
+    await rows(page, true);
+    await page.getByLabel("Width", { exact: true }).fill("420");
+    await rows(page, false);
+    // Hidden measurement elements must not create scrollbars on the parent.
+    expect(
+      await page.locator("#host").evaluate((el) => el.scrollWidth - el.clientWidth),
+    ).toBeLessThanOrEqual(1);
+  });
+}
+
+test("hover reveals actions without changing height or wrapping", async ({ page }) => {
+  await page.goto("/layout.html?width=420");
+  await rows(page, false);
+  const actions = content(page).locator(".datetime-neo__actions");
+  await expect(actions).toHaveCSS("opacity", "0");
+  const height = (await box(control(page))).height;
+  await control(page).hover();
+  await expect(actions).toHaveCSS("opacity", "1");
+  await contained(actions, control(page));
+  await rows(page, false);
+  expect((await box(control(page))).height).toBeCloseTo(height, 0);
+  await page.getByRole("button", { name: "Outside", exact: true }).hover();
+  await expect(actions).toHaveCSS("opacity", "0");
+});
+
+for (const zone of ["UTC", "Asia/Kolkata", "Asia/Kathmandu"]) {
+  test(`${zone}: only whole-hour offset minutes collapse`, async ({ page }) => {
+    await page.goto(`/layout.html?width=420&offset&zone=${zone}`);
+    const minutes = content(page).locator(".datetime-neo__timezone-minutes");
+    await expect(minutes).toHaveCSS("opacity", "1");
+    await control(page).hover();
+    await expect(minutes).toHaveCSS("opacity", zone === "UTC" ? "0" : "1");
+    await contained(content(page).locator(".datetime-neo__trailing"), control(page));
+    await page.getByLabel("Width", { exact: true }).fill("210");
+    await control(page).hover();
+    await rows(page, true);
+    await expect(minutes).toHaveCSS("opacity", "1");
+    await page.getByRole("button", { name: "Outside", exact: true }).hover();
+    await expect(minutes).toHaveCSS("opacity", zone === "UTC" ? "0" : "1");
+  });
+}
+
+test("empty placeholders appear on focus and typing emits a date", async ({ page }) => {
+  await page.goto("/layout.html?empty");
+  await expect(content(page).locator(".datetime-neo__value")).toHaveCSS("opacity", "0");
+  await content(page).getByRole("spinbutton").first().focus();
+  await expect(content(page).locator(".datetime-neo__value")).toHaveCSS("opacity", "1");
+  await page.keyboard.press("@");
+  await content(page).locator(".datetime-neo__natural-input").fill("tomorrow 9am");
+  await page.keyboard.press("Enter");
+  await expect(page.locator("output")).toHaveText("2026-08-18T09:00:00.000+10:00");
+});
+
+test("custom metrics align completion text and preserve wrapped row height", async ({ page }) => {
+  await page.goto("/layout.html?metrics&width=200");
+  await rows(page, true);
+  const height = (await box(control(page))).height;
+  await content(page).getByRole("spinbutton").first().focus();
+  await page.keyboard.press("@");
+  const input = content(page).locator(".datetime-neo__natural-input");
+  await input.fill("tom");
+  const ghost = content(page).locator(".datetime-neo__natural-ghost");
+  await expect(ghost).toBeVisible();
+  const inputBox = await box(input);
+  const ghostBox = await box(ghost);
+  expect(ghostBox.x).toBeCloseTo(inputBox.x, 0);
+  expect(Math.abs(ghostBox.y - inputBox.y)).toBeLessThanOrEqual(1);
+  expect(Math.abs((await box(control(page))).height - height)).toBeLessThanOrEqual(1);
+  await input.fill("tomorrow");
+  expect(Math.abs((await box(control(page))).height - height)).toBeLessThanOrEqual(1);
+});
+
+test("narrow editors scroll focused segments into view", async ({ page }) => {
+  await page.goto("/layout.html?width=140");
+  await rows(page, true);
+  const year = content(page).getByRole("spinbutton", { name: "year", exact: true });
+  await year.focus();
+  await contained(year, editor(page));
+  await page.keyboard.press("Home");
+  await contained(content(page).getByRole("spinbutton").first(), editor(page));
+});
+
+for (const state of ["readonly", "disabled"]) {
+  test(`${state}: actions are removed and keyboard editing is unavailable`, async ({ page }) => {
+    await page.goto(`/layout.html?state=${state}&offset`);
+    await expect(content(page).locator(".datetime-neo__actions")).toHaveCount(0);
+    await page.getByRole("button", { name: "Outside", exact: true }).focus();
+    await content(page)
+      .getByRole("spinbutton")
+      .first()
+      .evaluate((el) => (el as HTMLElement).focus());
+    await expect(page.getByRole("button", { name: "Outside", exact: true })).toBeFocused();
+    await page.getByLabel("State", { exact: true }).selectOption("editable");
+    await content(page).getByRole("spinbutton").first().focus();
+    await expect(content(page).locator(".datetime-neo__actions")).toHaveCSS("opacity", "1");
+    await contained(content(page).locator(".datetime-neo__actions"), control(page));
+  });
+}
+
+test("reduced motion removes layout transitions and keeps a static placeholder", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/layout.html?offset");
+  await expect(control(page)).not.toHaveAttribute("data-layout-changing");
+  await expect(editor(page)).toHaveCSS("transition-duration", "0s");
+  await content(page).getByRole("spinbutton").first().focus();
+  await page.keyboard.press("@");
+  const input = content(page).getByRole("textbox", { name: "Natural-language date and time" });
+  await expect(input).toHaveAttribute("placeholder", /.+/);
+  const placeholder = await input.getAttribute("placeholder");
+  // Longer than a typing step: a reduced-motion placeholder must not animate.
+  await page.waitForTimeout(150);
+  await expect(input).toHaveAttribute("placeholder", placeholder!);
+});
+
+test("natural entry becomes readonly when the prop changes", async ({ page }) => {
+  await page.goto("/layout.html");
+  await content(page).getByRole("spinbutton").first().focus();
+  await page.keyboard.press("@");
+  const input = content(page).getByRole("textbox", { name: "Natural-language date and time" });
+  await input.fill("tomorrow");
+  await page.getByLabel("State", { exact: true }).selectOption("readonly");
+  await expect(input).not.toBeEditable();
+  await expect(content(page).locator(".datetime-neo__actions")).toHaveCount(0);
+});
+
+test("layout recomputes when consumer font metrics and locale change", async ({ page }) => {
+  await page.goto("/layout.html?width=300");
+  await rows(page, false);
+  await control(page).evaluate((el) => {
+    el.style.fontSize = "36px";
+  });
+  await rows(page, true);
+  await control(page).evaluate((el) => {
+    el.style.fontSize = "12px";
+  });
+  await rows(page, false);
+  await page.getByLabel("Locale", { exact: true }).selectOption("ja-JP");
+  await rows(page, false);
+  await page.getByLabel("Offset", { exact: true }).check();
+  await contained(content(page).locator(".datetime-neo__timezone"), control(page));
+});

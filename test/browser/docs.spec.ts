@@ -84,7 +84,7 @@ test("docs and every styled preview fit a mobile viewport", async ({ page }) => 
       .getByRole("navigation", { name: "Main navigation" })
       .getByRole("link", { name: "Docs", exact: true }),
   ).toBeVisible();
-  for (const id of ["paper", "midnight", "mint", "compact"]) {
+  for (const id of ["paper", "midnight", "mint", "compact", "super-compact"]) {
     const preview = page.locator(`[data-theme-preview=${id}]`);
     const control = preview.locator("[data-preview-state=editable] .datetime-neo");
     await control.scrollIntoViewIfNeeded();
@@ -113,13 +113,13 @@ test("gallery formatting controls update every state in every theme", async ({ p
   await page.goto("/#/docs/styling");
   const nav = page.getByRole("navigation", { name: "Documentation" });
   const controls = page.locator("[data-theme-preview] .datetime-neo");
-  await expect(controls).toHaveCount(12);
+  await expect(controls).toHaveCount(15);
   await expect(
     page.locator("[data-preview-state=readonly] .datetime-neo[data-readonly]"),
-  ).toHaveCount(4);
+  ).toHaveCount(5);
   await expect(
     page.locator("[data-preview-state=disabled] .datetime-neo[data-disabled]"),
-  ).toHaveCount(4);
+  ).toHaveCount(5);
   const css = page
     .getByRole("article", { name: "Paper & ink" })
     .getByRole("textbox", { name: "Editable CSS" });
@@ -131,11 +131,11 @@ test("gallery formatting controls update every state in every theme", async ({ p
     ).toHaveAttribute("aria-label", "month");
   }
   await nav.getByRole("combobox", { name: "Hour12", exact: true }).selectOption("12");
-  await expect(controls.locator(".datetime-neo__content [aria-label=dayPeriod]")).toHaveCount(12);
+  await expect(controls.locator(".datetime-neo__content [aria-label=dayPeriod]")).toHaveCount(15);
   await nav.getByRole("combobox", { name: "Hour12", exact: true }).selectOption("24");
   await expect(controls.locator(".datetime-neo__content [aria-label=dayPeriod]")).toHaveCount(0);
   await nav.getByRole("combobox", { name: "Hour12", exact: true }).selectOption("locale");
-  await expect(controls.locator(".datetime-neo__content [aria-label=dayPeriod]")).toHaveCount(12);
+  await expect(controls.locator(".datetime-neo__content [aria-label=dayPeriod]")).toHaveCount(15);
   await nav.getByRole("combobox", { name: "Locale", exact: true }).selectOption("ja-JP");
   await expect(controls.locator(".datetime-neo__content [aria-label=dayPeriod]")).toHaveCount(0);
   for (const control of await controls.all()) {
@@ -146,7 +146,7 @@ test("gallery formatting controls update every state in every theme", async ({ p
   await nav.getByLabel("Show time offset").uncheck();
   await expect(controls.locator(".datetime-neo__content .datetime-neo__timezone")).toHaveCount(0);
   await nav.getByLabel("Show time offset").check();
-  await expect(controls.locator(".datetime-neo__content .datetime-neo__timezone")).toHaveCount(12);
+  await expect(controls.locator(".datetime-neo__content .datetime-neo__timezone")).toHaveCount(15);
   await expect(css).toHaveValue(/keep this edit/);
   await nav.getByRole("link", { name: "API reference" }).click();
   await expect(nav.getByRole("group", { name: "All previews" })).toHaveCount(0);
@@ -165,7 +165,11 @@ test("every width grip resizes the entire gallery with pointer and keyboard", as
   await page.mouse.up();
   await expect(grip).toHaveAttribute("aria-valuenow", String(start - 50));
   for (const control of await page.locator("[data-theme-preview] .datetime-neo").all()) {
-    expect((await control.boundingBox())!.width).toBeCloseTo(start - 50, 0);
+    const capped = await control.evaluate((el) => el.classList.contains("theme-super-compact"));
+    expect((await control.boundingBox())!.width).toBeCloseTo(
+      capped ? Math.min(start - 50, 240) : start - 50,
+      0,
+    );
   }
   for (const thumb of await page.getByRole("slider").all()) {
     await expect(thumb).toHaveAttribute("aria-valuenow", String(start - 50));
@@ -186,6 +190,28 @@ test("every width grip resizes the entire gallery with pointer and keyboard", as
   await expect(grip).toHaveAttribute("aria-valuenow", (await grip.getAttribute("aria-valuemax"))!);
   await page.setViewportSize({ width: 390, height: 844 });
   await expect.poll(async () => (await preview.boundingBox())!.width).toBeLessThan(300);
+});
+
+test("super-compact previews stay within a 125px sizer on hover and focus", async ({ page }) => {
+  await page.goto("/#/docs/styling");
+  await page.evaluate(() => document.fonts.ready);
+  const preview = page.locator("[data-theme-preview=super-compact]");
+  // Set the exact reproduction width without relying on pointer rounding.
+  await preview.evaluate((el) => (el.style.width = "125px"));
+  const nav = page.getByRole("navigation", { name: "Documentation" });
+  for (const showOffset of [false, true]) {
+    await nav.getByLabel("Show time offset").setChecked(showOffset);
+    const control = preview.locator("[data-preview-state=editable] .datetime-neo");
+    await control.hover();
+    await control.getByRole("spinbutton").first().focus();
+    await expect.poll(async () => (await control.boundingBox())!.width).toBe(125);
+    for (const variant of await preview.locator("[data-preview-state]").all()) {
+      expect((await variant.boundingBox())!.width).toBe(125);
+    }
+    await control.getByRole("button", { name: "Enter date and time naturally" }).click();
+    await expect.poll(async () => (await control.boundingBox())!.width).toBe(125);
+    await page.keyboard.press("Escape");
+  }
 });
 
 test("Midnight readonly keeps its dark surface and readable foreground", async ({ page }) => {

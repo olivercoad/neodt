@@ -67,4 +67,66 @@ export const themes = [
   width: 100%;
 }`,
   },
+  {
+    id: "super-compact",
+    name: "Seamless super-compact",
+    description:
+      "Adapted from a real-world times grid: minimal spacing, a transparent surface, and a width of 110-240px. Designed for not showing time offset.",
+    css: `.theme-super-compact {
+  font-family: "Roboto Flex", sans-serif;
+  overflow: clip;
+  width: 100%;
+  min-width: 110px;
+  max-width: 240px;
+  --datetime-neo-border: #9ca3af;
+  --datetime-neo-focus: #765271;
+  --datetime-neo-focus-ring: color-mix(in srgb, var(--datetime-neo-focus) 33%, transparent);
+  --datetime-neo-highlight: var(--datetime-neo-focus);
+  --datetime-neo-highlight-foreground: #fff;
+  --datetime-neo-hover: color-mix(in srgb, var(--datetime-neo-focus) 40%, transparent);
+  --datetime-neo-background: transparent;
+  --datetime-neo-foreground: currentColor;
+  --datetime-neo-segment-line-height: 1;
+  --datetime-neo-segment-padding: 0px;
+  border-radius: 4px;
+
+  &[data-readonly]:has(.datetime-neo__content[data-wrapped]) {
+    /* Allow readonly fields to shrink to the size of their wrapped content. */
+    min-width: max-content;
+  }
+
+  &[data-readonly] {
+    --datetime-neo-border: transparent;
+    --datetime-neo-background: transparent;
+  }
+
+  .datetime-neo__editor {
+    padding: 2px 3px;
+  }
+
+  .datetime-neo__actions {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0;
+    padding-right: 2px;
+    gap: 0;
+  }
+
+  .datetime-neo__natural-prefix {
+    padding: 0;
+    padding-right: 2px;
+  }
+
+  .datetime-neo__trigger {
+    padding: 2px;
+
+    span {
+      text-box: unset;
+    }
+  }
+
+  .datetime-neo__natural-result {
+    display: none;
+}`,
+  },
 ];

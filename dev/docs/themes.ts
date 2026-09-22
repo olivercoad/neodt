@@ -74,6 +74,8 @@ export const themes = [
       "Adapted from a real-world times grid: minimal spacing, a transparent surface, and a width of 110-240px. Designed for not showing time offset.",
     css: `.theme-super-compact {
   font-family: "Roboto Flex", sans-serif;
+  font-size: 16px;
+  line-height: normal;
   overflow: clip;
   width: 100%;
   min-width: 110px;

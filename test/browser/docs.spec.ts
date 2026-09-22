@@ -192,10 +192,18 @@ test("every width grip resizes the entire gallery with pointer and keyboard", as
   await expect.poll(async () => (await preview.boundingBox())!.width).toBeLessThan(300);
 });
 
-test("super-compact previews stay within a 125px sizer on hover and focus", async ({ page }) => {
+test("super-compact previews use compact typography and stay within a 125px sizer", async ({
+  page,
+}) => {
   await page.goto("/#/docs/styling");
   await page.evaluate(() => document.fonts.ready);
   const preview = page.locator("[data-theme-preview=super-compact]");
+  for (const control of await preview.locator(".datetime-neo").all()) {
+    await expect(control).toHaveCSS("font-size", "16px");
+    await expect(control).toHaveCSS("line-height", "normal");
+    // Font rasterisation and fallback fonts may differ slightly across hosts.
+    await expect.poll(async () => (await control.boundingBox())!.height).toBeLessThanOrEqual(26);
+  }
   // Set the exact reproduction width without relying on pointer rounding.
   await preview.evaluate((el) => (el.style.width = "125px"));
   const nav = page.getByRole("navigation", { name: "Documentation" });

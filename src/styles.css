@@ -302,8 +302,20 @@
 }
 
 .datetime-neo__content[data-wrapped][data-time-offset] > .datetime-neo__trailing {
-  display: grid;
-  grid-template-rows: 1fr auto 1fr;
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.datetime-neo__content[data-wrapped][data-time-offset]
+  > .datetime-neo__trailing
+  > .datetime-neo__timezone {
+  /* Balance space around the actions, retaining only the offset's minimum height. */
+  flex: 1 0 0;
+}
+
+.datetime-neo__content[data-wrapped][data-time-offset] > .datetime-neo__trailing::after {
+  content: "";
+  flex: 1 0 0;
 }
 
 .datetime-neo__content[data-wrapped] > .datetime-neo__editor > .datetime-neo__value {

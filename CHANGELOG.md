@@ -26,6 +26,7 @@
 - Missing native `showPicker` support no longer throws on invocation.
 - Documentation production builds now use Vite’s production environment flags.
 - Removed stale demo CSS hooks and made the playground resize handle keyboard-operable.
+- Reduce unnecessary vertical space when wrapped with timeoffset shown
 
 ## [0.1.8] - 2026-09-22
 

@@ -1,5 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
+import { themes } from "../../dev/docs/themes";
+
 const control = (page: Page) => page.locator("#host > .datetime-neo");
 const content = (page: Page) => control(page).locator(":scope > .datetime-neo__content");
 const editor = (page: Page) => content(page).locator(".datetime-neo__editor");
@@ -76,6 +78,57 @@ for (const locale of ["en-GB", "en-US", "de-DE", "ja-JP"]) {
     expect(
       await page.locator("#host").evaluate((el) => el.scrollWidth - el.clientWidth),
     ).toBeLessThanOrEqual(1);
+  });
+}
+
+for (const theme of themes) {
+  test(`${theme.id}: wrapped actions stay centered without adding an empty row`, async ({
+    page,
+  }) => {
+    await page.goto("/layout.html?width=110");
+    await page.addStyleTag({ content: theme.css });
+    await control(page).evaluate((el, id) => el.classList.add(`theme-${id}`), theme.id);
+    for (const offset of [false, true]) {
+      await page.getByLabel("Offset", { exact: true }).setChecked(offset);
+      await rows(page, true);
+      await control(page).hover();
+      await expect
+        .poll(() =>
+          content(page).evaluate((el) => {
+            const bounds = el.getBoundingClientRect();
+            const actions = el.querySelector(".datetime-neo__actions")!.getBoundingClientRect();
+            const timezone = el.querySelector(".datetime-neo__timezone")?.getBoundingClientRect();
+            const offsetHeight =
+              el.querySelector(".datetime-neo__timezone-minutes")?.getBoundingClientRect().height ??
+              0;
+            const expectedTop =
+              bounds.top + Math.max(offsetHeight, (bounds.height - actions.height) / 2);
+            return Math.max(
+              Math.abs(actions.top - expectedTop),
+              timezone ? Math.abs(timezone.top - bounds.top) : 0,
+            );
+          }),
+        )
+        .toBeLessThanOrEqual(1);
+      const excessHeight = await content(page).evaluate((el) => {
+        const editor = el.querySelector(".datetime-neo__editor")!;
+        const style = getComputedStyle(editor);
+        const valueHeight = editor
+          .querySelector(".datetime-neo__value")!
+          .getBoundingClientRect().height;
+        const editorHeight =
+          valueHeight + parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+        const actionsHeight = el
+          .querySelector(".datetime-neo__actions")!
+          .getBoundingClientRect().height;
+        const offsetHeight =
+          el.querySelector(".datetime-neo__timezone-minutes")?.getBoundingClientRect().height ?? 0;
+        return (
+          el.getBoundingClientRect().height - Math.max(editorHeight, actionsHeight + offsetHeight)
+        );
+      });
+      expect(excessHeight).toBeLessThanOrEqual(1);
+    }
   });
 }
 

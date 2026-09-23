@@ -1,4 +1,4 @@
-import { DateTime, type Zone } from "luxon";
+import { CalendarDate as DateTime, daysInMonth } from "./calendar";
 
 export const segmentNames = ["year", "month", "day", "hour", "minute", "dayPeriod"] as const;
 export type SegmentName = (typeof segmentNames)[number];
@@ -8,32 +8,27 @@ export type DisplayPart = Segment | { type: string; value: string; editable: fal
 const editableTypes = new Set<string>(segmentNames);
 const timeTypes = new Set<SegmentName>(["hour", "minute", "dayPeriod"]);
 
-export function parseLocal(value: string, zone: Zone): DateTime | undefined {
+export function parseLocal(value: string, zone: string): DateTime | undefined {
   if (!value) return undefined;
   const date = DateTime.fromISO(value, { zone });
-  return date.isValid ? date : undefined;
+  return date;
 }
 
 export function toLocalValue(date: DateTime): string {
-  return date.toFormat("yyyy-MM-dd'T'HH:mm");
-}
-
-function localeName(locale: Intl.LocalesArgument | undefined): string | undefined {
-  return Array.isArray(locale) ? locale[0] : locale?.toString();
+  return date.toLocalValue();
 }
 
 export function partsFor(
   value: string,
-  zone: Zone,
+  zone: string,
   locale: Intl.LocalesArgument | undefined,
   options: Intl.DateTimeFormatOptions | undefined,
 ): DisplayPart[] {
   const date =
     parseLocal(value, zone) ??
     DateTime.fromObject({ year: 2001, month: 2, day: 3, hour: 4, minute: 5 }, { zone });
-  const localizedDate = localeName(locale) ? date.setLocale(localeName(locale)!) : date;
-  return localizedDate
-    .toLocaleParts({
+  return date
+    .toLocaleParts(locale, {
       year: "numeric",
       month: "numeric",
       day: "numeric",
@@ -125,9 +120,9 @@ export function closestYear(twoDigitYear: string, referenceTime: DateTime): numb
 export function nearestLeapYear(year: number): number {
   for (let distance = 0; ; distance += 1) {
     const earlier = year - distance;
-    if (earlier >= 1 && DateTime.fromObject({ year: earlier }).isInLeapYear) return earlier;
+    if (earlier >= 1 && daysInMonth(earlier, 2) === 29) return earlier;
     const later = year + distance;
-    if (DateTime.fromObject({ year: later }).isInLeapYear) return later;
+    if (daysInMonth(later, 2) === 29) return later;
   }
 }
 

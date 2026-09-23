@@ -1,13 +1,18 @@
 import { DateTime, Info } from "luxon";
 import { describe, expect, it } from "vitest";
 
-import { parseNaturalDate } from "../src/natural-parser";
+import { createLuxonAdapter } from "../src/adapters/luxon";
+import { CalendarDate } from "../src/calendar";
+import { parseNaturalDate, parseInternalDate } from "../src/natural-parser";
 import { naturalTextExamples } from "../src/natural-placeholder";
 
+const adapter = createLuxonAdapter(DateTime);
 const referenceTime = DateTime.fromISO("2026-04-15T12:00:00Z");
 
 function parse(input: string, zone = Info.normalizeZone("UTC"), locale?: Intl.LocalesArgument) {
-  return parseNaturalDate(input, { referenceTime, zone, locale })?.toFormat("yyyy-MM-dd'T'HH:mmZZ");
+  return parseNaturalDate(input, { adapter, referenceTime, zone, locale })?.toFormat(
+    "yyyy-MM-dd'T'HH:mmZZ",
+  );
 }
 
 describe("parseNaturalDate", () => {
@@ -57,17 +62,16 @@ describe("parseNaturalDate", () => {
   it("resolves last weekdays to the previous occurrence", () => {
     const tuesday = DateTime.fromISO("2026-08-18T12:00:00Z");
     const parsed = parseNaturalDate("last wednesday", {
+      adapter,
       referenceTime: tuesday,
-      zone: Info.normalizeZone("UTC"),
+      zone: "UTC",
     });
     expect(parsed?.toFormat("yyyy-MM-dd'T'HH:mmZZ")).toBe("2026-08-12T00:00+00:00");
   });
 
   it("parses every rotating placeholder example", () => {
     for (const input of naturalTextExamples) {
-      expect(
-        parseNaturalDate(input, { referenceTime, zone: Info.normalizeZone("UTC") }),
-      ).toBeDefined();
+      expect(parseNaturalDate(input, { adapter, referenceTime, zone: "UTC" })).toBeDefined();
     }
   });
 
@@ -92,9 +96,7 @@ describe("parseNaturalDate", () => {
       "valentines day",
       "independence day",
     ]) {
-      expect(
-        parseNaturalDate(input, { referenceTime, zone: Info.normalizeZone("UTC") }),
-      ).toBeUndefined();
+      expect(parseNaturalDate(input, { adapter, referenceTime, zone: "UTC" })).toBeUndefined();
     }
   });
 
@@ -114,9 +116,18 @@ describe("parseNaturalDate", () => {
       "tomorrow to friday",
       "march 14 - march 28",
     ]) {
-      expect(
-        parseNaturalDate(input, { referenceTime, zone: Info.normalizeZone("UTC") }),
-      ).toBeUndefined();
+      expect(parseNaturalDate(input, { adapter, referenceTime, zone: "UTC" })).toBeUndefined();
     }
   });
+});
+
+it("keeps incomplete and out-of-range text safe in the component's parser", () => {
+  const referenceTime = CalendarDate.fromISO("2026-01-01T12:00Z")!;
+  for (const text of [
+    "in 999999999999 years",
+    "today plus 999999999999 days",
+    "tomorrow 9am America/Invalid",
+  ]) {
+    expect(parseInternalDate(text, { referenceTime, zone: "UTC" })).toBeUndefined();
+  }
 });

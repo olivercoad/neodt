@@ -3,7 +3,8 @@
   "compilerOptions": {
     "types": ["vite/client"],
     "paths": {
-      "src": ["../src/index.tsx"]
+      "src": ["../src/index.tsx"],
+      "src/*": ["../src/*"]
     }
   },
   "exclude": ["node_modules", "dist"]

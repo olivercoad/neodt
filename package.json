@@ -35,6 +35,20 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": "./dist/index.jsx",
+    "./adapters/date-fns": "./dist/adapters/date-fns.jsx",
+    "./adapters/dayjs": "./dist/adapters/dayjs.jsx",
+    "./adapters/luxon": "./dist/adapters/luxon.jsx",
+    "./adapters/moment": "./dist/adapters/moment.jsx",
+    "./adapters/spacetime": "./dist/adapters/spacetime.jsx",
+    "./adapters/temporal": "./dist/adapters/temporal.jsx",
+    "./date-fns": "./dist/date-fns.jsx",
+    "./dayjs": "./dist/dayjs.jsx",
+    "./generic": "./dist/generic.jsx",
+    "./js-temporal-polyfill": "./dist/js-temporal-polyfill.jsx",
+    "./luxon": "./dist/luxon.jsx",
+    "./moment": "./dist/moment.jsx",
+    "./spacetime": "./dist/spacetime.jsx",
+    "./temporal-polyfill": "./dist/temporal-polyfill.jsx",
     "./package.json": "./package.json",
     "./style.css": "./dist/style.css"
   },
@@ -54,29 +68,36 @@
     "lint": "concurrently pnpm:lint:*",
     "lint:code": "oxlint --deny-warnings",
     "lint:types": "tsc --noEmit",
-    "check": "pnpm format:check && pnpm lint && pnpm test && pnpm dev:typecheck && pnpm dev:build",
+    "check": "pnpm format:check && pnpm lint && pnpm test && pnpm dev:typecheck && pnpm dev:build && pnpm test:package",
     "update-deps": "pnpm up -Li",
     "test:browser": "playwright test",
     "format:check": "oxfmt --check .",
-    "check:release": "pnpm check && pnpm test:browser && pnpm build"
+    "check:release": "pnpm check && pnpm test:browser && pnpm build",
+    "test:package": "pnpm build && node scripts/check-package.mjs"
   },
   "dependencies": {
     "@solid-primitives/resize-observer": "^2.2.0",
-    "@solid-primitives/storage": "^4.4.0",
-    "luxon": "^3.7.2"
+    "@solid-primitives/storage": "^4.4.0"
   },
   "devDependencies": {
+    "@js-temporal/polyfill": "^0.5.1",
     "@playwright/test": "^1.63.0",
     "@tsdown/css": "^0.22.14",
     "@types/luxon": "^3.7.4",
     "@types/node": "^26.2.0",
     "@types/prismjs": "^1.26.6",
     "concurrently": "^8.2.2",
+    "date-fns": "^4.4.0",
+    "dayjs": "^1.11.23",
     "jsdom": "^30.0.1",
+    "luxon": "^3.7.2",
+    "moment": "^2.31.0",
     "oxfmt": "^0.64.0",
     "oxlint": "^1.79.0",
     "prismjs": "^1.30.0",
     "solid-js": "^1.8.17",
+    "spacetime": "^7.15.0",
+    "temporal-polyfill": "^1.0.5",
     "tsdown": "^0.22.14",
     "typescript": "^7.0.2",
     "vite": "^8.2.2",
@@ -84,7 +105,37 @@
     "vitest": "^4.1.11"
   },
   "peerDependencies": {
-    "solid-js": "^1.6.0"
+    "@js-temporal/polyfill": "^0.5.1",
+    "date-fns": "^4.4.0",
+    "dayjs": "^1.11.23",
+    "luxon": "^3.7.2",
+    "moment": "^2.31.0",
+    "solid-js": "^1.6.0",
+    "spacetime": "^7.15.0",
+    "temporal-polyfill": "^1.0.5"
+  },
+  "peerDependenciesMeta": {
+    "luxon": {
+      "optional": true
+    },
+    "moment": {
+      "optional": true
+    },
+    "dayjs": {
+      "optional": true
+    },
+    "date-fns": {
+      "optional": true
+    },
+    "spacetime": {
+      "optional": true
+    },
+    "temporal-polyfill": {
+      "optional": true
+    },
+    "@js-temporal/polyfill": {
+      "optional": true
+    }
   },
   "engines": {
     "node": ">=24",

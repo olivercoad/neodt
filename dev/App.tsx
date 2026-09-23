@@ -1,7 +1,7 @@
 import { makePersisted, type PersistenceOptions } from "@solid-primitives/storage";
-import { DateTime } from "luxon";
 import { createMemo, createSignal, For, onCleanup, onMount, type Component } from "solid-js";
-import Neodt from "src";
+import Neodt from "src/temporal-polyfill";
+import { Temporal } from "temporal-polyfill";
 
 import packageJson from "../package.json";
 import Code from "./code/Code";
@@ -10,7 +10,7 @@ import SiteNav from "./SiteNav";
 
 import styles from "./App.module.css";
 
-const systemTimezone = DateTime.now().zoneName ?? "UTC";
+const systemTimezone = Temporal.Now.timeZoneId();
 
 const timezones = [
   [systemTimezone, `System (${systemTimezone})`],
@@ -27,32 +27,40 @@ const timezones = [
 type DayPeriod = "locale" | "12" | "24";
 type Timezone = string;
 
-const initialValue: DateTime = DateTime.fromISO("2026-08-24T14:30:00", {
-  zone: "Australia/Sydney",
-});
+const initialValue = Temporal.ZonedDateTime.from("2026-08-24T14:30[Australia/Sydney]");
 const minimumPreviewWidth = 100;
 
 function makePersistedSignal<T>(initialValue: T, options: PersistenceOptions<T, undefined>) {
   return makePersisted(createSignal(initialValue), options);
 }
 
-function iso(date: DateTime | null): string {
-  return date?.toISO({ precision: "minutes" }) ?? "null";
+function iso(date: Temporal.ZonedDateTime | null): string {
+  return date?.toString({ smallestUnit: "minute" }) ?? "null";
+}
+
+// Retain saved values from older demos, whose ISO strings lack a bracketed zone.
+function restoreDate(value: string, zone: string): Temporal.ZonedDateTime {
+  try {
+    return Temporal.ZonedDateTime.from(value);
+  } catch {
+    try {
+      return Temporal.Instant.from(value).toZonedDateTimeISO(zone);
+    } catch {
+      return Temporal.Now.zonedDateTimeISO(zone);
+    }
+  }
 }
 
 const App: Component = () => {
   const [timezone, setTimezone] = makePersistedSignal<Timezone>(systemTimezone, {
     name: "neodt-configuration-lab-timezone",
   });
-  const [now, setNow] = createSignal(DateTime.now());
-  const referenceTimeInputReference = () => now().setZone(timezone());
+  const [now, setNow] = createSignal(Temporal.Now.zonedDateTimeISO());
+  const referenceTimeInputReference = () => now().withTimeZone(timezone());
   const [referenceTime, setReferenceTime] = makePersistedSignal(referenceTimeInputReference(), {
     name: "neodt-configuration-lab-reference-time",
-    serialize: (value) => value.toISO() ?? "",
-    deserialize: (value) =>
-      DateTime.fromISO(value, {
-        zone: timezone(),
-      }),
+    serialize: (value) => value.toString(),
+    deserialize: (value) => restoreDate(value, timezone()).withTimeZone(timezone()),
   });
   const [locale, setLocale] = makePersistedSignal<string | undefined>(undefined, {
     name: "neodt-configuration-lab-locale",
@@ -60,10 +68,10 @@ const App: Component = () => {
   const [dayPeriod, setDayPeriod] = makePersistedSignal<DayPeriod>("locale", {
     name: "neodt-configuration-lab-day-period",
   });
-  const [value, setValue] = makePersistedSignal<DateTime | null>(initialValue, {
+  const [value, setValue] = makePersistedSignal<Temporal.ZonedDateTime | null>(initialValue, {
     name: "neodt-configuration-lab-value",
     serialize: (value) => iso(value),
-    deserialize: (value) => (value === "null" ? null : DateTime.fromISO(value)),
+    deserialize: (value) => (value === "null" ? null : restoreDate(value, timezone())),
   });
   const [showTimeOffset, setShowTimeOffset] = makePersistedSignal(false, {
     name: "neodt-configuration-lab-show-time-offset",
@@ -95,7 +103,7 @@ const App: Component = () => {
     const observer = new ResizeObserver(updateMaximumWidth);
     if (previewInputArea) observer.observe(previewInputArea);
     updateMaximumWidth();
-    const timer = window.setInterval(() => setNow(DateTime.now()), 60_000);
+    const timer = window.setInterval(() => setNow(Temporal.Now.zonedDateTimeISO()), 60_000);
     onCleanup(() => {
       observer.disconnect();
       window.clearInterval(timer);
@@ -121,11 +129,11 @@ const App: Component = () => {
       "  value={value()}",
       "  onValueChange={setValue}",
     ].filter(Boolean);
-    return `import Neodt from '@olicoad/neodt'\n\n<Neodt\n${optionLines.join("\n")}\n/>`;
+    return `import Neodt from '@olicoad/neodt'\nimport { createSignal } from 'solid-js'\n\nconst [referenceTime] = createSignal(Temporal.Now.zonedDateTimeISO())\nconst [value, setValue] = createSignal<Temporal.ZonedDateTime | null>(null)\n\n<Neodt\n${optionLines.join("\n")}\n/>`;
   });
 
   const reset = () => {
-    setReferenceTime(DateTime.now());
+    setReferenceTime(Temporal.Now.zonedDateTimeISO());
     setTimezone(systemTimezone);
     setLocale(undefined);
     setDayPeriod("locale");
@@ -138,7 +146,7 @@ const App: Component = () => {
 
   const setReferenceTimezone = (nextTimezone: Timezone) => {
     setTimezone(nextTimezone);
-    setReferenceTime(referenceTime().setZone(nextTimezone));
+    setReferenceTime(referenceTime().withTimeZone(nextTimezone));
   };
 
   return (
@@ -156,13 +164,17 @@ const App: Component = () => {
           <p class={styles.lede}>
             neodt is a familiar, timezone-aware datetime input for Solid. It speaks your users'
             language, works naturally with a keyboard, and gives your app a robust{" "}
-            <a href="https://github.com/moment/luxon/" target="_blank" rel="noreferrer">
-              Luxon <code>DateTime</code>
+            <a
+              href="https://tc39.es/proposal-temporal/docs/zoneddatetime.html"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Temporal <code>ZonedDateTime</code>
             </a>{" "}
             instead of a string to untangle.
           </p>
           <div class={styles.install}>
-            <code>pnpm add @olicoad/neodt luxon</code>
+            <code>pnpm add @olicoad/neodt solid-js</code>
             <span>Solid 1.6+</span>
             <a href="https://www.npmjs.com/package/@olicoad/neodt" target="_blank" rel="noreferrer">
               v{packageJson.version} on npm ↗
@@ -212,13 +224,13 @@ const App: Component = () => {
           <a class={styles.galleryLink} href="#/docs/styling">
             <div class={styles.gallerySamples} aria-hidden="true">
               <span>
-                <span>{referenceTime().toFormat("hh:mm")}</span>
+                <span>{referenceTime().toPlainTime().toString({ smallestUnit: "minute" })}</span>
               </span>
               <span>
-                <span>{referenceTime().toFormat("hh:mm")}</span>
+                <span>{referenceTime().toPlainTime().toString({ smallestUnit: "minute" })}</span>
               </span>
               <span>
-                <span>{referenceTime().toFormat("hh:mm")}</span>
+                <span>{referenceTime().toPlainTime().toString({ smallestUnit: "minute" })}</span>
               </span>
             </div>
             <span class={styles.galleryTitle}>
@@ -315,7 +327,7 @@ const App: Component = () => {
           <div class={styles.preview}>
             <div class={styles.previewTop}>
               <span>Preview</span>
-              <code>{referenceTime().zoneName}</code>
+              <code>{referenceTime().timeZoneId}</code>
             </div>
             <label>Appointment time</label>
             <div

@@ -13,6 +13,7 @@ import {
 import Code from "../code/Code";
 import { locales } from "../locales";
 import SiteNav from "../SiteNav";
+import Libraries from "./Libraries";
 import Styling from "./Styling";
 
 import styles from "./docs.module.css";
@@ -20,17 +21,17 @@ import styles from "./docs.module.css";
 export const pages = [
   ["getting-started", "Getting started"],
   ["api", "API reference"],
+  ["libraries", "Datetime libraries"],
   ["styling", "Styling gallery"],
   ["interaction", "Keyboard & natural language"],
 ] as const;
 
 const example = `import { createSignal } from "solid-js";
-import { DateTime } from "luxon";
 import Neodt from "@olicoad/neodt";
 
 export function Appointment() {
-  const [value, setValue] = createSignal<DateTime | null>(null);
-  const referenceTime = DateTime.now().setZone("Australia/Sydney");
+  const [value, setValue] = createSignal<Temporal.ZonedDateTime | null>(null);
+  const referenceTime = Temporal.Now.zonedDateTimeISO("Australia/Sydney");
 
   return (
     <>
@@ -42,7 +43,7 @@ export function Appointment() {
         value={value()}
         onValueChange={setValue}
       />
-      <input type="hidden" name="appointment" value={value()?.toISO() ?? ""} />
+      <input type="hidden" name="appointment" value={value()?.toString() ?? ""} />
     </>
   );
 }`;
@@ -57,15 +58,22 @@ function GettingStarted() {
         without the guesswork.
       </h1>
       <p class={styles.intro}>
-        A segmented date and time input for Solid, with locale-aware formatting and Luxon values.
+        A segmented date and time input for Solid, with locale-aware formatting and your choice of
+        datetime library.
       </p>
       <h2 id="install">Install</h2>
       <pre>
-        <code>pnpm add @olicoad/neodt luxon</code>
+        <code>pnpm add @olicoad/neodt solid-js</code>
       </pre>
       <p>
         Use Solid 1.6 or later with a build setup that compiles JSX in dependencies, such as Vite
         with vite-plugin-solid. The package ships preserved JSX and imports its own stylesheet.
+      </p>
+      <p>
+        The default import uses native <code>Temporal.ZonedDateTime</code> values. Your browser must
+        provide Temporal. For a polyfill, another datetime library, or a custom adapter, see{" "}
+        <a href="#/docs/libraries">Datetime libraries</a>. TypeScript 6 or later projects can enable
+        Temporal types with <code>lib: ["ESNext", "DOM"]</code>.
       </p>
       <h2 id="a-controlled-field">A controlled field</h2>
       <pre>
@@ -106,18 +114,18 @@ function Api() {
   const props = [
     [
       "referenceTime",
-      "DateTime · required",
+      "Temporal.ZonedDateTime · required",
       "Timezone and defaults for partial dates, relative input, and two-digit years.",
     ],
     [
       "value",
-      "DateTime | null",
+      "Temporal.ZonedDateTime | null",
       "Controlled value. Undefined selects uncontrolled mode; null clears the field.",
     ],
-    ["defaultValue", "DateTime", "Initial uncontrolled value."],
+    ["defaultValue", "Temporal.ZonedDateTime", "Initial uncontrolled value."],
     [
       "onValueChange",
-      "(DateTime | null) => void",
+      "(Temporal.ZonedDateTime | null) => void",
       "Receives complete values and null when cleared. Values use the reference timezone.",
     ],
     [
@@ -162,7 +170,8 @@ function Api() {
       </h1>
       <p class={styles.intro}>
         Import Neodt as the default or a named export. The public prop type is{" "}
-        <code>NeodtProps</code>.
+        <code>NeodtProps</code>. The default entry uses native Temporal; see{" "}
+        <a href="#/docs/libraries">Datetime libraries</a> for other value types and custom adapters.
       </p>
       <div class={styles.tableScroll}>
         <table>
@@ -194,8 +203,9 @@ function Api() {
       <p>
         Values are normalised to the zone of <code>referenceTime</code>. Locale controls
         presentation, not the timezone. The offset shown belongs to the selected date, so it can
-        change across daylight saving transitions. Calendar arithmetic and ambiguous or nonexistent
-        local times follow Luxon’s behaviour.
+        change across daylight saving transitions. Calendar arithmetic uses ISO/Gregorian dates and
+        Intl timezone data for every adapter. New ambiguous times choose the earlier instant;
+        nonexistent times move forward by the gap.
       </p>
       <h2 id="natural-language-parser">Natural-language parser</h2>
       <pre>
@@ -205,16 +215,17 @@ function Api() {
 
 const result = parseNaturalDate("tomorrow 9am", {
   referenceTime,
-  zone: referenceTime.zone,
+  zone: referenceTime.timeZoneId,
   locale: "en-AU",
 });
 const suggestions = getNaturalDateCompletions("tom", 5);`}
         />
       </pre>
       <p>
-        <code>parseNaturalDate</code> returns a Luxon DateTime or undefined when the text cannot be
-        parsed. <code>getNaturalDateCompletions</code> returns labels and replacement text. The
-        associated types are <code>NaturalDateParseOptions</code> and{" "}
+        <code>parseNaturalDate</code> returns a <code>Temporal.ZonedDateTime</code> or undefined
+        when the text cannot be parsed. The optional zone is a timezone identifier and defaults to
+        the reference’s zone. <code>getNaturalDateCompletions</code> returns labels and replacement
+        text. The associated types are <code>NaturalDateParseOptions</code> and{" "}
         <code>NaturalDateCompletion</code>.
       </p>
       <h2 id="controlled-updates">Controlled updates</h2>
@@ -453,6 +464,9 @@ export default function Docs(props: { page: string }) {
             </Match>
             <Match when={props.page === "api"}>
               <Api />
+            </Match>
+            <Match when={props.page === "libraries"}>
+              <Libraries />
             </Match>
             <Match when={props.page === "styling"}>
               <Styling options={previewOptions()} />

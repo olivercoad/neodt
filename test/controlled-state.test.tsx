@@ -3,7 +3,10 @@ import { createSignal } from "solid-js";
 import { render } from "solid-js/web";
 import { afterEach, expect, it, vi } from "vitest";
 
-import Neodt from "../src";
+import { createLuxonAdapter } from "../src/adapters/luxon";
+import Neodt from "../src/generic";
+
+const adapter = createLuxonAdapter(DateTime);
 
 const referenceTime = DateTime.fromISO("2026-08-17T15:30", { zone: "UTC" });
 let dispose: (() => void) | undefined;
@@ -20,7 +23,14 @@ it("clears all displayed segments when the parent resets a controlled value", ()
   const [value, setValue] = createSignal<DateTime | null>(referenceTime);
   const changed = vi.fn();
   dispose = render(
-    () => <Neodt referenceTime={referenceTime} value={value()} onValueChange={changed} />,
+    () => (
+      <Neodt
+        adapter={adapter}
+        referenceTime={referenceTime}
+        value={value()}
+        onValueChange={changed}
+      />
+    ),
     document.body,
   );
   setValue(null);
@@ -34,7 +44,14 @@ it("clears all displayed segments when the parent resets a controlled value", ()
 it("replaces an unfinished year when the parent assigns another date", () => {
   const [value, setValue] = createSignal<DateTime | null>(referenceTime);
   dispose = render(
-    () => <Neodt referenceTime={referenceTime} value={value()} onValueChange={setValue} />,
+    () => (
+      <Neodt
+        adapter={adapter}
+        referenceTime={referenceTime}
+        value={value()}
+        onValueChange={setValue}
+      />
+    ),
     document.body,
   );
   key("year", "2");
@@ -48,7 +65,14 @@ it("replaces an unfinished year when the parent assigns another date", () => {
 it("preserves incremental entry when the parent accepts each emitted value", () => {
   const [value, setValue] = createSignal<DateTime | null>(referenceTime);
   dispose = render(
-    () => <Neodt referenceTime={referenceTime} value={value()} onValueChange={setValue} />,
+    () => (
+      <Neodt
+        adapter={adapter}
+        referenceTime={referenceTime}
+        value={value()}
+        onValueChange={setValue}
+      />
+    ),
     document.body,
   );
   key("year", "Backspace");
@@ -62,6 +86,7 @@ it.each(["readonly", "disabled"] as const)("ignores native picker events while %
   dispose = render(
     () => (
       <Neodt
+        adapter={adapter}
         referenceTime={referenceTime}
         defaultValue={referenceTime}
         {...{ [state]: true }}
@@ -82,7 +107,7 @@ it.each(["readonly", "disabled"] as const)("ignores native picker events while %
 it("emits once for paired native input and change events", () => {
   const changed = vi.fn();
   dispose = render(
-    () => <Neodt referenceTime={referenceTime} onValueChange={changed} />,
+    () => <Neodt adapter={adapter} referenceTime={referenceTime} onValueChange={changed} />,
     document.body,
   );
   const input = document.querySelector<HTMLInputElement>('input[type="datetime-local"]')!;
@@ -96,7 +121,12 @@ it("leaves modified arrow keys to the browser", () => {
   const changed = vi.fn();
   dispose = render(
     () => (
-      <Neodt referenceTime={referenceTime} defaultValue={referenceTime} onValueChange={changed} />
+      <Neodt
+        adapter={adapter}
+        referenceTime={referenceTime}
+        defaultValue={referenceTime}
+        onValueChange={changed}
+      />
     ),
     document.body,
   );
@@ -107,7 +137,7 @@ it("leaves modified arrow keys to the browser", () => {
 });
 
 it("clears an incomplete draft through the native picker", () => {
-  dispose = render(() => <Neodt referenceTime={referenceTime} />, document.body);
+  dispose = render(() => <Neodt adapter={adapter} referenceTime={referenceTime} />, document.body);
   key("year", "2");
   expect(segment("year").getAttribute("aria-valuenow")).not.toBeNull();
   const input = document.querySelector<HTMLInputElement>('input[type="datetime-local"]')!;
@@ -119,7 +149,7 @@ it("clears an incomplete draft through the native picker", () => {
 
 it("restores the accepted date when a native selection matches a partially cleared controlled value", () => {
   dispose = render(
-    () => <Neodt referenceTime={referenceTime} value={referenceTime} />,
+    () => <Neodt adapter={adapter} referenceTime={referenceTime} value={referenceTime} />,
     document.body,
   );
   key("year", "Backspace");

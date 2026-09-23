@@ -172,7 +172,7 @@ test("empty placeholders appear on focus and typing emits a date", async ({ page
   await page.keyboard.press("@");
   await content(page).locator(".datetime-neo__natural-input").fill("tomorrow 9am");
   await page.keyboard.press("Enter");
-  await expect(page.locator("output")).toHaveText("2026-08-18T09:00:00.000+10:00");
+  await expect(page.locator("output")).toHaveText("2026-08-18T09:00:00+10:00[Australia/Sydney]");
 });
 
 test("custom metrics align completion text and preserve wrapped row height", async ({ page }) => {

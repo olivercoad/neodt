@@ -476,3 +476,50 @@ test("Compact console keeps padded segments and offsets inside single and wrappe
     }
   }
 });
+
+test("library documentation is separate from the native Temporal getting-started example", async ({
+  page,
+}) => {
+  await page.goto("/#/docs/getting-started");
+  const example = page.locator("#docs-content pre").last();
+  await expect(example).toContainText('import Neodt from "@olicoad/neodt"');
+  await expect(example).toContainText("Temporal.Now.zonedDateTimeISO");
+  await expect(example).not.toContainText("luxon");
+  await page
+    .getByRole("navigation", { name: "Documentation" })
+    .getByRole("link", { name: "Datetime libraries", exact: true })
+    .click();
+  await page.reload();
+  await expect(page).toHaveTitle("Datetime libraries · neodt");
+  await expect(
+    page.getByRole("heading", { name: "Temporal polyfills", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("#docs-content")).toContainText("@olicoad/neodt/generic");
+  await expect(page.locator("#docs-content")).toContainText("@olicoad/neodt/luxon");
+});
+
+test("live demos work without global Temporal and keep it unchanged", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(globalThis, "Temporal", { value: undefined, configurable: true });
+    // Older demo versions persisted Luxon ISO strings, without a bracketed zone.
+    localStorage.setItem("neodt-configuration-lab-timezone", JSON.stringify("Australia/Sydney"));
+    localStorage.setItem("neodt-configuration-lab-value", "2026-08-24T14:30:00.000+10:00");
+  });
+  await page.goto("/");
+  const lab = page.locator("#lab");
+  await expect(lab).toContainText("2026-08-24T14:30+10:00[Australia/Sydney]");
+  // Scope to the appointment preview, after the reference-time editor.
+  const hour = lab.getByRole("spinbutton", { name: "hour", exact: true }).last();
+  await hour.focus();
+  await hour.press("ArrowUp");
+  await expect(lab).toContainText("2026-08-24T15:30+10:00[Australia/Sydney]");
+  expect(await page.evaluate(() => globalThis.Temporal)).toBeUndefined();
+  await page.goto("/#/docs/styling");
+  await expect(
+    page
+      .getByRole("article", { name: "Paper & ink" })
+      .getByRole("spinbutton", { name: "hour", exact: true })
+      .first(),
+  ).toBeVisible();
+  expect(await page.evaluate(() => globalThis.Temporal)).toBeUndefined();
+});

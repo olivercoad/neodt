@@ -1,5 +1,17 @@
 ## [Unreleased]
 
+This is a major change to Neodt! It is now fully datetime-library agnostic, with support for a whole array of datetime libraries, including native Temporal.
+
+### Added
+
+- Imports for Luxon, Moment.js, Day.js, date-fns, Spacetime, and Temporal polyfills that select the adapter automatically. Use `/generic` for custom adapters.
+- Datetime libraries documentation with timezone configuration examples.
+
+### Changed
+
+- **Breaking:** The default import now uses native Temporal. Luxon users should switch to `@olicoad/neodt/luxon` and install `luxon` separately. Only install the datetime library you use.
+- Docs examples use native Temporal; live demos use `temporal-polyfill` for browser compatibility.
+
 ## [0.2.0] - 2026-09-23
 
 ### Added

@@ -1,7 +1,7 @@
-import { DateTime } from "luxon";
 import { createMemo, createSignal, For, onCleanup, onMount } from "solid-js";
 import { render } from "solid-js/web";
-import Neodt from "src";
+import Neodt from "src/temporal-polyfill";
+import { Temporal } from "temporal-polyfill";
 
 import Code from "../code/Code";
 import CodeEditor from "../code/CodeEditor";
@@ -27,7 +27,7 @@ function Preview(props: {
   onMount(() => {
     // Isolate reader CSS while sharing the reactive options and theme across states.
     const shadow = host.attachShadow({ mode: "open" });
-    const reference = DateTime.fromISO("2026-08-17T15:30", { zone: "Australia/Sydney" });
+    const reference = Temporal.ZonedDateTime.from("2026-08-17T15:30[Australia/Sydney]");
     const dispose = render(
       () => (
         <>

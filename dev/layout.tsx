@@ -1,17 +1,19 @@
 // Deterministic browser fixture: no demo styles, persistence, remote fonts, or clock.
 // This entry is served by Vite during testing and excluded from the production build.
-import { DateTime } from "luxon";
 import { createSignal } from "solid-js";
 import { render } from "solid-js/web";
-import Neodt from "src";
+import Neodt from "src/temporal-polyfill";
+import { Temporal } from "temporal-polyfill";
 
 function Fixture() {
   const query = new URLSearchParams(location.search);
-  const reference = DateTime.fromISO("2026-08-17T15:30", {
-    zone: query.get("zone") ?? "Australia/Sydney",
-  });
+  const reference = Temporal.PlainDateTime.from("2026-08-17T15:30").toZonedDateTime(
+    query.get("zone") ?? "Australia/Sydney",
+  );
   const [width, setWidth] = createSignal(Number(query.get("width") ?? 420));
-  const [value, setValue] = createSignal<DateTime | null>(query.has("empty") ? null : reference);
+  const [value, setValue] = createSignal<Temporal.ZonedDateTime | null>(
+    query.has("empty") ? null : reference,
+  );
   const [state, setState] = createSignal(query.get("state") ?? "editable");
   const [locale, setLocale] = createSignal(query.get("locale") ?? "en-GB");
   const [offset, setOffset] = createSignal(query.has("offset"));
@@ -79,7 +81,7 @@ function Fixture() {
           disabled={state() === "disabled"}
         />
       </div>
-      <output>{value()?.toISO() ?? "null"}</output>
+      <output>{value()?.toString() ?? "null"}</output>
       <button type="button">Outside</button>
     </>
   );

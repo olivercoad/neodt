@@ -3,7 +3,10 @@ import { createRoot, createSignal } from "solid-js";
 import { isServer } from "solid-js/web";
 import { describe, expect, it, vi } from "vitest";
 
-import Neodt from "../src";
+import { createLuxonAdapter } from "../src/adapters/luxon";
+import Neodt from "../src/generic";
+
+const adapter = createLuxonAdapter(DateTime);
 
 const DateTimeLocal = Neodt;
 
@@ -60,6 +63,7 @@ describe("Neodt", () => {
       dispose = rootDispose;
       return (
         <DateTimeLocal
+          adapter={adapter}
           referenceTime={referenceTime}
           locale="en-GB"
           value={date("2026-08-17T15:30")}
@@ -114,6 +118,7 @@ describe("Neodt", () => {
       dispose = rootDispose;
       return (
         <DateTimeLocal
+          adapter={adapter}
           referenceTime={referenceTime}
           locale="en-GB"
           showTimeOffset
@@ -156,7 +161,7 @@ describe("Neodt", () => {
     createRoot(() => {
       const value = date("2026-08-17T15:30");
       const control = (
-        <DateTimeLocal referenceTime={referenceTime} value={value} />
+        <DateTimeLocal adapter={adapter} referenceTime={referenceTime} value={value} />
       ) as HTMLSpanElement;
       const expected = value
         .setLocale(new Intl.DateTimeFormat().resolvedOptions().locale)
@@ -177,6 +182,7 @@ describe("Neodt", () => {
     createRoot(() => {
       const control = (
         <DateTimeLocal
+          adapter={adapter}
           referenceTime={referenceTime}
           locale="en-GB"
           value={date("2026-08-17T15:30")}
@@ -193,6 +199,7 @@ describe("Neodt", () => {
     createRoot(() => {
       const control = (
         <DateTimeLocal
+          adapter={adapter}
           referenceTime={referenceTime}
           locale="en-GB"
           value={date("0001-08-17T15:30")}
@@ -207,6 +214,7 @@ describe("Neodt", () => {
     createRoot(() => {
       const control = (
         <DateTimeLocal
+          adapter={adapter}
           referenceTime={referenceTime}
           locale="en-GB"
           value={date("2026-08-17T15:30")}
@@ -223,6 +231,7 @@ describe("Neodt", () => {
       dispose = rootDispose;
       return (
         <DateTimeLocal
+          adapter={adapter}
           referenceTime={referenceTime}
           locale="en-GB"
           value={date("2026-08-17T15:30")}
@@ -262,6 +271,7 @@ describe("Neodt", () => {
       const sydneyReference = DateTime.fromISO("2026-08-17T15:30:00", { zone: "Australia/Sydney" });
       const control = (
         <DateTimeLocal
+          adapter={adapter}
           referenceTime={sydneyReference}
           locale="en-GB"
           value={date("2026-08-17T15:30")}
@@ -276,6 +286,7 @@ describe("Neodt", () => {
       const sydneyReference = DateTime.fromISO("2026-08-17T15:30:00", { zone: "Australia/Sydney" });
       const control = (
         <DateTimeLocal
+          adapter={adapter}
           referenceTime={sydneyReference}
           locale="en-GB"
           showTimeOffset
@@ -296,6 +307,7 @@ describe("Neodt", () => {
       const fourHourReference = DateTime.fromISO("2026-08-17T15:30:00", { zone: "UTC+4" });
       const fourHourControl = (
         <DateTimeLocal
+          adapter={adapter}
           referenceTime={fourHourReference}
           locale="en-GB"
           showTimeOffset
@@ -311,6 +323,7 @@ describe("Neodt", () => {
       const halfHourReference = DateTime.fromISO("2026-08-17T15:30:00", { zone: "UTC+10:30" });
       const halfHourControl = (
         <DateTimeLocal
+          adapter={adapter}
           referenceTime={halfHourReference}
           locale="en-GB"
           showTimeOffset
@@ -329,7 +342,11 @@ describe("Neodt", () => {
       const showPicker = vi.fn();
       const nativeClick = vi.fn();
       const control = (
-        <DateTimeLocal referenceTime={referenceTime} value={date("2026-08-17T15:30")} />
+        <DateTimeLocal
+          adapter={adapter}
+          referenceTime={referenceTime}
+          value={date("2026-08-17T15:30")}
+        />
       ) as HTMLSpanElement;
       const input = control.querySelector<HTMLInputElement>("input")!;
       const trigger = control.querySelector<HTMLLabelElement>(
@@ -353,6 +370,7 @@ describe("Neodt", () => {
       const onValueChange = vi.fn();
       const control = (
         <DateTimeLocal
+          adapter={adapter}
           referenceTime={referenceTime}
           calendarIcon={<span>Choose</span>}
           onValueChange={onValueChange}
@@ -375,6 +393,7 @@ describe("Neodt", () => {
       const onValueChange = vi.fn();
       const control = (
         <DateTimeLocal
+          adapter={adapter}
           referenceTime={referenceTime}
           locale="en-GB"
           formatOptions={{ hour12: false }}
@@ -409,6 +428,7 @@ describe("Neodt", () => {
       dispose = rootDispose;
       return (
         <DateTimeLocal
+          adapter={adapter}
           referenceTime={referenceTime}
           locale="en-GB"
           formatOptions={{ hour12: false }}
@@ -450,7 +470,7 @@ describe("Neodt", () => {
     let dispose: (() => void) | undefined;
     const control = createRoot((rootDispose) => {
       dispose = rootDispose;
-      return (<DateTimeLocal referenceTime={referenceTime} />) as HTMLSpanElement;
+      return (<DateTimeLocal adapter={adapter} referenceTime={referenceTime} />) as HTMLSpanElement;
     });
     document.body.append(control);
     const magicButton = control.querySelector<HTMLButtonElement>(
@@ -489,7 +509,7 @@ describe("Neodt", () => {
     let dispose: (() => void) | undefined;
     const control = createRoot((rootDispose) => {
       dispose = rootDispose;
-      return (<DateTimeLocal referenceTime={referenceTime} />) as HTMLSpanElement;
+      return (<DateTimeLocal adapter={adapter} referenceTime={referenceTime} />) as HTMLSpanElement;
     });
     document.body.append(control);
     const segment = control.querySelector<HTMLButtonElement>(".datetime-neo__segment")!;
@@ -516,7 +536,9 @@ describe("Neodt", () => {
     const sydneyReference = DateTime.fromISO("2026-08-17T15:30:00", { zone: "Australia/Sydney" });
     const control = createRoot((rootDispose) => {
       dispose = rootDispose;
-      return (<DateTimeLocal referenceTime={sydneyReference} showTimeOffset />) as HTMLSpanElement;
+      return (
+        <DateTimeLocal adapter={adapter} referenceTime={sydneyReference} showTimeOffset />
+      ) as HTMLSpanElement;
     });
     document.body.append(control);
     control
@@ -538,6 +560,7 @@ describe("Neodt", () => {
       dispose = rootDispose;
       return (
         <DateTimeLocal
+          adapter={adapter}
           referenceTime={referenceTime}
           formatOptions={{ timeZoneName: "shortOffset" }}
           showTimeOffset
@@ -568,7 +591,7 @@ describe("Neodt", () => {
     let dispose: (() => void) | undefined;
     const control = createRoot((rootDispose) => {
       dispose = rootDispose;
-      return (<DateTimeLocal referenceTime={referenceTime} />) as HTMLSpanElement;
+      return (<DateTimeLocal adapter={adapter} referenceTime={referenceTime} />) as HTMLSpanElement;
     });
     document.body.append(control);
     control
@@ -594,7 +617,7 @@ describe("Neodt", () => {
     let dispose: (() => void) | undefined;
     const control = createRoot((rootDispose) => {
       dispose = rootDispose;
-      return (<DateTimeLocal referenceTime={referenceTime} />) as HTMLSpanElement;
+      return (<DateTimeLocal adapter={adapter} referenceTime={referenceTime} />) as HTMLSpanElement;
     });
     document.body.append(control);
     control
@@ -618,7 +641,7 @@ describe("Neodt", () => {
     let dispose: (() => void) | undefined;
     const control = createRoot((rootDispose) => {
       dispose = rootDispose;
-      return (<DateTimeLocal referenceTime={referenceTime} />) as HTMLSpanElement;
+      return (<DateTimeLocal adapter={adapter} referenceTime={referenceTime} />) as HTMLSpanElement;
     });
     document.body.append(control);
     control
@@ -649,7 +672,7 @@ describe("Neodt", () => {
     let dispose: (() => void) | undefined;
     const control = createRoot((rootDispose) => {
       dispose = rootDispose;
-      return (<DateTimeLocal referenceTime={referenceTime} />) as HTMLSpanElement;
+      return (<DateTimeLocal adapter={adapter} referenceTime={referenceTime} />) as HTMLSpanElement;
     });
     document.body.append(control);
     control
@@ -674,6 +697,7 @@ describe("Neodt", () => {
       const onValueChange = vi.fn();
       const control = (
         <DateTimeLocal
+          adapter={adapter}
           referenceTime={referenceTime}
           value={date("2026-08-17T15:30")}
           onValueChange={onValueChange}
@@ -700,6 +724,7 @@ describe("Neodt", () => {
         const onValueChange = vi.fn();
         const control = (
           <DateTimeLocal
+            adapter={adapter}
             referenceTime={referenceTime}
             value={date("2026-08-17T15:30")}
             onValueChange={onValueChange}
@@ -723,6 +748,7 @@ describe("Neodt", () => {
     createRoot(() => {
       const control = (
         <DateTimeLocal
+          adapter={adapter}
           referenceTime={referenceTime}
           locale="en-US"
           value={date("2026-08-17T05:03")}
@@ -737,6 +763,7 @@ describe("Neodt", () => {
     createRoot(() => {
       const control = (
         <DateTimeLocal
+          adapter={adapter}
           referenceTime={referenceTime}
           locale="en-US"
           formatOptions={{ hour12: true }}
@@ -757,7 +784,12 @@ describe("Neodt", () => {
       const [value, setControlledValue] = createSignal<DateTime | null>(null);
       setValue = setControlledValue;
       return (
-        <DateTimeLocal referenceTime={referenceTime} locale="en-GB" value={value()} />
+        <DateTimeLocal
+          adapter={adapter}
+          referenceTime={referenceTime}
+          locale="en-GB"
+          value={value()}
+        />
       ) as HTMLSpanElement;
     });
     document.body.append(control);
@@ -778,6 +810,7 @@ describe("Neodt", () => {
       createRoot((dispose) => {
         const control = (
           <DateTimeLocal
+            adapter={adapter}
             referenceTime={referenceTime}
             locale="en-US"
             formatOptions={{ hour12: true }}
@@ -810,6 +843,7 @@ describe("Neodt", () => {
       createRoot((dispose) => {
         const control = (
           <DateTimeLocal
+            adapter={adapter}
             referenceTime={referenceTime}
             locale="en-US"
             formatOptions={{ hour12: true }}
@@ -839,6 +873,7 @@ describe("Neodt", () => {
       createRoot((dispose) => {
         const control = (
           <DateTimeLocal
+            adapter={adapter}
             referenceTime={referenceTime}
             locale="en-US"
             formatOptions={{ hour12: true }}
@@ -863,6 +898,7 @@ describe("Neodt", () => {
       createRoot((dispose) => {
         const control = (
           <DateTimeLocal
+            adapter={adapter}
             referenceTime={referenceTime}
             locale="ja-JP"
             formatOptions={{ hour12: true }}
@@ -888,6 +924,7 @@ describe("Neodt", () => {
       createRoot((dispose) => {
         const control = (
           <DateTimeLocal
+            adapter={adapter}
             referenceTime={referenceTime}
             locale="ja-JP"
             formatOptions={{ hour12: true }}
@@ -927,6 +964,7 @@ describe("Neodt", () => {
         dispose = cleanup;
         return (
           <DateTimeLocal
+            adapter={adapter}
             referenceTime={referenceTime}
             locale="en-US"
             formatOptions={{ hour12: true }}
@@ -963,7 +1001,11 @@ describe("Neodt", () => {
     await new Promise<void>((resolve) =>
       createRoot((dispose) => {
         const control = (
-          <DateTimeLocal referenceTime={referenceTime} value={date("2026-08-17T15:30")} />
+          <DateTimeLocal
+            adapter={adapter}
+            referenceTime={referenceTime}
+            value={date("2026-08-17T15:30")}
+          />
         ) as HTMLSpanElement;
         document.body.append(control);
         const segments = control.querySelectorAll<HTMLButtonElement>(
@@ -991,7 +1033,11 @@ describe("Neodt", () => {
   it("creates a single native text selection when a segment receives focus", () =>
     createRoot((dispose) => {
       const control = (
-        <DateTimeLocal referenceTime={referenceTime} value={date("2026-08-17T15:30")} />
+        <DateTimeLocal
+          adapter={adapter}
+          referenceTime={referenceTime}
+          value={date("2026-08-17T15:30")}
+        />
       ) as HTMLSpanElement;
       document.body.append(control);
       const segment = control.querySelector<HTMLElement>(".datetime-neo__segment")!;
@@ -1006,7 +1052,11 @@ describe("Neodt", () => {
     await new Promise<void>((resolve) =>
       createRoot((dispose) => {
         const control = (
-          <DateTimeLocal referenceTime={referenceTime} value={date("2026-08-17T15:30")} />
+          <DateTimeLocal
+            adapter={adapter}
+            referenceTime={referenceTime}
+            value={date("2026-08-17T15:30")}
+          />
         ) as HTMLSpanElement;
         document.body.append(control);
         const segments = control.querySelectorAll<HTMLButtonElement>(
@@ -1049,6 +1099,7 @@ describe("Neodt", () => {
       createRoot((dispose) => {
         const control = (
           <DateTimeLocal
+            adapter={adapter}
             referenceTime={referenceTime}
             locale="en-GB"
             value={date("2026-08-17T15:30")}
@@ -1085,7 +1136,11 @@ describe("Neodt", () => {
     await new Promise<void>((resolve) =>
       createRoot((dispose) => {
         const control = (
-          <DateTimeLocal referenceTime={referenceTime} value={date("2026-08-17T15:30")} />
+          <DateTimeLocal
+            adapter={adapter}
+            referenceTime={referenceTime}
+            value={date("2026-08-17T15:30")}
+          />
         ) as HTMLSpanElement;
         document.body.append(control);
         const segments = control.querySelectorAll<HTMLSpanElement>(".datetime-neo__segment");
@@ -1105,7 +1160,11 @@ describe("Neodt", () => {
     await new Promise<void>((resolve) =>
       createRoot((dispose) => {
         const control = (
-          <DateTimeLocal referenceTime={referenceTime} value={date("2026-08-17T15:30")} />
+          <DateTimeLocal
+            adapter={adapter}
+            referenceTime={referenceTime}
+            value={date("2026-08-17T15:30")}
+          />
         ) as HTMLSpanElement;
         document.body.append(control);
         const segments = control.querySelectorAll<HTMLSpanElement>(".datetime-neo__segment");
@@ -1127,7 +1186,11 @@ describe("Neodt", () => {
     await new Promise<void>((resolve) =>
       createRoot((dispose) => {
         const control = (
-          <DateTimeLocal referenceTime={referenceTime} value={date("2026-08-17T15:30")} />
+          <DateTimeLocal
+            adapter={adapter}
+            referenceTime={referenceTime}
+            value={date("2026-08-17T15:30")}
+          />
         ) as HTMLSpanElement;
         document.body.append(control);
         const emptyArea = control.querySelector<HTMLSpanElement>(".datetime-neo__empty-area")!;
@@ -1155,7 +1218,11 @@ describe("Neodt", () => {
   it("preserves a selection dragged from the empty editor area", () =>
     createRoot((dispose) => {
       const control = (
-        <DateTimeLocal referenceTime={referenceTime} value={date("2026-08-17T15:30")} />
+        <DateTimeLocal
+          adapter={adapter}
+          referenceTime={referenceTime}
+          value={date("2026-08-17T15:30")}
+        />
       ) as HTMLSpanElement;
       document.body.append(control);
       const emptyArea = control.querySelector<HTMLSpanElement>(".datetime-neo__empty-area")!;
@@ -1178,6 +1245,7 @@ describe("Neodt", () => {
       const onValueChange = vi.fn();
       const control = (
         <DateTimeLocal
+          adapter={adapter}
           referenceTime={referenceTime}
           value={date("2026-08-17T15:30")}
           onValueChange={onValueChange}
@@ -1206,6 +1274,7 @@ describe("Neodt", () => {
       dispose = rootDispose;
       return (
         <DateTimeLocal
+          adapter={adapter}
           referenceTime={referenceTime}
           locale="en-US"
           formatOptions={{ hour12: true }}
@@ -1245,7 +1314,12 @@ describe("Neodt", () => {
       createRoot((dispose) => {
         const [value, setValue] = createSignal<DateTime>(date("2026-08-17T15:30"));
         const control = (
-          <DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />
+          <DateTimeLocal
+            adapter={adapter}
+            referenceTime={referenceTime}
+            value={value()}
+            onValueChange={setValue}
+          />
         ) as HTMLSpanElement;
         document.body.append(control);
         const month = control.querySelectorAll<HTMLButtonElement>(".datetime-neo__segment")[0]!;
@@ -1274,7 +1348,12 @@ describe("Neodt", () => {
       createRoot((dispose) => {
         const [value, setValue] = createSignal<DateTime>(date("2026-08-17T15:30"));
         const control = (
-          <DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />
+          <DateTimeLocal
+            adapter={adapter}
+            referenceTime={referenceTime}
+            value={value()}
+            onValueChange={setValue}
+          />
         ) as HTMLSpanElement;
         document.body.append(control);
         const month = control.querySelectorAll<HTMLButtonElement>(".datetime-neo__segment")[0]!;
@@ -1300,7 +1379,12 @@ describe("Neodt", () => {
       createRoot((dispose) => {
         const [value, setValue] = createSignal<DateTime | null>(date("2026-08-17T15:30"));
         const control = (
-          <DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />
+          <DateTimeLocal
+            adapter={adapter}
+            referenceTime={referenceTime}
+            value={value()}
+            onValueChange={setValue}
+          />
         ) as HTMLSpanElement;
         document.body.append(control);
         const year = control.querySelectorAll<HTMLButtonElement>(".datetime-neo__segment")[2]!;
@@ -1324,7 +1408,12 @@ describe("Neodt", () => {
       createRoot((dispose) => {
         const [value, setValue] = createSignal<DateTime | null>(date("2026-08-17T15:30"));
         const control = (
-          <DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />
+          <DateTimeLocal
+            adapter={adapter}
+            referenceTime={referenceTime}
+            value={value()}
+            onValueChange={setValue}
+          />
         ) as HTMLSpanElement;
         document.body.append(control);
         const year = control.querySelector<HTMLButtonElement>('[aria-label="year"]')!;
@@ -1349,7 +1438,12 @@ describe("Neodt", () => {
       createRoot((dispose) => {
         const [value, setValue] = createSignal<DateTime | null>(null);
         const control = (
-          <DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />
+          <DateTimeLocal
+            adapter={adapter}
+            referenceTime={referenceTime}
+            value={value()}
+            onValueChange={setValue}
+          />
         ) as HTMLSpanElement;
         document.body.append(control);
         const year = control.querySelectorAll<HTMLButtonElement>(".datetime-neo__segment")[2]!;
@@ -1374,7 +1468,12 @@ describe("Neodt", () => {
       createRoot((dispose) => {
         const [value, setValue] = createSignal<DateTime>(date("2026-08-17T15:30"));
         const control = (
-          <DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />
+          <DateTimeLocal
+            adapter={adapter}
+            referenceTime={referenceTime}
+            value={value()}
+            onValueChange={setValue}
+          />
         ) as HTMLSpanElement;
         document.body.append(control);
         const month = control.querySelectorAll<HTMLButtonElement>(".datetime-neo__segment")[0]!;
@@ -1400,6 +1499,7 @@ describe("Neodt", () => {
         const [value, setValue] = createSignal<DateTime>(date("2026-08-17T15:30"));
         const control = (
           <DateTimeLocal
+            adapter={adapter}
             referenceTime={referenceTime}
             value={value()}
             onValueChange={setValue}
@@ -1431,6 +1531,7 @@ describe("Neodt", () => {
         const [value, setValue] = createSignal<DateTime>(date("2026-08-17T05:30"));
         const control = (
           <DateTimeLocal
+            adapter={adapter}
             referenceTime={referenceTime}
             locale="en-US"
             formatOptions={{ hour12: true }}
@@ -1463,6 +1564,7 @@ describe("Neodt", () => {
         const [value, setValue] = createSignal<DateTime>(date("2026-08-17T05:30"));
         const control = (
           <DateTimeLocal
+            adapter={adapter}
             referenceTime={referenceTime}
             locale="en-AU"
             formatOptions={{ hourCycle: "h23" }}
@@ -1493,6 +1595,7 @@ describe("Neodt", () => {
         const [value, setValue] = createSignal<DateTime | null>(date("2026-08-17T05:30"));
         const control = (
           <DateTimeLocal
+            adapter={adapter}
             referenceTime={referenceTime}
             locale="en-US"
             formatOptions={{ hour12: true }}
@@ -1529,7 +1632,12 @@ describe("Neodt", () => {
       createRoot((dispose) => {
         const [value, setValue] = createSignal<DateTime | null>(date("2026-02-17T15:30"));
         const control = (
-          <DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />
+          <DateTimeLocal
+            adapter={adapter}
+            referenceTime={referenceTime}
+            value={value()}
+            onValueChange={setValue}
+          />
         ) as HTMLSpanElement;
         document.body.append(control);
         const month = control.querySelector<HTMLButtonElement>('[aria-label="month"]')!;
@@ -1553,7 +1661,12 @@ describe("Neodt", () => {
       createRoot((dispose) => {
         const [value, setValue] = createSignal<DateTime | null>(date("2026-04-30T15:30"));
         const control = (
-          <DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />
+          <DateTimeLocal
+            adapter={adapter}
+            referenceTime={referenceTime}
+            value={value()}
+            onValueChange={setValue}
+          />
         ) as HTMLSpanElement;
         document.body.append(control);
         const month = control.querySelector<HTMLButtonElement>('[aria-label="month"]')!;
@@ -1576,7 +1689,12 @@ describe("Neodt", () => {
       createRoot((dispose) => {
         const [value, setValue] = createSignal<DateTime | null>(date("2026-02-17T15:30"));
         const control = (
-          <DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />
+          <DateTimeLocal
+            adapter={adapter}
+            referenceTime={referenceTime}
+            value={value()}
+            onValueChange={setValue}
+          />
         ) as HTMLSpanElement;
         document.body.append(control);
         const year = control.querySelector<HTMLButtonElement>('[aria-label="year"]')!;
@@ -1600,7 +1718,12 @@ describe("Neodt", () => {
       createRoot((dispose) => {
         const [value, setValue] = createSignal<DateTime | null>(date("2026-02-28T15:30"));
         const control = (
-          <DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />
+          <DateTimeLocal
+            adapter={adapter}
+            referenceTime={referenceTime}
+            value={value()}
+            onValueChange={setValue}
+          />
         ) as HTMLSpanElement;
         document.body.append(control);
         const year = control.querySelector<HTMLButtonElement>('[aria-label="year"]')!;
@@ -1635,7 +1758,12 @@ describe("Neodt", () => {
       createRoot((dispose) => {
         const [value, setValue] = createSignal<DateTime | null>(date("2025-02-28T15:30"));
         const control = (
-          <DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />
+          <DateTimeLocal
+            adapter={adapter}
+            referenceTime={referenceTime}
+            value={value()}
+            onValueChange={setValue}
+          />
         ) as HTMLSpanElement;
         document.body.append(control);
         const year = control.querySelector<HTMLButtonElement>('[aria-label="year"]')!;
@@ -1680,6 +1808,7 @@ describe("Neodt", () => {
         const [value, setValue] = createSignal<DateTime | null>(date("2026-08-17T15:30"));
         return (
           <DateTimeLocal
+            adapter={adapter}
             referenceTime={referenceTime}
             locale={controlled ? "en-US" : "en-GB"}
             value={controlled ? value() : undefined}
@@ -1751,6 +1880,7 @@ describe("Neodt", () => {
         const [value, setValue] = createSignal<DateTime | null>(date("2026-08-17T15:30"));
         return (
           <DateTimeLocal
+            adapter={adapter}
             referenceTime={referenceTime}
             locale={locale}
             value={controlled ? value() : undefined}
@@ -1812,6 +1942,7 @@ describe("Neodt", () => {
         const [value, setValue] = createSignal<DateTime | null>(date("2026-08-17T15:30"));
         const control = (
           <DateTimeLocal
+            adapter={adapter}
             referenceTime={referenceTime}
             locale="en-AU"
             formatOptions={{ hourCycle: "h23" }}
@@ -1846,7 +1977,12 @@ describe("Neodt", () => {
       createRoot((dispose) => {
         const [value, setValue] = createSignal<DateTime>(date("2026-08-17T15:30"));
         const control = (
-          <DateTimeLocal referenceTime={referenceTime} value={value()} onValueChange={setValue} />
+          <DateTimeLocal
+            adapter={adapter}
+            referenceTime={referenceTime}
+            value={value()}
+            onValueChange={setValue}
+          />
         ) as HTMLSpanElement;
         document.body.append(control);
         const month = control.querySelectorAll<HTMLButtonElement>(".datetime-neo__segment")[0]!;
@@ -1870,6 +2006,7 @@ describe("Neodt", () => {
         const onValueChange = vi.fn();
         const control = (
           <DateTimeLocal
+            adapter={adapter}
             referenceTime={referenceTime}
             value={date("2026-08-17T15:30")}
             onValueChange={onValueChange}
@@ -1906,7 +2043,11 @@ describe("Neodt", () => {
     await new Promise<void>((resolve) =>
       createRoot((dispose) => {
         const control = (
-          <DateTimeLocal referenceTime={referenceTime} value={date("2026-08-17T15:30")} />
+          <DateTimeLocal
+            adapter={adapter}
+            referenceTime={referenceTime}
+            value={date("2026-08-17T15:30")}
+          />
         ) as HTMLSpanElement;
         document.body.append(control);
         const year = control.querySelectorAll<HTMLButtonElement>(".datetime-neo__segment")[2]!;
@@ -1932,13 +2073,27 @@ describe("Neodt", () => {
     await new Promise<void>((resolve) =>
       createRoot((dispose) => {
         const control = (
-          <DateTimeLocal referenceTime={referenceTime} defaultValue={date("2026-08-17T15:30")} />
+          <DateTimeLocal
+            adapter={adapter}
+            referenceTime={referenceTime}
+            defaultValue={date("2026-08-17T15:30")}
+          />
         ) as HTMLSpanElement;
         const readonly = (
-          <DateTimeLocal referenceTime={referenceTime} value={date("2026-08-17T15:30")} readonly />
+          <DateTimeLocal
+            adapter={adapter}
+            referenceTime={referenceTime}
+            value={date("2026-08-17T15:30")}
+            readonly
+          />
         ) as HTMLSpanElement;
         const disabled = (
-          <DateTimeLocal referenceTime={referenceTime} value={date("2026-08-17T15:30")} disabled />
+          <DateTimeLocal
+            adapter={adapter}
+            referenceTime={referenceTime}
+            value={date("2026-08-17T15:30")}
+            disabled
+          />
         ) as HTMLSpanElement;
         document.body.append(control, readonly, disabled);
         const month = control.querySelectorAll<HTMLButtonElement>(".datetime-neo__segment")[0]!;

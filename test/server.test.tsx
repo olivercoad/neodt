@@ -2,7 +2,10 @@ import { DateTime } from "luxon";
 import { isServer, renderToString } from "solid-js/web";
 import { describe, expect, it } from "vitest";
 
-import Neodt from "../src";
+import { createLuxonAdapter } from "../src/adapters/luxon";
+import Neodt from "../src/generic";
+
+const adapter = createLuxonAdapter(DateTime);
 
 describe("environment", () => {
   it("runs on server", () => {
@@ -15,6 +18,7 @@ describe("Neodt", () => {
   it("renders a segmented editor on the server", () => {
     const html = renderToString(() => (
       <Neodt
+        adapter={adapter}
         referenceTime={DateTime.fromISO("2026-08-17T15:30:00Z")}
         locale="en-GB"
         value={DateTime.fromISO("2026-08-17T15:30:00Z")}

@@ -3,7 +3,10 @@ import { createSignal } from "solid-js";
 import { render } from "solid-js/web";
 import { afterEach, expect, it, vi } from "vitest";
 
-import Neodt from "../src";
+import { createLuxonAdapter } from "../src/adapters/luxon";
+import Neodt from "../src/generic";
+
+const adapter = createLuxonAdapter(DateTime);
 
 const referenceTime = DateTime.fromISO("2026-08-17T15:30", { zone: "UTC" });
 let dispose: (() => void) | undefined;
@@ -16,7 +19,7 @@ afterEach(() => {
 it("forwards and updates an external accessible label on the editor group", () => {
   const [label, setLabel] = createSignal("start-label");
   dispose = render(
-    () => <Neodt referenceTime={referenceTime} aria-labelledby={label()} />,
+    () => <Neodt adapter={adapter} referenceTime={referenceTime} aria-labelledby={label()} />,
     document.body,
   );
   const group = document.querySelector('[role="group"]')!;
@@ -27,14 +30,14 @@ it("forwards and updates an external accessible label on the editor group", () =
 });
 
 it("retains the default group name when no accessible name is supplied", () => {
-  dispose = render(() => <Neodt referenceTime={referenceTime} />, document.body);
+  dispose = render(() => <Neodt adapter={adapter} referenceTime={referenceTime} />, document.body);
   expect(document.querySelector('[role="group"]')?.getAttribute("aria-label")).toBe(
     "Date and time",
   );
 });
 
 it("does not throw when the browser has no native picker API", () => {
-  dispose = render(() => <Neodt referenceTime={referenceTime} />, document.body);
+  dispose = render(() => <Neodt adapter={adapter} referenceTime={referenceTime} />, document.body);
   const input = document.querySelector("input")!;
   Object.defineProperty(input, "showPicker", { value: undefined, configurable: true });
   const onError = vi.fn((event: ErrorEvent) => event.preventDefault());
@@ -54,6 +57,7 @@ it("exposes numeric values, localized text, and changing calendar ranges", () =>
   dispose = render(
     () => (
       <Neodt
+        adapter={adapter}
         referenceTime={referenceTime}
         value={value()}
         locale="en-US"
@@ -80,7 +84,10 @@ it("exposes numeric values, localized text, and changing calendar ranges", () =>
 });
 
 it("exposes readonly on the spinbuttons", () => {
-  dispose = render(() => <Neodt referenceTime={referenceTime} readonly />, document.body);
+  dispose = render(
+    () => <Neodt adapter={adapter} referenceTime={referenceTime} readonly />,
+    document.body,
+  );
   expect(document.querySelector('[role="spinbutton"]')?.getAttribute("aria-readonly")).toBe("true");
 });
 
@@ -91,6 +98,7 @@ it("keeps editing and accessible hour ranges in sync when formatting changes", (
   dispose = render(
     () => (
       <Neodt
+        adapter={adapter}
         referenceTime={referenceTime}
         value={value()}
         onValueChange={setValue}
@@ -122,7 +130,14 @@ it.each(["disabled", "readonly"] as const)(
   "does not focus %s controls through their gaps",
   (state) => {
     dispose = render(
-      () => <Neodt referenceTime={referenceTime} {...{ [state]: true }} showTimeOffset />,
+      () => (
+        <Neodt
+          adapter={adapter}
+          referenceTime={referenceTime}
+          {...{ [state]: true }}
+          showTimeOffset
+        />
+      ),
       document.body,
     );
     const root = document.querySelector<HTMLElement>(".datetime-neo")!;
@@ -137,6 +152,7 @@ it.each([false, true])("preserves root click handlers (bound: %s) and cancellati
   dispose = render(
     () => (
       <Neodt
+        adapter={adapter}
         referenceTime={referenceTime}
         onClick={bound ? [(data, event) => data(event), handler] : handler}
       />
@@ -156,6 +172,7 @@ it.each([false, true])(
     dispose = render(
       () => (
         <Neodt
+          adapter={adapter}
           referenceTime={referenceTime}
           onMouseDown={bound ? [(data, event) => data(event), handler] : handler}
         />

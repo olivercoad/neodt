@@ -2,8 +2,30 @@ import { defineConfig } from "tsdown";
 
 export default defineConfig([
   {
-    entry: ["src/index.tsx"],
+    entry: [
+      "src/index.tsx",
+      "src/generic.tsx",
+      "src/luxon.tsx",
+      "src/moment.tsx",
+      "src/dayjs.tsx",
+      "src/date-fns.tsx",
+      "src/spacetime.tsx",
+      "src/temporal-polyfill.tsx",
+      "src/js-temporal-polyfill.tsx",
+      "src/adapters/*.ts",
+    ],
     platform: "neutral",
+    deps: {
+      neverBundle: [
+        "luxon",
+        "moment",
+        "dayjs",
+        "date-fns",
+        "spacetime",
+        "temporal-polyfill",
+        "@js-temporal/polyfill",
+      ],
+    },
     css: {
       inject: true,
     },

@@ -1,10 +1,11 @@
-import { DateTime, Info, Zone, type DurationUnit } from "luxon";
+import type { DateAdapter } from "./adapter";
+import { CalendarDate as DateTime, type DurationUnit } from "./calendar";
 
-export interface NaturalDateParseOptions {
+interface InternalParseOptions {
   /** The instant used for relative expressions and omitted years. */
   referenceTime: DateTime;
   /** IANA zone in which date-only and wall-clock expressions are interpreted. */
-  zone: Zone;
+  zone: string;
   /** Locale used to disambiguate short numeric dates such as `8/4`. */
   locale?: Intl.LocalesArgument;
 }
@@ -91,31 +92,42 @@ const aliases: Record<string, string> = {
 type Clock = { hour: number; minute: number };
 
 /** Parses one natural-language date-time. Deliberately does not parse date ranges. */
-export function parseNaturalDate(
+export function parseInternalDate(
   value: string,
-  options: NaturalDateParseOptions,
+  options: InternalParseOptions,
 ): DateTime | undefined {
+  try {
+    return parseDateExpression(value, options);
+  } catch {
+    // Incomplete or out-of-range text must not throw while the user is typing.
+    return undefined;
+  }
+}
+
+function parseDateExpression(value: string, options: InternalParseOptions): DateTime | undefined {
   const zone = options.zone ?? options.referenceTime.zone;
   const now = options.referenceTime.setZone(zone).startOf("minute");
   const input = normalize(value);
   if (!input) return undefined;
   if (input === "now") return now;
 
-  const iso = DateTime.fromISO(value.trim(), { setZone: true });
-  if (iso.isValid && /\d{4}-\d{2}-\d{2}/.test(value)) return iso.setZone(zone).startOf("minute");
+  const iso = DateTime.fromISO(value.trim(), { zone });
+  if (iso && /\d{4}-\d{2}-\d{2}/.test(value)) return iso.setZone(zone).startOf("minute");
 
-  const zoned = value
-    .trim()
-    .match(/^(.*?)(?:\s+(America\/[\w-]+|Europe\/[\w-]+|Australia\/[\w-]+|Asia\/[\w-]+|UTC))$/i);
+  const zoned = value.trim().match(/^(.*?)(?:\s+([A-Za-z_]+(?:\/[\w+-]+)+|UTC))$/i);
   if (zoned) {
-    const zz = Info.normalizeZone(zoned[2]!);
-    const parsed = parseNaturalDate(zoned[1]!, { ...options, zone: zz });
-    return parsed?.setZone(zone);
+    const zz = zoned[2]!;
+    try {
+      const parsed = parseInternalDate(zoned[1]!, { ...options, zone: zz });
+      return parsed?.setZone(zone);
+    } catch {
+      return undefined;
+    }
   }
 
   const arithmetic = input.match(/^(.+?)(?:\s*\+\s*|\s+plus\s+)(.+)$/);
   if (arithmetic) {
-    const base = parseNaturalDate(arithmetic[1]!, options);
+    const base = parseInternalDate(arithmetic[1]!, options);
     const duration = parseDuration(arithmetic[2]!);
     return base && duration ? base.plus(duration).startOf("minute") : undefined;
   }
@@ -125,7 +137,7 @@ export function parseNaturalDate(
   if (relative) {
     const durationText = relative[1] ?? relative[2] ?? relative[3] ?? relative[4];
     const duration = durationText ? parseDuration(durationText) : undefined;
-    const base = relative[5] ? parseNaturalDate(relative[5], options) : now;
+    const base = relative[5] ? parseInternalDate(relative[5], options) : now;
     const direction = relative[2] || relative[3] ? -1 : 1;
     return base && duration
       ? base.plus(scaleDuration(duration, direction)).startOf("minute")
@@ -286,8 +298,11 @@ function localeUsesDayFirst(locale: Intl.LocalesArgument | undefined): boolean {
 }
 
 function makeDate(now: DateTime, year: number, month: number, day: number): DateTime | undefined {
-  const date = DateTime.fromObject({ year, month, day }, { zone: now.zoneName ?? undefined });
-  return date.isValid ? date.startOf("day") : undefined;
+  try {
+    return DateTime.fromObject({ year, month, day }, { zone: now.zone });
+  } catch {
+    return undefined;
+  }
 }
 
 function normalizeYear(raw: string, referenceYear: number): number {
@@ -321,4 +336,33 @@ function scaleDuration(
   return Object.fromEntries(
     Object.entries(duration).map(([unit, amount]) => [unit, amount * factor]),
   ) as Partial<Record<DurationUnit, number>>;
+}
+
+export interface NaturalDateParseOptions<T, TZone = string> {
+  adapter: DateAdapter<T, TZone>;
+  /** The instant used for relative expressions and omitted years. */
+  referenceTime: NoInfer<T>;
+  /** Native adapter zone; defaults to the reference value's zone. */
+  zone?: NoInfer<TZone>;
+  locale?: Intl.LocalesArgument;
+}
+
+/** Parse a single point in time, returning the selected adapter's value type. */
+export function parseNaturalDate<T, TZone>(
+  value: string,
+  options: NaturalDateParseOptions<T, TZone>,
+): T | undefined {
+  try {
+    const { adapter, referenceTime } = options;
+    const zone = options.zone === undefined ? adapter.getZone(referenceTime) : options.zone;
+    const zoneId = adapter.getZoneId(zone);
+    const parsed = parseInternalDate(value, {
+      referenceTime: new DateTime(adapter.toEpochMilliseconds(referenceTime), zoneId),
+      zone: zoneId,
+      locale: options.locale,
+    });
+    return parsed ? adapter.fromEpochMilliseconds(parsed.milliseconds, zone) : undefined;
+  } catch {
+    return undefined;
+  }
 }

@@ -265,3 +265,82 @@ test("layout recomputes when consumer font metrics and locale change", async ({ 
   await page.getByLabel("Offset", { exact: true }).check();
   await contained(content(page).locator(".datetime-neo__timezone"), control(page));
 });
+
+for (const width of [420, 210]) {
+  test(`clicking control gaps repeatedly focuses the first segment at width ${width}`, async ({
+    page,
+  }) => {
+    await page.goto(`/layout.html?offset&width=${width}`);
+    await rows(page, width === 210);
+    await control(page).hover();
+    const first = content(page).getByRole("spinbutton").first();
+    const last = content(page).getByRole("spinbutton").last();
+    const bounds = await box(control(page));
+    const offset = await box(content(page).locator(".datetime-neo__timezone"));
+    const points = [
+      { x: bounds.x + 2, y: bounds.y + bounds.height / 2 },
+      { x: bounds.x + bounds.width - 2, y: bounds.y + bounds.height / 2 },
+      { x: offset.x + offset.width / 2, y: bounds.y + 2 },
+      { x: offset.x + offset.width / 2, y: bounds.y + bounds.height - 2 },
+    ];
+    if (width === 420) {
+      const empty = await box(editor(page).locator(".datetime-neo__empty-area"));
+      points.push({ x: empty.x + empty.width / 2, y: empty.y + empty.height / 2 });
+    }
+    for (const point of points) {
+      await last.click();
+      await expect(last).toBeFocused();
+      for (let repeat = 0; repeat < 3; repeat++) {
+        await page.mouse.move(point.x, point.y);
+        await page.mouse.down();
+        await expect(first).toBeFocused();
+        await page.mouse.up();
+        await expect(first).toBeFocused();
+        expect(await control(page).evaluate((el) => el.matches(":focus-within"))).toBe(true);
+      }
+    }
+    await content(page).getByRole("button", { name: "Enter date and time naturally" }).click();
+    const input = content(page).getByRole("textbox");
+    await expect(input).toBeFocused();
+    await page.mouse.click(bounds.x + 2, bounds.y + bounds.height / 2);
+    await expect(input).toBeFocused();
+  });
+}
+
+for (const width of [420, 210]) {
+  test(`value separators focus the closest segment on mouse-down at width ${width}`, async ({
+    page,
+  }) => {
+    await page.goto(`/layout.html?locale=en-GB&offset&width=${width}`);
+    await rows(page, width === 210);
+    await control(page).hover();
+    const separators = content(page).locator(".datetime-neo__separator");
+    const cases = [
+      { separator: separators.filter({ hasText: "/" }).nth(1), left: "month", right: "year" },
+      { separator: separators.filter({ hasText: ":" }), left: "hour", right: "minute" },
+      {
+        separator: separators.filter({ hasText: "," }),
+        left: "year",
+        right: width === 420 ? "hour" : "year",
+        // Chromium includes collapsed trailing whitespace in this inline box.
+        rightFraction: width === 210 ? 0.4 : 0.9,
+      },
+    ];
+    for (const { separator, left, right, rightFraction = 0.9 } of cases) {
+      const bounds = await box(separator);
+      for (const [fraction, name] of [
+        [0.1, left],
+        [rightFraction, right],
+      ] as const) {
+        await page.getByRole("button", { name: "Outside", exact: true }).focus();
+        await page.mouse.move(bounds.x + bounds.width * fraction, bounds.y + bounds.height / 2);
+        await page.mouse.down();
+        const segment = content(page).getByRole("spinbutton", { name, exact: true });
+        await expect(segment).toBeFocused();
+        await expect(segment).toHaveClass(/datetime-neo__segment--selected/);
+        await page.mouse.up();
+        await expect(segment).toBeFocused();
+      }
+    }
+  });
+}

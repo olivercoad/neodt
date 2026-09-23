@@ -84,6 +84,8 @@ function Neodt(props: NeodtProps): JSX.Element {
     "classList",
     "disabled",
     "aria-label",
+    "onClick",
+    "onMouseDown",
   ]);
   const locale = () => local.locale ?? systemLocale;
   const hourFormat = createMemo(() =>
@@ -662,10 +664,59 @@ function Neodt(props: NeodtProps): JSX.Element {
     }
   };
 
-  const onEmptyAreaClick = () => {
-    if (naturalMode()) return;
-    if (!window.getSelection()?.isCollapsed) return;
-    selectSegment(0, true);
+  const isControlGap = (event: MouseEvent & { target: Element }) => {
+    // Segments, action icons, and inputs handle their own clicks, including clicks
+    // on their descendants. All remaining space belongs to the active editor.
+    return (
+      !event.defaultPrevented &&
+      !local.disabled &&
+      !local.readonly &&
+      !event.target.closest(".datetime-neo__segment, .datetime-neo__trigger, input")
+    );
+  };
+
+  const focusEditor = (event: MouseEvent & { target: Element }) => {
+    if (naturalMode()) {
+      naturalInput?.focus();
+      return;
+    }
+    let nearest = 0;
+    if (event.target.closest(".datetime-neo__value")) {
+      let nearestDistance = Infinity;
+      editableSegments().forEach((_, index) => {
+        const bounds = segmentButtons[index]?.getBoundingClientRect();
+        if (!bounds) return;
+        // Measure from the segment's edges so both wide labels and wrapped rows
+        // choose the segment visually closest to the pointer.
+        const dx = Math.max(bounds.left - event.clientX, 0, event.clientX - bounds.right);
+        const dy = Math.max(bounds.top - event.clientY, 0, event.clientY - bounds.bottom);
+        const distance = dx * dx + dy * dy;
+        if (distance < nearestDistance) {
+          nearest = index;
+          nearestDistance = distance;
+        }
+      });
+    }
+    selectSegment(nearest, true);
+  };
+
+  const onControlMouseDown: JSX.EventHandler<HTMLSpanElement, MouseEvent> = (event) => {
+    const handler = local.onMouseDown;
+    if (typeof handler === "function") handler(event);
+    else if (handler) handler[0](handler[1], event);
+    if (event.button !== 0 || !isControlGap(event)) return;
+    // Otherwise the browser places the caret in the nearest contenteditable
+    // segment before the click handler runs, briefly highlighting that segment.
+    event.preventDefault();
+    focusEditor(event);
+  };
+
+  const onControlClick: JSX.EventHandler<HTMLSpanElement, MouseEvent> = (event) => {
+    const handler = local.onClick;
+    if (typeof handler === "function") handler(event);
+    else if (handler) handler[0](handler[1], event);
+    if (!isControlGap(event) || !window.getSelection()?.isCollapsed) return;
+    focusEditor(event);
   };
 
   const renderPart = (part: () => DisplayPart) =>
@@ -766,6 +817,8 @@ function Neodt(props: NeodtProps): JSX.Element {
       {...rest}
       class={`datetime-neo ${local.class ?? ""}`}
       classList={local.classList}
+      onClick={onControlClick}
+      onMouseDown={onControlMouseDown}
       data-disabled={local.disabled ? "" : undefined}
       data-empty={value() ? undefined : ""}
       data-natural={naturalMode() ? "" : undefined}
@@ -879,9 +932,7 @@ function Neodt(props: NeodtProps): JSX.Element {
               </Index>
             </span>
           )}
-          {!naturalMode() && (
-            <span class="datetime-neo__empty-area" aria-hidden="true" onClick={onEmptyAreaClick} />
-          )}
+          {!naturalMode() && <span class="datetime-neo__empty-area" aria-hidden="true" />}
         </span>
         {renderTrailing()}
       </span>

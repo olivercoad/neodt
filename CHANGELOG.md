@@ -18,6 +18,7 @@
 
 ### Fixed
 
+- Fix #4, clicks on control gaps focus the first segment on mouse-down without flickering or losing focus on repeated clicks; clicks within the displayed value, including separators, focus the closest editable segment.
 - Segmented spinbuttons expose numeric values, localized value text, calendar ranges, readonly state, and validation descriptions to assistive technology; removed unsupported selection/group ARIA states.
 - Native picker events respect readonly/disabled state and avoid duplicate notifications for accepted input/change pairs.
 - Prevent Ctrl/Cmd/Alt keyboard shortcuts from accidentally editing the date.

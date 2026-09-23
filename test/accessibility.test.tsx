@@ -117,3 +117,54 @@ it("keeps editing and accessible hour ranges in sync when formatting changes", (
     hour().dispatchEvent(new KeyboardEvent("keydown", { key: digit, bubbles: true }));
   expect(value()!.hour).toBe(0);
 });
+
+it.each(["disabled", "readonly"] as const)(
+  "does not focus %s controls through their gaps",
+  (state) => {
+    dispose = render(
+      () => <Neodt referenceTime={referenceTime} {...{ [state]: true }} showTimeOffset />,
+      document.body,
+    );
+    const root = document.querySelector<HTMLElement>(".datetime-neo")!;
+    root.click();
+    root.querySelector<HTMLElement>(".datetime-neo__timezone")!.click();
+    expect(root.contains(document.activeElement)).toBe(false);
+  },
+);
+
+it.each([false, true])("preserves root click handlers (bound: %s) and cancellation", (bound) => {
+  const handler = vi.fn((event: MouseEvent) => event.preventDefault());
+  dispose = render(
+    () => (
+      <Neodt
+        referenceTime={referenceTime}
+        onClick={bound ? [(data, event) => data(event), handler] : handler}
+      />
+    ),
+    document.body,
+  );
+  const root = document.querySelector<HTMLElement>(".datetime-neo")!;
+  root.click();
+  expect(handler).toHaveBeenCalledTimes(1);
+  expect(root.contains(document.activeElement)).toBe(false);
+});
+
+it.each([false, true])(
+  "preserves root mouse-down handlers (bound: %s) and cancellation",
+  (bound) => {
+    const handler = vi.fn((event: MouseEvent) => event.preventDefault());
+    dispose = render(
+      () => (
+        <Neodt
+          referenceTime={referenceTime}
+          onMouseDown={bound ? [(data, event) => data(event), handler] : handler}
+        />
+      ),
+      document.body,
+    );
+    const root = document.querySelector<HTMLElement>(".datetime-neo")!;
+    root.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }));
+    expect(handler).toHaveBeenCalledTimes(1);
+    expect(root.contains(document.activeElement)).toBe(false);
+  },
+);

@@ -59,7 +59,7 @@ export const themes = [
   --datetime-neo-foreground: #243649;
   --datetime-neo-border: #91a2b5;
   --datetime-neo-focus: #235bc4;
-  --datetime-neo-segment-padding: 0.08rem 0.1rem;
+  --datetime-neo-segment-padding: 0.4rem 0.1rem;
   --datetime-neo-segment-line-height: 1.2;
   font-family: ui-monospace, monospace;
   font-size: 13px;
@@ -89,7 +89,7 @@ export const themes = [
   --datetime-neo-background: transparent;
   --datetime-neo-foreground: currentColor;
   --datetime-neo-segment-line-height: 1;
-  --datetime-neo-segment-padding: 0px;
+  --datetime-neo-segment-padding: 2px 0;
   border-radius: 4px;
 
   &[data-readonly]:has(.datetime-neo__content[data-wrapped]) {
@@ -103,7 +103,7 @@ export const themes = [
   }
 
   .datetime-neo__editor {
-    padding: 2px 3px;
+    padding: 0 3px;
   }
 
   .datetime-neo__actions {
@@ -121,10 +121,6 @@ export const themes = [
 
   .datetime-neo__trigger {
     padding: 2px;
-
-    span {
-      text-box: unset;
-    }
   }
 
   .datetime-neo__natural-result {

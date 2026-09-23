@@ -227,6 +227,65 @@ test("seamless previews use compact typography and stay within a 125px sizer", a
   }
 });
 
+for (const width of [240, 125]) {
+  test(`seamless shadow host keeps its height between editing modes at ${width}px`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/#/docs/styling");
+    await page.evaluate(() => document.fonts.ready);
+    const preview = page.locator("[data-theme-preview=seamless]");
+    await preview.evaluate((el, width) => (el.style.width = `${width}px`), width);
+    const control = preview.locator("[data-preview-state=editable] .datetime-neo");
+    const geometry = () =>
+      control.evaluate((el) => {
+        const host = (el.getRootNode() as ShadowRoot).host;
+        const variant = host.parentElement!;
+        return {
+          control: el.getBoundingClientRect().height,
+          host: host.getBoundingClientRect().height,
+          variant: variant.getBoundingClientRect().height,
+          following:
+            variant.nextElementSibling!.getBoundingClientRect().top -
+            variant.getBoundingClientRect().top,
+        };
+      });
+    for (const offset of [false, true]) {
+      await page
+        .getByRole("navigation", { name: "Documentation" })
+        .getByLabel("Show time offset")
+        .setChecked(offset);
+      await control.hover();
+      await control.getByRole("spinbutton").first().focus();
+      const before = await geometry();
+      const expectStable = async () => {
+        // The input alone can keep its height while its baseline enlarges the
+        // host's line box and pushes every following preview down.
+        for (let frame = 0; frame < 3; frame++) {
+          await page.evaluate(() => new Promise(requestAnimationFrame));
+          const after = await geometry();
+          for (const key of ["control", "host", "variant", "following"] as const) {
+            expect(
+              Math.abs(after[key] - before[key]),
+              `${key}, offset=${offset}`,
+            ).toBeLessThanOrEqual(0.1);
+          }
+        }
+      };
+      await page.keyboard.press("@");
+      const input = control.getByRole("textbox", { name: "Natural-language date and time" });
+      await expect(input).toBeFocused();
+      await expectStable();
+      for (const value of ["tom", "tomorrow 9am", "invalid date", ""]) {
+        await input.fill(value);
+        await expectStable();
+      }
+      await input.press("Escape");
+      await expectStable();
+    }
+  });
+}
+
 test("Midnight readonly keeps its dark surface and readable foreground", async ({ page }) => {
   await page.goto("/#/docs/styling");
   const readonly = page.locator(
@@ -370,4 +429,50 @@ test("section highlighting follows scrolling in both directions", async ({ page 
   ).toBeVisible();
   await page.locator("#natural-language-parser").evaluate((heading) => heading.scrollIntoView());
   await expect(active).toHaveText("Natural-language parser");
+});
+
+test("Compact console keeps padded segments and offsets inside single and wrapped inputs", async ({
+  page,
+}) => {
+  await page.goto("/#/docs/styling");
+  const card = page.getByRole("article", { name: "Compact console", exact: true });
+  const css = card.getByRole("textbox", { name: "Editable CSS" });
+  const original = await css.inputValue();
+  for (const width of [320, 200]) {
+    await css.fill(`${original}\n.theme-compact { width: ${width}px; }`);
+    const editable = card.locator('[data-preview-state="editable"] .datetime-neo');
+    await editable.locator(".datetime-neo__segment").first().click();
+    for (const input of await card.locator(".datetime-neo").all()) {
+      const content = input.locator(":scope > .datetime-neo__content");
+      if (width === 200) await expect(content).toHaveAttribute("data-wrapped", "");
+      else await expect(content).not.toHaveAttribute("data-wrapped");
+      await expect
+        .poll(async () =>
+          input.evaluate((root) => {
+            const editor = root.querySelector(
+              ":scope > .datetime-neo__content > .datetime-neo__editor",
+            )!;
+            const bounds = editor.getBoundingClientRect();
+            return [...editor.querySelectorAll(".datetime-neo__segment")].every((segment) => {
+              const box = segment.getBoundingClientRect();
+              return box.top >= bounds.top + 1 && box.bottom <= bounds.bottom - 1;
+            });
+          }),
+        )
+        .toBe(true);
+      await expect
+        .poll(async () =>
+          input.evaluate((root) => {
+            const rootBounds = root.getBoundingClientRect();
+            const offsetBounds = root
+              .querySelector(":scope > .datetime-neo__content .datetime-neo__timezone")!
+              .getBoundingClientRect();
+            return (
+              offsetBounds.top >= rootBounds.top + 1 && offsetBounds.bottom <= rootBounds.bottom - 1
+            );
+          }),
+        )
+        .toBe(true);
+    }
+  }
 });

@@ -493,15 +493,19 @@ describe("Neodt", () => {
     });
     document.body.append(control);
     const segment = control.querySelector<HTMLButtonElement>(".datetime-neo__segment")!;
-    expect(control.querySelector('[aria-label="Enter date and time naturally"]')?.textContent).toBe(
-      "@",
-    );
+    expect(
+      control.querySelector(
+        '[aria-label="Enter date and time naturally"] .datetime-neo__magic-icon',
+      ),
+    ).not.toBeNull();
     const event = new KeyboardEvent("keydown", { key: "@", bubbles: true, cancelable: true });
     segment.dispatchEvent(event);
     await nextRender();
     expect(event.defaultPrevented).toBe(true);
     expect(control.querySelector(".datetime-neo__natural-input")).not.toBeNull();
-    expect(control.querySelector(".datetime-neo__natural-prefix")?.textContent).toBe("@");
+    expect(
+      control.querySelector(".datetime-neo__natural-prefix .datetime-neo__magic-icon"),
+    ).not.toBeNull();
     expect(document.activeElement).toBe(control.querySelector(".datetime-neo__natural-input"));
     control.remove();
     dispose!();

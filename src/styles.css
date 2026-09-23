@@ -19,6 +19,8 @@
   box-sizing: border-box;
   color: var(--datetime-neo-foreground);
   display: inline-flex;
+  /* Internal baselines differ by editing mode; keep the surrounding line box stable. */
+  vertical-align: middle;
   position: relative;
   width: 250px;
 }
@@ -118,13 +120,25 @@
 }
 
 .datetime-neo__value {
+  align-items: baseline;
+  display: inline-flex;
   opacity: 1;
   transition: opacity 220ms ease;
   white-space: nowrap;
 }
 
 .datetime-neo__row {
-  display: inline;
+  align-items: baseline;
+  display: inline-flex;
+}
+
+/* Reserve the same line height and additive padding as the natural input,
+   including under a consumer's global border-box reset. */
+.datetime-neo__segment,
+.datetime-neo__separator,
+.datetime-neo__natural-preview {
+  box-sizing: content-box;
+  height: 1lh;
 }
 
 .datetime-neo__empty-area {
@@ -146,6 +160,7 @@
   outline: 0;
   padding: var(--datetime-neo-segment-padding);
   field-sizing: content;
+  text-box: trim-both cap alphabetic;
 }
 
 .datetime-neo__natural-field {
@@ -155,16 +170,16 @@
 }
 
 .datetime-neo__natural-field > * {
-  align-self: baseline;
+  align-self: center;
   grid-area: 1 / 1;
 }
 
 .datetime-neo__natural-ghost {
   box-sizing: content-box;
   height: 1lh;
-  align-items: center;
+  align-content: center;
   color: color-mix(in srgb, currentColor 70%, transparent);
-  display: flex;
+  display: block;
   font: inherit;
   line-height: var(--datetime-neo-segment-line-height);
   min-width: fit-content;
@@ -172,6 +187,7 @@
   padding: var(--datetime-neo-segment-padding);
   pointer-events: none;
   white-space: pre;
+  text-box: trim-both cap alphabetic;
 }
 
 .datetime-neo__natural-ghost-typed {
@@ -190,7 +206,16 @@
 }
 
 .datetime-neo__natural-input::placeholder {
+  /* Retain the native placeholder for intrinsic sizing. The existing completion
+     overlay paints it, since native placeholder baselines differ by browser. */
+  color: transparent;
+}
+
+.datetime-neo__natural-ghost--placeholder {
   color: color-mix(in srgb, currentColor 52%, transparent);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .datetime-neo__natural-preview {
@@ -209,6 +234,20 @@
 /* Reserve a text line even while the phrase is incomplete or invalid. */
 .datetime-neo__natural-preview::before {
   content: "\200b";
+}
+
+@supports (text-box: trim-both cap alphabetic) and (height: 1cap) {
+  .datetime-neo__segment,
+  .datetime-neo__separator,
+  .datetime-neo__natural-preview {
+    /* Trim the actual text box; distribute the remaining leading outside it.
+       Together these still occupy 1lh, without depending on align-content's
+       interaction with trimming inside a fixed-height block. */
+    align-content: normal;
+    height: 1cap;
+    margin-block: calc((1lh - 1cap) / 2);
+    text-box: trim-both cap alphabetic;
+  }
 }
 
 .datetime-neo__natural-prefix {
@@ -237,12 +276,6 @@
   margin-left: auto;
 }
 
-.datetime-neo__natural-prefix > span {
-  font-size: 1.1em;
-  line-height: 1;
-  text-box: trim-both cap text;
-}
-
 .datetime-neo__timezone {
   color: color-mix(in srgb, currentColor 52%, transparent);
   flex: 0 0 auto;
@@ -250,6 +283,7 @@
   font-variant-numeric: tabular-nums;
   padding: 0.16rem 0.18rem;
   text-align: right;
+  text-box: trim-both cap alphabetic;
   margin-right: 0;
   transition:
     margin-right 220ms ease,
@@ -330,7 +364,7 @@
   > .datetime-neo__editor
   > .datetime-neo__value
   > .datetime-neo__row {
-  align-items: center;
+  align-items: baseline;
   display: flex;
   min-width: 0;
 }
@@ -345,7 +379,7 @@
 
 .datetime-neo__content[data-wrapped][data-natural] > .datetime-neo__editor {
   display: grid;
-  grid-template-rows: auto auto;
+  grid-template-rows: 1fr 1fr;
 }
 
 .datetime-neo__native-input {
@@ -435,6 +469,7 @@
   color: inherit;
   cursor: pointer;
   display: inline-flex;
+  font: inherit;
   justify-content: center;
   margin: 0;
   padding: 0.25rem;
@@ -492,6 +527,12 @@
   transition-delay: 0ms;
 }
 
+/* The wrapped offset occupies a flexible area above the actions. Retain its
+   natural font leading here instead of trimming text against the top border. */
+.datetime-neo__content[data-wrapped] .datetime-neo__timezone {
+  text-box: normal;
+}
+
 .datetime-neo:not(:hover):not(:focus-within)
   .datetime-neo__content[data-wrapped]
   .datetime-neo__timezone {
@@ -525,7 +566,8 @@
   cursor: not-allowed;
 }
 
-.datetime-neo__trigger svg {
+.datetime-neo__trigger svg,
+.datetime-neo__natural-prefix svg {
   fill: none;
   height: 1.1em;
   stroke: currentColor;
@@ -533,12 +575,6 @@
   stroke-linejoin: round;
   stroke-width: 1.8;
   width: 1.1em;
-}
-
-.datetime-neo__magic-icon {
-  font-size: 1.1em;
-  line-height: 1;
-  text-box: trim-both cap text;
 }
 
 @media (prefers-reduced-motion: reduce) {

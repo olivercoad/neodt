@@ -15,6 +15,7 @@
 - Separated internal date/segment rules and icons from the component, consolidated segment completion and keyboard navigation, and shared reactive hour-format resolution across editing and accessibility.
 - **Breaking:** Parent-driven controlled resets and replacements now discard stale segments and unfinished typing, while accepted change callbacks preserve incremental entry.
 - Arrow up/down on cleared segment reveals draft value without incrementing/decrementing it
+- Use SVG for @ symbol
 
 ### Fixed
 
@@ -30,6 +31,7 @@
 - Removed stale demo CSS hooks and made the playground resize handle keyboard-operable.
 - Reduce unnecessary vertical space when wrapped with timeoffset shown
 - Typing ignored keys in a cleared segment no longer causes it to lose its transparency
+- Fix vertical alignment with some fonts eg monospace in compact console theme
 
 ## [0.1.8] - 2026-09-22
 

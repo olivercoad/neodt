@@ -20,8 +20,11 @@ The browser suite uses `dev/layout.html`, a development-only Vite entry with a f
 - Hidden measurements mirror the **idle single-row** layout, including typography, separators, and trailing content. They must not wrap or make the parent scroll.
 - The component picks one or two rows from available width and the widest measurement. Hover, focus, and natural-language entry must not independently change that choice.
 - Actions reveal without increasing the control’s height or escaping its bounds. Their measured width is published as `--datetime-neo-actions-width`; consumers should not override it.
+- Editing modes must also preserve the surrounding line box. The inline-flex control uses `vertical-align: middle` so changes to its internal baseline cannot grow its parent even when its own height stays constant. Gallery tests check the shadow host, preview container, and following preview position in both single-row and narrow layouts.
 - Whole-hour offset minutes collapse in the appropriate idle/active state. Half- and quarter-hour offset minutes stay visible.
 - Date/time rows, natural input, completion text, and the parsed preview share segment metrics. An empty parsed preview still occupies one line; native input minimum heights must not override a theme’s line-height.
+- Segments and parsed previews occupy `1lh` plus theme padding. In browsers with text trimming, a `1cap` text box and equal block margins share that line height, centering the glyphs without relying on alignment inside a trimmed fixed-height box. Wrapped natural entry reserves two equal rows even when a theme hides the parsed result; action buttons inherit the control font so swapping icons cannot change the height.
+- The natural input retains its native placeholder for sizing, while the existing completion overlay paints the placeholder using the same typography as suggestions. Check both empty and typed states; native placeholder baselines can differ from entered text.
 - At very narrow widths, focusing a segment scrolls it into view inside the editor. The overflow mask must reflect whether more content is hidden at the end.
 - Measurements can update after a font, locale, state, offset, or width change. Layout transitions are suspended while measurement changes settle, then restored. Reduced-motion users receive no transitions.
 
@@ -35,4 +38,4 @@ The browser suite uses `dev/layout.html`, a development-only Vite entry with a f
 
 On failure, Playwright saves a screenshot and trace in `test-results/`. Open `pnpm exec playwright show-report` or use `pnpm exec playwright show-trace <trace.zip>` to inspect the failing layout. These artifacts are uploaded by CI.
 
-The suite deliberately uses geometry contracts instead of pixel snapshots tied to one operating system and font rasteriser. Add a regression assertion for the user-visible failure when fixing layout. For visual-only changes, inspect the fixture and styling gallery as well. Native OS picker surfaces, physical touch devices, and screen-reader output still need manual checks.
+The suite uses geometry contracts and small painted-glyph bounds checks instead of golden pixel snapshots tied to one operating system and font rasteriser. The glyph checks use lining digits to distinguish visible centering from an equal-height line box. Add a regression assertion for the user-visible failure when fixing layout. For visual-only changes, inspect the fixture and styling gallery as well. Native OS picker surfaces, physical touch devices, and screen-reader output still need manual checks.

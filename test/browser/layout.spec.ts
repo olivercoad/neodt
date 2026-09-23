@@ -344,3 +344,173 @@ for (const width of [420, 210]) {
     }
   });
 }
+
+for (const theme of [
+  undefined,
+  ...themes,
+  {
+    id: "custom-metrics",
+    css: `.theme-custom-metrics {
+      font: 20px Georgia, serif;
+      --datetime-neo-segment-line-height: 1;
+      --datetime-neo-segment-padding: 0.3rem 0.25rem;
+    }`,
+  },
+]) {
+  test(`${theme?.id ?? "default"}: editing modes share row heights`, async ({ page }) => {
+    await page.goto("/layout.html?width=420");
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    // Exercise the consumer reset used by the gallery as well as the bare
+    // component covered by the other layout tests.
+    await page.addStyleTag({ content: "* { box-sizing: border-box; }" });
+    if (theme) {
+      await page.addStyleTag({ content: theme.css });
+      await control(page).evaluate((el, id) => el.classList.add(`theme-${id}`), theme.id);
+    }
+    for (const offset of [false, true]) {
+      await page.getByLabel("Offset", { exact: true }).setChecked(offset);
+      for (const width of [420, 200]) {
+        await page.getByLabel("Width", { exact: true }).fill(String(width));
+        // Wait for the resize observer and rendered geometry to settle before
+        // recording the height, rather than comparing against the previous width.
+        await control(page).hover();
+        await content(page).getByRole("spinbutton").first().focus();
+        const height = (await box(control(page))).height;
+        const wrapped = await content(page).getAttribute("data-wrapped");
+        await page.keyboard.press("@");
+        const input = content(page).getByRole("textbox", {
+          name: "Natural-language date and time",
+        });
+        for (const text of ["", "tom", "tomorrow 9am", "invalid date"]) {
+          await input.fill(text);
+          await expect
+            .poll(async () => Math.abs((await box(control(page))).height - height))
+            .toBeLessThanOrEqual(1);
+          expect(await content(page).getAttribute("data-wrapped")).toBe(wrapped);
+        }
+        await input.press("Escape");
+        expect(Math.abs((await box(control(page))).height - height)).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+}
+
+for (const font of ["ui-monospace, monospace", '"Courier New", monospace', "Arial, sans-serif"]) {
+  test(`${font}: painted digits are vertically centered`, async ({ page }) => {
+    await page.goto("/layout.html?state=readonly&offset");
+    const compact = themes.find((theme) => theme.id === "compact")!;
+    await page.addStyleTag({ content: compact.css });
+    await control(page).evaluate((el) => el.classList.add("theme-compact"));
+    for (const size of [11, 13, 20]) {
+      await control(page).evaluate(
+        (el, style) => {
+          el.style.fontFamily = style.font;
+          el.style.fontSize = `${style.size}px`;
+        },
+        { font, size },
+      );
+      for (const width of [264, 140]) {
+        await page.getByLabel("Width", { exact: true }).fill(String(width));
+        await control(page).hover();
+        const segment = content(page).getByRole("spinbutton").first();
+        // Inspect painted glyphs, not the font's invisible ascent/descent box.
+        // This avoids platform-specific golden images and catches visual drift
+        // that equal-height geometry assertions cannot detect.
+        const png = await segment.screenshot({ scale: "css" });
+        const ink = await paintedTextCenter(
+          page,
+          `data:image/png;base64,${png.toString("base64")}`,
+        );
+        expect(ink.count).toBeGreaterThan(0);
+        expect(ink.error, JSON.stringify({ font, size, width, ink })).toBeLessThanOrEqual(1.5);
+        if ((await content(page).getAttribute("data-wrapped")) === null) {
+          const textBox = await box(segment);
+          const inputBox = await box(control(page));
+          expect(
+            Math.abs(textBox.y + textBox.height / 2 - inputBox.y - inputBox.height / 2),
+          ).toBeLessThanOrEqual(1);
+        }
+      }
+    }
+  });
+}
+
+async function paintedTextCenter(page: Page, image: string) {
+  return await page.evaluate(async (data) => {
+    const image = new Image();
+    image.src = data;
+    await image.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(image, 0, 0);
+    const { data: pixels } = ctx.getImageData(0, 0, image.width, image.height);
+    const rows: number[] = [];
+    for (let y = 0; y < image.height; y++) {
+      for (let x = 0; x < image.width; x++) {
+        const i = (y * image.width + x) * 4;
+        if (pixels[i]! < 240 && pixels[i + 1]! < 240 && pixels[i + 2]! < 240) {
+          rows.push(y);
+          break;
+        }
+      }
+    }
+    return {
+      count: rows.length,
+      error: Math.abs((rows[0]! + rows[rows.length - 1]! + 1) / 2 - image.height / 2),
+    };
+  }, image);
+}
+
+for (const font of ["ui-monospace, monospace", '"Courier New", monospace', "Arial, sans-serif"]) {
+  test(`${font}: natural input and placeholder digits are vertically centered`, async ({
+    page,
+  }) => {
+    await page.goto("/layout.html?offset");
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    const compact = themes.find((theme) => theme.id === "compact")!;
+    await page.addStyleTag({ content: compact.css });
+    await control(page).evaluate((el) => el.classList.add("theme-compact"));
+    await content(page).getByRole("spinbutton").first().focus();
+    await page.keyboard.press("@");
+    const input = content(page).getByRole("textbox", { name: "Natural-language date and time" });
+    for (const size of [11, 13, 20]) {
+      await control(page).evaluate(
+        (el, style) => {
+          el.style.fontFamily = style.font;
+          el.style.fontSize = `${style.size}px`;
+        },
+        { font, size },
+      );
+      for (const width of [264, 140]) {
+        await page.getByLabel("Width", { exact: true }).fill(String(width));
+        await control(page).hover();
+        for (const value of ["11:11", ""]) {
+          await input.fill(value);
+          if (!value) {
+            const placeholder = content(page).locator(".datetime-neo__natural-ghost--placeholder");
+            await expect(placeholder).toHaveText((await input.getAttribute("placeholder"))!);
+            // Use the same lining digits in both rendering paths to compare ink,
+            // independent of the animated example's mixture of letter shapes.
+            await placeholder.evaluate((el) => {
+              el.textContent = "11:11";
+            });
+            await input.evaluate((el) => {
+              (el as HTMLInputElement).placeholder = "11:11";
+            });
+          }
+          const png = await input.screenshot({ scale: "css" });
+          const ink = await paintedTextCenter(
+            page,
+            `data:image/png;base64,${png.toString("base64")}`,
+          );
+          expect(ink.count).toBeGreaterThan(0);
+          expect(ink.error, JSON.stringify({ font, size, width, value, ink })).toBeLessThanOrEqual(
+            1.5,
+          );
+        }
+      }
+    }
+  });
+}

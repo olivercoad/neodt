@@ -211,9 +211,15 @@ const App: Component = () => {
           </div>
           <a class={styles.galleryLink} href="#/docs/styling">
             <div class={styles.gallerySamples} aria-hidden="true">
-              <span>{referenceTime().toFormat("hh:mm")}</span>
-              <span>{referenceTime().toFormat("hh:mm")}</span>
-              <span>{referenceTime().toFormat("hh:mm")}</span>
+              <span>
+                <span>{referenceTime().toFormat("hh:mm")}</span>
+              </span>
+              <span>
+                <span>{referenceTime().toFormat("hh:mm")}</span>
+              </span>
+              <span>
+                <span>{referenceTime().toFormat("hh:mm")}</span>
+              </span>
             </div>
             <span class={styles.galleryTitle}>
               Styling gallery <span aria-hidden="true">↗</span>

@@ -859,7 +859,7 @@ function Neodt(props: NeodtProps): JSX.Element {
             <>
               <span class="datetime-neo__natural-entry">
                 <span class="datetime-neo__natural-prefix" aria-hidden="true">
-                  <span>@</span>
+                  <MagicIcon />
                 </span>
                 <span class="datetime-neo__natural-field">
                   <input
@@ -904,11 +904,21 @@ function Neodt(props: NeodtProps): JSX.Element {
                       }
                     }}
                   />
-                  {activeNaturalCompletion() && (
-                    <span class="datetime-neo__natural-ghost" aria-hidden="true">
-                      <span class="datetime-neo__natural-ghost-typed">{naturalText()}</span>
-                      {activeNaturalCompletion()!.insertText.slice(naturalText().length)}
-                      <kbd>Tab</kbd>
+                  {(!naturalText() || activeNaturalCompletion()) && (
+                    <span
+                      class="datetime-neo__natural-ghost"
+                      classList={{ "datetime-neo__natural-ghost--placeholder": !naturalText() }}
+                      aria-hidden="true"
+                    >
+                      {naturalText() ? (
+                        <>
+                          <span class="datetime-neo__natural-ghost-typed">{naturalText()}</span>
+                          {activeNaturalCompletion()!.insertText.slice(naturalText().length)}
+                          <kbd>Tab</kbd>
+                        </>
+                      ) : (
+                        naturalPlaceholder()
+                      )}
                     </span>
                   )}
                 </span>

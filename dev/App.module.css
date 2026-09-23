@@ -309,7 +309,7 @@ p {
   gap: 0.5rem;
   margin-bottom: 1rem;
 }
-.gallerySamples span {
+.gallerySamples > span {
   align-items: center;
   border: 1px solid var(--line);
   border-radius: 0.25rem;
@@ -321,15 +321,16 @@ p {
   line-height: 1;
   width: 4.25rem;
 }
-.gallerySamples span:nth-child(2) {
+.gallerySamples > span > span {
+  text-box: trim-both cap alphabetic;
+}
+.gallerySamples > span:nth-child(2) {
   background: #172633;
   border-color: #172633;
   color: #91e9b6;
   font-family: ui-monospace, monospace;
-  /* Optically center the numerals within the monospace font's line box. */
-  padding-top: 0.2rem;
 }
-.gallerySamples span:nth-child(3) {
+.gallerySamples > span:nth-child(3) {
   background: #eeedff;
   border-color: #d6d0f5;
   border-radius: 99px;

@@ -258,19 +258,107 @@ p {
 .playgroundSection {
   border-top: 1px solid var(--line);
   padding-bottom: 7rem;
-  padding-top: 6rem;
+  padding-top: 4rem;
 }
 .playgroundHeading {
+  align-items: center;
   display: grid;
-  gap: 1rem 3rem;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
-  margin-bottom: 2.5rem;
+  gap: 2rem;
+  grid-template-columns: minmax(0, 1fr) 20rem;
+  margin-bottom: 2rem;
 }
 .playgroundHeading .kicker {
-  grid-column: 1 / -1;
+  margin-bottom: 0.85rem;
 }
 .playgroundHeading h2 {
+  font-size: clamp(2.75rem, 5vw, 4rem);
+  font-weight: 600;
+  letter-spacing: -0.055em;
+  line-height: 1.05;
   margin: 0;
+}
+.playgroundIntro {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 1rem 0 0;
+}
+.galleryLink {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  color: var(--ink);
+  display: block;
+  padding: 1.25rem;
+  text-decoration: none;
+  transition:
+    border-color 150ms,
+    box-shadow 150ms;
+}
+.galleryLink:hover {
+  border-color: var(--blue);
+  box-shadow: 0 4px 16px #1522300a;
+}
+.galleryLink:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 0.25rem;
+}
+.gallerySamples {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.gallerySamples span {
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 0.25rem;
+  display: inline-flex;
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-size: 0.8rem;
+  height: 2rem;
+  justify-content: center;
+  line-height: 1;
+  width: 4.25rem;
+}
+.gallerySamples span:nth-child(2) {
+  background: #172633;
+  border-color: #172633;
+  color: #91e9b6;
+  font-family: ui-monospace, monospace;
+  /* Optically center the numerals within the monospace font's line box. */
+  padding-top: 0.2rem;
+}
+.gallerySamples span:nth-child(3) {
+  background: #eeedff;
+  border-color: #d6d0f5;
+  border-radius: 99px;
+  color: #6250a5;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.9rem;
+}
+.galleryTitle {
+  display: flex;
+  font-size: 0.9rem;
+  font-weight: 600;
+  justify-content: space-between;
+}
+.galleryTitle > span {
+  color: var(--blue);
+}
+.galleryDescription {
+  color: var(--muted);
+  display: block;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  margin-top: 0.35rem;
+}
+.fieldHint {
+  color: var(--muted);
+  font-family: sans-serif;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  margin: 0.5rem 0 0;
 }
 .playground {
   border: 1px solid var(--line);
@@ -467,6 +555,9 @@ footer span:first-child {
   font-weight: 700;
 }
 @media (max-width: 720px) {
+  .playgroundHeading {
+    grid-template-columns: 1fr;
+  }
   .nav,
   .hero,
   .playgroundSection,

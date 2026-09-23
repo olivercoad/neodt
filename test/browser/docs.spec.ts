@@ -13,9 +13,10 @@ test("documentation routes survive reload and browser navigation", async ({ page
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Date and time");
   await page
     .getByRole("navigation", { name: "Main navigation" })
-    .getByRole("link", { name: "Playground" })
+    .getByRole("link", { name: "Lab", exact: true })
     .click();
-  await expect(page.locator("#playground")).toBeInViewport();
+  await expect(page).toHaveURL(/\/#lab$/);
+  await expect(page.locator("#lab")).toBeInViewport();
 });
 
 test("theme CSS edits update only that preview, can be copied, and reset", async ({ page }) => {

@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 
 test("configuration TSX highlighting follows live options", async ({ page }) => {
-  await page.goto("/#playground");
-  const code = page.locator('#playground code[data-language="tsx"]');
+  await page.goto("/#lab");
+  const code = page.locator('#lab code[data-language="tsx"]');
   await expect(code.locator(".token.keyword").first()).toHaveText("import");
   await expect(code.locator(".token.tag").first()).toContainText("Neodt");
   await page.getByLabel("Time offset", { exact: true }).check();

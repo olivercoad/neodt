@@ -7,7 +7,7 @@ export default function SiteNav() {
         <span>n</span> neodt
       </a>
       <div class={styles.navLinks}>
-        <a href="#playground">Playground</a>
+        <a href="#lab">Lab</a>
         <a href="#/docs/getting-started">Docs</a>
         <a href="#/docs/styling">Styling</a>
         <a href="https://github.com/olivercoad/neodt" target="_blank" rel="noreferrer">

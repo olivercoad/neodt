@@ -202,18 +202,26 @@ const App: Component = () => {
         </div>
       </section>
 
-      <section id="playground" class={styles.playgroundSection}>
+      <section id="lab" class={styles.playgroundSection}>
         <div class={styles.playgroundHeading}>
-          <p class={styles.kicker}>CONFIGURATION LAB</p>
-          <h2>
-            Make it feel
-            <br />
-            at home.
-          </h2>
-          <p>
-            Try the options and see the setup update as you go. The reference time supplies the
-            timezone and helps complete partial dates.
-          </p>
+          <div>
+            <p class={styles.kicker}>CONFIGURATION LAB</p>
+            <h2>Make it yours.</h2>
+            <p class={styles.playgroundIntro}>Set the defaults. Try the input. Take the code.</p>
+          </div>
+          <a class={styles.galleryLink} href="#/docs/styling">
+            <div class={styles.gallerySamples} aria-hidden="true">
+              <span>{referenceTime().toFormat("hh:mm")}</span>
+              <span>{referenceTime().toFormat("hh:mm")}</span>
+              <span>{referenceTime().toFormat("hh:mm")}</span>
+            </div>
+            <span class={styles.galleryTitle}>
+              Styling gallery <span aria-hidden="true">↗</span>
+            </span>
+            <span class={styles.galleryDescription}>
+              Find a look. Edit the CSS. Make it your own.
+            </span>
+          </a>
         </div>
         <div class={styles.playground}>
           <div class={styles.settings}>
@@ -234,6 +242,7 @@ const App: Component = () => {
                 onValueChange={(next) => next && setReferenceTime(next)}
                 showTimeOffset
               />
+              <p class={styles.fieldHint}>Sets the timezone and fills in partial dates.</p>
             </div>
             <label class={styles.field}>
               <span class={styles.fieldLabel}>Timezone</span>

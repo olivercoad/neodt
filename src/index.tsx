@@ -627,14 +627,13 @@ function Neodt(props: NeodtProps): JSX.Element {
     }
     // Arrow keys traverse segments horizontally and adjust the selected value vertically.
     if (navigateControl(event, index)) return;
-    if (event.key === "ArrowUp") {
+    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
       event.preventDefault();
-      changeSegment(segment.type, 1);
-      return;
-    }
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      changeSegment(segment.type, -1);
+      if (isCleared(segment.type)) {
+        completeSegments(draftDate(), [segment.type]);
+      } else {
+        changeSegment(segment.type, event.key === "ArrowUp" ? 1 : -1);
+      }
       return;
     }
     // Numeric segments expose a decimal keyboard on mobile; its decimal key advances instead of

@@ -1166,6 +1166,52 @@ describe("Neodt", () => {
       dispose();
     }));
 
+  it.each(
+    ["year", "month", "day", "hour", "minute", "dayPeriod"].flatMap((segment) =>
+      ["ArrowUp", "ArrowDown"].map((arrow) => ({ segment, arrow })),
+    ),
+  )("restores a cleared $segment before adjusting with $arrow", async ({ segment, arrow }) => {
+    const initialDate = date("2026-10-17T15:30");
+    let dispose!: () => void;
+    const [value, setValue] = createSignal<DateTime | null>(initialDate);
+    const control = createRoot((rootDispose) => {
+      dispose = rootDispose;
+      return (
+        <DateTimeLocal
+          referenceTime={referenceTime}
+          locale="en-US"
+          formatOptions={{ hour12: true }}
+          value={value()}
+          onValueChange={setValue}
+        />
+      ) as HTMLSpanElement;
+    });
+    document.body.append(control);
+    try {
+      const input = control.querySelector<HTMLElement>(`[aria-label="${segment}"]`)!;
+      const initialText = input.textContent;
+      input.focus();
+      key(input, "Backspace");
+      await nextRender();
+      expect(value()).toBeNull();
+      expect(input.textContent).not.toBe(initialText);
+
+      key(input, arrow);
+      await nextRender();
+      expect(input.textContent).toBe(initialText);
+      expect(localValue(value())).toBe(localValue(initialDate));
+      expect(document.activeElement).toBe(input);
+
+      key(input, arrow);
+      await nextRender();
+      expect(input.textContent).not.toBe(initialText);
+      expect(localValue(value())).not.toBe(localValue(initialDate));
+    } finally {
+      control.remove();
+      dispose();
+    }
+  });
+
   it("keeps focus while repeatedly adjusting a segment", async () =>
     await new Promise<void>((resolve) =>
       createRoot((dispose) => {

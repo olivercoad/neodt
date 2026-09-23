@@ -671,6 +671,7 @@ function Neodt(props: NeodtProps): JSX.Element {
   const renderPart = (part: () => DisplayPart) =>
     part().editable ? (
       (() => {
+        let placeholder: HTMLSpanElement | undefined;
         const segment = () => part() as Segment;
         const aria = createMemo(() =>
           segmentAria(
@@ -725,9 +726,12 @@ function Neodt(props: NeodtProps): JSX.Element {
                 setDayPeriod(dayPeriod);
                 return;
               }
-              input.textContent = isCleared(segment().type)
-                ? placeholderFor(segment().type)
-                : segment().value;
+              if (isCleared(segment().type) && placeholder) {
+                placeholder.textContent = placeholderFor(segment().type);
+                input.replaceChildren(placeholder);
+              } else {
+                input.textContent = displaySegmentValue(index(), segment());
+              }
               if (segment().type !== "dayPeriod" && enteredCharacter === ".") {
                 selectSegment(index() + 1, true);
                 return;
@@ -737,7 +741,9 @@ function Neodt(props: NeodtProps): JSX.Element {
             }}
           >
             {isCleared(segment().type) ? (
-              <span class="datetime-neo__placeholder">{placeholderFor(segment().type)}</span>
+              <span ref={(element) => (placeholder = element)} class="datetime-neo__placeholder">
+                {placeholderFor(segment().type)}
+              </span>
             ) : (
               displaySegmentValue(index(), segment())
             )}

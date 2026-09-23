@@ -907,29 +907,53 @@ describe("Neodt", () => {
       }),
     ));
 
-  it("restores a cleared day-period placeholder after unhandled input", async () =>
-    await new Promise<void>((resolve) =>
-      createRoot((dispose) => {
-        const control = (
+  it.each([
+    { segment: "year", placeholder: "yyyy", accepted: "2" },
+    { segment: "month", placeholder: "mm", accepted: "2" },
+    { segment: "day", placeholder: "dd", accepted: "2" },
+    { segment: "hour", placeholder: "--", accepted: "2" },
+    { segment: "minute", placeholder: "--", accepted: "2" },
+    { segment: "dayPeriod", placeholder: "--", accepted: "a" },
+  ])(
+    "preserves a cleared $segment placeholder after ignored input",
+    async ({ segment, placeholder, accepted }) => {
+      let dispose!: () => void;
+      const onValueChange = vi.fn();
+      const control = createRoot((cleanup) => {
+        dispose = cleanup;
+        return (
           <DateTimeLocal
             referenceTime={referenceTime}
             locale="en-US"
             formatOptions={{ hour12: true }}
-            value={null}
+            onValueChange={onValueChange}
           />
         ) as HTMLSpanElement;
-        document.body.append(control);
-        const dayPeriod = () => control.querySelector<HTMLSpanElement>('[aria-label="dayPeriod"]')!;
-        dayPeriod().textContent = "x";
-        dayPeriod().dispatchEvent(new InputEvent("input", { bubbles: true, data: "x" }));
-        nextRender().then(() => {
-          expect(dayPeriod().textContent).toBe("--");
-          control.remove();
-          dispose();
-          resolve();
-        });
-      }),
-    ));
+      });
+      document.body.append(control);
+      try {
+        const input = control.querySelector<HTMLSpanElement>(`[aria-label="${segment}"]`)!;
+        const placeholderElement = input.querySelector(".datetime-neo__placeholder");
+        expect(placeholderElement).not.toBeNull();
+        for (const character of ["x", "z"]) {
+          input.textContent = character;
+          input.dispatchEvent(new InputEvent("input", { bubbles: true, data: character }));
+          await nextRender();
+          expect(input.textContent).toBe(placeholder);
+          expect(input.querySelector(".datetime-neo__placeholder")).toBe(placeholderElement);
+          expect(input.getAttribute("aria-valuetext")).toBe("Empty");
+          expect(onValueChange).not.toHaveBeenCalled();
+        }
+        key(input, accepted);
+        await nextRender();
+        expect(input.querySelector(".datetime-neo__placeholder")).toBeNull();
+        expect(input.getAttribute("aria-valuetext")).not.toBe("Empty");
+      } finally {
+        control.remove();
+        dispose();
+      }
+    },
+  );
 
   it("selects focused segments and moves focus with left and right arrows", async () =>
     await new Promise<void>((resolve) =>

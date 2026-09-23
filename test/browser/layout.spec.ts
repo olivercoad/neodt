@@ -200,6 +200,11 @@ test("narrow editors scroll focused segments into view", async ({ page }) => {
   const year = content(page).getByRole("spinbutton", { name: "year", exact: true });
   await year.focus();
   await contained(year, editor(page));
+  // Keep the focused segment visible when the editor's width changes after focus.
+  await page.locator("#host").evaluate((el) => (el.style.width = "180px"));
+  await contained(year, editor(page));
+  await page.locator("#host").evaluate((el) => (el.style.width = "140px"));
+  await contained(year, editor(page));
   await page.keyboard.press("Home");
   await contained(content(page).getByRole("spinbutton").first(), editor(page));
 });

@@ -235,7 +235,11 @@ function Neodt(props: NeodtProps): JSX.Element {
     void segments();
     void naturalMode();
     void naturalText();
-    updateEditorOverflow();
+    const focusedIndex = segmentButtons.indexOf(
+      editor()?.ownerDocument.activeElement as HTMLSpanElement,
+    );
+    if (focusedIndex >= 0) revealSegment(focusedIndex);
+    else updateEditorOverflow();
   });
 
   createEffect(() => {

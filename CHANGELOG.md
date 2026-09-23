@@ -1,9 +1,10 @@
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-23
+
 ### Added
 
 - Lightweight syntax highlighting for tsx and css in docs
-
 - Getting started, API, keyboard/natural-language, and styling documentation pages
 - Five live styling examples with editable css
 - Playwright tests for actual layout, interaction, and docs

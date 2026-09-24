@@ -2,17 +2,9 @@ import type { Plugin } from "vite";
 
 import { libraries } from "./libraries";
 
-const packages: Record<string, string[]> = {
-  "native-temporal": [],
-  "temporal-polyfill": ["temporal-polyfill"],
-  "js-temporal-polyfill": ["@js-temporal/polyfill"],
-  luxon: ["luxon"],
-  moment: ["moment", "moment-timezone"],
-  dayjs: ["dayjs"],
-  "date-fns": ["date-fns", "@date-fns/tz"],
-  spacetime: ["spacetime"],
-  "internationalized-date": ["@internationalized/date"],
-};
+const packages = Object.fromEntries(
+  libraries.map((library) => [library.id, [...library.dependencies, ...library.demoPackages]]),
+);
 
 /** Check the actual production graph, including shared and dynamically imported chunks. */
 export function checkLibraryEntries(): Plugin {

@@ -8,13 +8,13 @@ import spacetime from "spacetime";
 import { Temporal as OtherTemporal } from "temporal-polyfill";
 import { describe, expect, it, vi } from "vitest";
 
-import { createTemporalAdapter, type TemporalZonedValue } from "../src";
-import { createDateFnsAdapter } from "../src/date-fns";
 import Neodt, { parseNaturalDate, type DateAdapter } from "../src/generic";
-import { createInternationalizedDateAdapter } from "../src/internationalized-date";
-import { createLuxonAdapter } from "../src/luxon";
-import { createMomentAdapter } from "../src/moment";
-import { createSpacetimeAdapter } from "../src/spacetime";
+import { createDateFnsAdapter } from "../src/libraries/date-fns";
+import { createInternationalizedDateAdapter } from "../src/libraries/internationalized-date";
+import { createLuxonAdapter } from "../src/libraries/luxon";
+import { createMomentAdapter } from "../src/libraries/moment";
+import { createTemporalAdapter, type TemporalZonedValue } from "../src/libraries/native-temporal";
+import { createSpacetimeAdapter } from "../src/libraries/spacetime";
 import { builtInAdapters } from "./helpers/adapters";
 
 const zone = "America/New_York";
@@ -158,12 +158,8 @@ function contract<T, TZone>(
 }
 
 for (const implementation of builtInAdapters)
-  implementation.run(({ name, adapter, zone: nativeZone }) => {
-    contract(name, adapter, nativeZone(zone), {
-      // Day.js tz reparses years 1–99 as 1901–1999 in named zones.
-      earlyYears: name !== "dayjs",
-      gapInstant: name === "spacetime" ? "2026-03-08T06:30:00.000Z" : undefined,
-    });
+  implementation.run(({ name, adapter, zone: nativeZone, behavior }) => {
+    contract(name, adapter, nativeZone(zone), behavior);
   });
 
 it("formats Moment zones that are absent from Intl's database", () => {

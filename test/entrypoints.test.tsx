@@ -3,10 +3,10 @@ import { render } from "solid-js/web";
 import { Temporal as Ponyfill } from "temporal-polyfill";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { libraries } from "../dev/libraries";
+import { libraries, datetimePackages } from "../libraries";
 import packageJson from "../package.json";
-import * as native from "../src";
-import * as temporal from "../src/temporal-polyfill";
+import * as native from "../src/libraries/native-temporal";
+import * as temporal from "../src/libraries/temporal-polyfill";
 import { builtInAdapters } from "./helpers/adapters";
 import { forEachConfiguredEntry, milliseconds } from "./helpers/entries";
 
@@ -83,4 +83,21 @@ it("covers every configured library export in the unit and browser matrices", ()
     configured.push(name);
   });
   expect(configured.sort()).toEqual([...exports, "native-temporal"].sort());
+});
+
+it("keeps dependency declarations and unique registrations consistent", () => {
+  expect(new Set(libraries.map(({ id }) => id)).size).toBe(libraries.length);
+  expect(new Set(libraries.map(({ entry }) => entry)).size).toBe(libraries.length);
+  expect(Object.keys(packageJson.peerDependenciesMeta).sort()).toEqual(
+    [...datetimePackages].sort(),
+  );
+  for (const library of libraries) {
+    for (const name of [
+      ...library.dependencies,
+      ...library.typePackages,
+      ...library.demoPackages,
+    ]) {
+      expect(packageJson.devDependencies, `${library.id}: ${name}`).toHaveProperty(name);
+    }
+  }
 });

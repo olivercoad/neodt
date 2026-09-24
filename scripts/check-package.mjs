@@ -9,34 +9,35 @@ import { fileURLToPath } from "node:url";
 import { build } from "vite";
 import solid from "vite-plugin-solid";
 
+import { libraries, datetimePackages } from "../libraries.ts";
+
 const root = fileURLToPath(new URL("../", import.meta.url));
 const temporary = await mkdtemp(path.join(tmpdir(), "neodt-consumer-"));
 const packageJson = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
-const datetimePackages = [
-  "@internationalized/date",
-  "luxon",
-  "moment",
-  "dayjs",
-  "date-fns",
-  "@date-fns/tz",
-  "spacetime",
-  "@js-temporal/polyfill",
-  "temporal-polyfill",
-];
 for (const name of datetimePackages) {
   assert(!packageJson.dependencies?.[name], `${name} must not be a runtime dependency`);
   assert(packageJson.peerDependenciesMeta?.[name]?.optional, `${name} must be an optional peer`);
 }
+for (const library of libraries) {
+  const name = library.entry.slice(1) || "index";
+  for (const extension of ["jsx", "d.ts"]) {
+    const source = await readFile(path.join(root, "dist", `${name}.${extension}`), "utf8");
+    assert(
+      !/\bintegration\b|["'](?:moment-timezone|dayjs\/plugin[^"']*)["']/.test(source),
+      `${name}.${extension} leaked demo/test setup`,
+    );
+  }
+}
 const cases = [
-  {
-    name: "native",
-    packages: [],
-    entry: "",
-    factory: "createTemporalAdapter",
-    implementation: "Temporal",
-    source: `const referenceTime = Temporal.Now.zonedDateTimeISO();`,
-    callback: "value?.toInstant()",
-  },
+  ...libraries.map((library) => ({
+    name: library.id,
+    entry: library.entry,
+    factory: library.factory,
+    implementation: library.implementation,
+    packages: [...library.dependencies, ...library.typePackages],
+    source: `${library.imports}\nconst referenceTime: ${library.type} = ${library.now};`,
+    callback: library.callback,
+  })),
   {
     name: "custom-temporal",
     entry: "/generic",
@@ -55,66 +56,6 @@ const referenceTime = decorate(Temporal.Instant.fromEpochMilliseconds(0).toZoned
     callback: "value?.applicationMethod()",
   },
   {
-    name: "luxon",
-    entry: "/luxon",
-    factory: "createLuxonAdapter",
-    implementation: "DateTime",
-    packages: ["luxon", "@types/luxon"],
-    source: `import { DateTime } from "luxon";
-const referenceTime: DateTime = DateTime.now();`,
-    callback: "value?.toISO()",
-  },
-  {
-    name: "moment",
-    entry: "/moment",
-    factory: "createMomentAdapter",
-    implementation: "moment",
-    packages: ["moment"],
-    source: `import moment from "moment";
-const referenceTime = moment();`,
-    callback: "value?.format()",
-  },
-  {
-    name: "dayjs",
-    entry: "/dayjs",
-    factory: "createDayjsAdapter",
-    implementation: "dayjs",
-    packages: ["dayjs"],
-    source: `import dayjs from "dayjs";
-const referenceTime = dayjs();`,
-    callback: "value?.format()",
-  },
-  {
-    name: "date-fns",
-    entry: "/date-fns",
-    factory: "createDateFnsAdapter",
-    implementation: "toDate",
-    packages: ["date-fns", "@date-fns/tz"],
-    source: `import { toDate, constructNow } from "date-fns";
-const referenceTime = constructNow(0);`,
-    callback: "value?.getTime()",
-  },
-  {
-    name: "spacetime",
-    entry: "/spacetime",
-    factory: "createSpacetimeAdapter",
-    implementation: "spacetime",
-    packages: ["spacetime"],
-    source: `import spacetime from "spacetime";
-const referenceTime = spacetime.now();`,
-    callback: "value?.epoch",
-  },
-  {
-    name: "internationalized-date",
-    entry: "/internationalized-date",
-    factory: "createInternationalizedDateAdapter",
-    implementation: "fromAbsolute",
-    packages: ["@internationalized/date"],
-    source: `import { fromAbsolute, now } from "@internationalized/date";
-const referenceTime = now("Australia/Sydney");`,
-    callback: "value?.toAbsoluteString()",
-  },
-  {
     name: "internationalized-date-adapter",
     entry: "/generic",
     generic: true,
@@ -125,16 +66,6 @@ const adapter = createInternationalizedDateAdapter(fromAbsolute);
 const referenceTime = now("Australia/Sydney");`,
     callback: "value?.toAbsoluteString()",
   },
-  ...["@js-temporal/polyfill", "temporal-polyfill"].map((name) => ({
-    name: name.replaceAll("/", "-"),
-    entry: name === "temporal-polyfill" ? "/temporal-polyfill" : "/js-temporal-polyfill",
-    factory: "createTemporalAdapter",
-    implementation: "Temporal",
-    packages: [name],
-    source: `import { Temporal } from "${name}";
-const referenceTime = Temporal.Now.zonedDateTimeISO();`,
-    callback: "value?.toInstant()",
-  })),
 ];
 
 try {
@@ -192,7 +123,10 @@ export const control = <Neodt ${fixture.generic ? "adapter={adapter} " : ""} ref
           strict: true,
           skipLibCheck: false,
           target: "ESNext",
-          lib: [["native", "custom-temporal"].includes(fixture.name) ? "ESNext" : "ES2022", "DOM"],
+          lib: [
+            ["native-temporal", "custom-temporal"].includes(fixture.name) ? "ESNext" : "ES2022",
+            "DOM",
+          ],
           module: "ESNext",
           moduleResolution: "bundler",
           jsx: "preserve",

@@ -2,10 +2,10 @@ import { Temporal } from "@js-temporal/polyfill";
 import { DateTime, FixedOffsetZone } from "luxon";
 import { describe, expect, it, vi } from "vitest";
 
-import { createLuxonAdapter } from "../src/adapters/luxon";
 import { createTemporalAdapter } from "../src/adapters/temporal";
 import { calendarDate } from "../src/calendar";
 import { formatterFor } from "../src/formatter-cache";
+import { createLuxonAdapter } from "../src/libraries/luxon";
 import { builtInAdapters } from "./helpers/adapters";
 const options: Intl.DateTimeFormatOptions = {
   hour: "2-digit",

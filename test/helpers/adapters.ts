@@ -1,25 +1,8 @@
-import { fromAbsolute } from "@internationalized/date";
-import { Temporal as JsTemporal } from "@js-temporal/polyfill";
-import { toDate } from "date-fns/toDate";
-import dayjs from "dayjs";
-import timezone from "dayjs/plugin/timezone.js";
-import utc from "dayjs/plugin/utc.js";
 import { DateTime, FixedOffsetZone } from "luxon";
-import moment from "moment-timezone";
-import spacetime from "spacetime";
-import { Temporal } from "temporal-polyfill";
 
 import type { DateAdapter } from "../../src/adapter";
-import { createDateFnsAdapter } from "../../src/adapters/date-fns";
-import { createDayjsAdapter } from "../../src/adapters/dayjs";
-import { createInternationalizedDateAdapter } from "../../src/adapters/internationalized-date";
-import { createLuxonAdapter } from "../../src/adapters/luxon";
-import { createMomentAdapter } from "../../src/adapters/moment";
-import { createSpacetimeAdapter } from "../../src/adapters/spacetime";
-import { createTemporalAdapter } from "../../src/adapters/temporal";
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
+import type { LibraryBehavior } from "../../src/integration";
+import { integrations } from "./integrations";
 
 export interface AdapterFixture<T, TZone> {
   name: string;
@@ -28,12 +11,14 @@ export interface AdapterFixture<T, TZone> {
   date: (iso: string, zone?: string) => T;
   localValue: (value: T | null | undefined) => string;
   iso: (value: T) => string;
+  behavior: LibraryBehavior;
 }
 
 function fixture<T, TZone>(
   name: string,
   create: () => DateAdapter<T, TZone>,
   zone: (id: string) => TZone,
+  behavior: LibraryBehavior,
 ) {
   return {
     name,
@@ -47,6 +32,7 @@ function fixture<T, TZone>(
         });
       return test({
         name,
+        behavior,
         adapter,
         zone,
         date: (iso, id = "UTC") => {
@@ -61,24 +47,13 @@ function fixture<T, TZone>(
   };
 }
 
-const stringZone = (id: string) => id;
-
-// Shared by unit suites; entrypoints.test.ts checks parity with public exports and browser entries.
-export const builtInAdapters = [
-  fixture(
-    "internationalized-date",
-    () => createInternationalizedDateAdapter(fromAbsolute),
-    stringZone,
-  ),
-  fixture(
-    "luxon",
-    () => createLuxonAdapter(DateTime),
-    (id) => DateTime.now().setZone(/^[+-]/.test(id) ? `UTC${id}` : id).zone,
-  ),
-  fixture("moment", () => createMomentAdapter(moment), stringZone),
-  fixture("dayjs", () => createDayjsAdapter(dayjs), stringZone),
-  fixture("date-fns", () => createDateFnsAdapter(toDate), stringZone),
-  fixture("spacetime", () => createSpacetimeAdapter(spacetime), stringZone),
-  fixture("js-temporal-polyfill", () => createTemporalAdapter(JsTemporal), stringZone),
-  fixture("temporal-polyfill", () => createTemporalAdapter(Temporal), stringZone),
-];
+export const builtInAdapters = integrations
+  .filter(({ id }) => id !== "native-temporal")
+  .map((integration) => ({
+    name: integration.id,
+    run<R>(test: <T, TZone>(fixture: AdapterFixture<T, TZone>) => R): R {
+      return integration.run(({ adapter, zone, behavior }) =>
+        fixture(integration.id, () => adapter, zone, behavior).run(test),
+      );
+    },
+  }));

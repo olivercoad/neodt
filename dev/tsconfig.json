@@ -3,7 +3,7 @@
   "compilerOptions": {
     "types": ["vite/client"],
     "paths": {
-      "src": ["../src/index.tsx"],
+      "src": ["../src/libraries/native-temporal.ts"],
       "src/*": ["../src/*"]
     }
   },

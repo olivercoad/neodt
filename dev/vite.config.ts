@@ -5,6 +5,7 @@ import solidPlugin from "vite-plugin-solid";
 
 import { checkLibraryEntries } from "./build-library-check";
 import { libraries } from "./libraries";
+import { libraryPages } from "./library-plugin";
 
 export default defineConfig({
   resolve: {
@@ -12,7 +13,13 @@ export default defineConfig({
       src: path.resolve(import.meta.dirname, "../src"),
     },
   },
-  plugins: [solidPlugin(), checkLibraryEntries()],
+  plugins: [libraryPages(), solidPlugin(), checkLibraryEntries()],
+  optimizeDeps: {
+    entries: [
+      path.resolve(import.meta.dirname, "start.tsx"),
+      ...libraries.map(({ source }) => path.resolve(import.meta.dirname, "..", source)),
+    ],
+  },
   server: {
     port: 3000,
   },

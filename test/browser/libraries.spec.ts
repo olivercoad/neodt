@@ -2,18 +2,28 @@ import { expect, test } from "@playwright/test";
 
 import { libraries, libraryPath } from "../../dev/libraries";
 
-const dependencyPatterns: Record<string, RegExp> = {
-  "temporal-polyfill": /\/temporal-polyfill(?:[./_-]|$)/,
-  "js-temporal-polyfill": /\/(?:@js-temporal|@js-temporal_polyfill)(?:[./_-]|$)/,
-  luxon: /\/luxon(?:[./_-]|$)/,
-  moment: /\/moment(?:[./_-]|$)/,
-  dayjs: /\/dayjs(?:[./_-]|$)/,
-  "date-fns": /\/(?:date-fns|@date-fns)(?:[./_-]|$)/,
-  spacetime: /\/spacetime(?:[./_-]|$)/,
-  "internationalized-date": /\/(?:@internationalized|@internationalized_date)(?:[./_-]|$)/,
-};
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const dependencyPatterns = Object.fromEntries(
+  libraries
+    .filter((library) => library.dependencies.length)
+    .map((library) => [
+      library.id,
+      new RegExp(
+        `/(?:${[...library.dependencies, ...library.demoPackages].map((name) => name.split("/").map(escapeRegExp).join("(?:/|_)")).join("|")})(?:[./_-]|$)`,
+      ),
+    ]),
+);
 
 for (const library of libraries) {
+  test(`${library.id}: direct URLs preserve the library, query, and docs section`, async ({
+    page,
+  }) => {
+    await page.goto(`/${library.id}?direct=1#/docs/libraries`);
+    await expect(page).toHaveURL(`http://127.0.0.1:3000/${library.id}/?direct=1#/docs/libraries`);
+    await expect(page.locator("html")).toHaveAttribute("data-adapter", library.id);
+    await expect(page.getByRole("combobox", { name: "Datetime library" })).toHaveValue(library.id);
+  });
+
   test(`${library.id}: loads only the selected datetime dependency`, async ({ page }) => {
     const modules: string[] = [];
     page.on("request", (request) => {

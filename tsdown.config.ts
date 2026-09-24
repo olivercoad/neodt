@@ -1,44 +1,17 @@
 import { defineConfig } from "tsdown";
 
-export default defineConfig([
-  {
-    entry: [
-      "src/index.tsx",
-      "src/generic.tsx",
-      "src/luxon.tsx",
-      "src/moment.tsx",
-      "src/dayjs.tsx",
-      "src/date-fns.tsx",
-      "src/spacetime.tsx",
-      "src/internationalized-date.tsx",
-      "src/temporal-polyfill.tsx",
-      "src/js-temporal-polyfill.tsx",
-    ],
-    platform: "neutral",
-    deps: {
-      neverBundle: [
-        "luxon",
-        "moment",
-        "dayjs",
-        "date-fns",
-        "@date-fns/tz",
-        "spacetime",
-        "@internationalized/date",
-        "temporal-polyfill",
-        "@js-temporal/polyfill",
-      ],
-    },
-    css: {
-      inject: true,
-    },
-    // don't process solid, just export preserved jsx and let the consumer
-    // do the solid transformation
-    // plugins: [solid()],
-    exports: {
-      legacy: false,
-    },
-    outExtensions: () => {
-      return { js: ".jsx" };
-    },
-  },
-]);
+import { libraries, datetimePackages } from "./libraries.ts";
+import { libraryEntries } from "./scripts/library-entries.ts";
+
+export default defineConfig({
+  entry: Object.fromEntries([
+    ["generic", "src/generic.tsx"],
+    ...libraries.map((library) => [library.entry.slice(1) || "index", library.source]),
+  ]),
+  plugins: [libraryEntries()],
+  platform: "neutral",
+  deps: { neverBundle: datetimePackages },
+  css: { inject: true },
+  exports: { legacy: false },
+  outExtensions: () => ({ js: ".jsx" }),
+});

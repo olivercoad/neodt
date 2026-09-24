@@ -14,14 +14,14 @@ import { Temporal as Ponyfill } from "temporal-polyfill";
 // Compiled by lint:types. These assertions also protect JSX's generic inference.
 import { expectTypeOf } from "vitest";
 
-import { createTemporalAdapter } from "../src";
-import { createDateFnsAdapter } from "../src/date-fns";
-import { createDayjsAdapter } from "../src/dayjs";
 import Neodt, { parseNaturalDate, type NeodtProps } from "../src/generic";
-import { createInternationalizedDateAdapter } from "../src/internationalized-date";
-import { createLuxonAdapter, type LuxonZone } from "../src/luxon";
-import { createMomentAdapter } from "../src/moment";
-import { createSpacetimeAdapter } from "../src/spacetime";
+import { createDateFnsAdapter } from "../src/libraries/date-fns";
+import { createDayjsAdapter } from "../src/libraries/dayjs";
+import { createInternationalizedDateAdapter } from "../src/libraries/internationalized-date";
+import { createLuxonAdapter, type LuxonZone } from "../src/libraries/luxon";
+import { createMomentAdapter } from "../src/libraries/moment";
+import { createTemporalAdapter } from "../src/libraries/native-temporal";
+import { createSpacetimeAdapter } from "../src/libraries/spacetime";
 
 export function checkAdapterTypes() {
   const internationalized = createInternationalizedDateAdapter(fromAbsolute);

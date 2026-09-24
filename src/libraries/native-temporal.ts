@@ -1,9 +1,10 @@
-import { createTemporalAdapter } from "./adapters/temporal";
+import { createTemporalAdapter } from "../adapters/temporal";
 import {
   configureNeodt,
   type ConfiguredNeodtProps,
   type ConfiguredNaturalDateParseOptions,
-} from "./configured";
+} from "../configured";
+import { defineIntegration } from "../integration";
 
 export type NeodtProps = ConfiguredNeodtProps<Temporal.ZonedDateTime>;
 export type NaturalDateParseOptions = ConfiguredNaturalDateParseOptions<Temporal.ZonedDateTime>;
@@ -28,15 +29,14 @@ export const { Neodt, parseNaturalDate } = configureNeodt(
   }),
 );
 export default Neodt;
-export { getNaturalDateCompletions } from "./natural-completion";
-export type { NaturalDateCompletion } from "./natural-completion";
-export type {
-  DateAdapter,
-  AdapterOptions,
-  DateFields,
-  DateDuration,
-  DateBoundary,
-  DurationUnit,
-} from "./adapter";
-export { createTemporalAdapter } from "./adapters/temporal";
-export type { TemporalImplementation, TemporalZonedValue } from "./adapters/temporal";
+export * from "../public";
+export { createTemporalAdapter } from "../adapters/temporal";
+export type { TemporalImplementation, TemporalZonedValue } from "../adapters/temporal";
+
+/** @internal Demo/test setup; omitted from the published entry. */
+export const integration = /* @__PURE__ */ defineIntegration({
+  create: () => createTemporalAdapter(globalThis.Temporal),
+  zone: (id: string) => id,
+  entry: { default: Neodt, Neodt, parseNaturalDate },
+  behavior: {},
+});

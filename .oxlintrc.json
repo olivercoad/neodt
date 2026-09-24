@@ -54,7 +54,7 @@
       }
     },
     {
-      "files": ["src/adapters/date-fns.ts", "src/date-fns.tsx"],
+      "files": ["src/libraries/*.ts"],
       "rules": {
         "no-restricted-globals": "off"
       }

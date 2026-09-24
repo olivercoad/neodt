@@ -1,3 +1,4 @@
+import { fromAbsolute } from "@internationalized/date";
 import {
   CalendarDateTime,
   getDayOfWeek,
@@ -6,7 +7,22 @@ import {
 } from "@internationalized/date";
 
 import type { DateAdapter } from "../adapter";
-import { createIntlFormatter } from "./intl-format";
+import { createIntlFormatter } from "../adapters/intl-format";
+import {
+  configureNeodt,
+  type ConfiguredNeodtProps,
+  type ConfiguredNaturalDateParseOptions,
+} from "../configured";
+import { defineIntegration } from "../integration";
+
+export type NeodtProps = ConfiguredNeodtProps<ZonedDateTime>;
+export type NaturalDateParseOptions = ConfiguredNaturalDateParseOptions<ZonedDateTime>;
+
+export const { Neodt, parseNaturalDate } = configureNeodt(
+  createInternationalizedDateAdapter(fromAbsolute),
+);
+export default Neodt;
+export * from "../public";
 
 export function createInternationalizedDateAdapter(
   fromAbsolute: typeof import("@internationalized/date").fromAbsolute,
@@ -67,3 +83,14 @@ export function createInternationalizedDateAdapter(
       ),
   };
 }
+
+/** @internal Demo/test setup; omitted from the published entry. */
+export const integration = /* @__PURE__ */ defineIntegration({
+  create: () => createInternationalizedDateAdapter(fromAbsolute),
+  zone: (id: string) => id,
+  entry: { default: Neodt, Neodt, parseNaturalDate },
+  behavior: {
+    editFoldOffset: "-04:00",
+    minuteFoldOffset: "-04:00",
+  },
+});

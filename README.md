@@ -34,103 +34,9 @@ function Appointment() {
 
 ## Datetime adapters
 
-The import path selects the adapter for both `Neodt` and `parseNaturalDate`. No `adapter` prop or parser option is needed for these entries. Only the selected library is loaded; datetime packages are optional peer dependencies.
+neodt supports different datetime libraries through dedicated package entries. The import path selects the library for both `Neodt` and `parseNaturalDate`, including their native value and timezone types. Only the selected library is loaded; datetime packages are optional peer dependencies.
 
-| Import                                  | Implementation            | Value type                   |
-| --------------------------------------- | ------------------------- | ---------------------------- |
-| `@olicoad/neodt`                        | Native/global Temporal    | `Temporal.ZonedDateTime`     |
-| `@olicoad/neodt/luxon`                  | `luxon`                   | `DateTime`                   |
-| `@olicoad/neodt/moment`                 | `moment`                  | `Moment`                     |
-| `@olicoad/neodt/dayjs`                  | `dayjs`                   | `Dayjs`                      |
-| `@olicoad/neodt/date-fns`               | `date-fns`                | `Date`                       |
-| `@olicoad/neodt/internationalized-date` | `@internationalized/date` | `ZonedDateTime`              |
-| `@olicoad/neodt/spacetime`              | `spacetime`               | `Spacetime`                  |
-| `@olicoad/neodt/temporal-polyfill`      | `temporal-polyfill`       | Its `Temporal.ZonedDateTime` |
-| `@olicoad/neodt/js-temporal-polyfill`   | `@js-temporal/polyfill`   | Its `Temporal.ZonedDateTime` |
-| `@olicoad/neodt/generic`                | Your explicit `adapter`   | Your adapter's value type    |
-
-`referenceTime`, `value`, `defaultValue`, parser results, and `onValueChange` use the selected implementation's type. Mixing library types is a TypeScript error. Each configured entry exports concrete `NeodtProps` and `NaturalDateParseOptions` types. The parser accepts the adapter's native zone type: Luxon accepts `Zone` objects or strings; the other built-in adapters use string zone identifiers.
-
-For custom configuration, use `/generic` with the adapter factory exported from the corresponding library entry (for example, `createLuxonAdapter` from `/luxon`). These factories accept your application's library instance and never register plugins or install a polyfill. The following examples show this explicit configuration; pass the resulting adapter to `<Neodt adapter={adapter} referenceTime={...} />` imported from `/generic`.
-
-### Luxon
-
-The `/luxon` entry uses the reference value's zone, including Luxon `Zone` objects. Install `luxon` and, for TypeScript, `@types/luxon`.
-
-### Moment.js
-
-```ts
-import moment from "moment-timezone";
-import { createMomentAdapter } from "@olicoad/neodt/moment";
-
-const adapter = createMomentAdapter(moment, { zone: "Australia/Sydney" });
-```
-
-Moment.js handles system-local and fixed-offset editing. Install and supply `moment-timezone` for named-zone editing outside the system zone. Without a configured zone, the adapter reads the value's named zone, fixed offset, or system zone. Input Moment values are never mutated.
-
-### Day.js
-
-```ts
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
-import timezone from "dayjs/plugin/timezone";
-import { createDayjsAdapter } from "@olicoad/neodt/dayjs";
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
-const adapter = createDayjsAdapter(dayjs, { zone: "Australia/Sydney" });
-```
-
-Day.js uses the configured zone, defaulting to the system zone. Register the `utc` plugin for fixed-offset output and both `utc` and `timezone` for IANA-zone output. System-local editing needs neither plugin. The adapter does not inspect Day.js's private timezone metadata. Day.js timezone parsing has limitations for years 1–99; incremental year entry can encounter these because partial digits are valid draft years. Luxon and Temporal support these drafts.
-
-### date-fns
-
-```ts
-import { toDate, constructNow } from "date-fns";
-import { createDateFnsAdapter } from "@olicoad/neodt/date-fns";
-
-const adapter = createDateFnsAdapter(toDate, { zone: "Australia/Sydney" });
-```
-
-Native `Date` values store instants, so configure their editing zone explicitly or use the default system zone. Install both `date-fns` and `@date-fns/tz`: calendar operations use date-fns with `TZDate` for the configured zone. A Date's own local getters still use the system zone. For a Date subclass, pass `createDateFnsAdapter<MyDate>(ms => new MyDate(ms), options)`.
-
-### Spacetime
-
-```ts
-import spacetime from "spacetime";
-import { createSpacetimeAdapter } from "@olicoad/neodt/spacetime";
-
-const adapter = createSpacetimeAdapter(spacetime);
-```
-
-The adapter reads the value's timezone. Named zones and timezone rules come from your Spacetime installation. Fixed-offset outputs use an equivalent non-DST zone in Spacetime's database; unsupported offsets throw instead of silently changing the clock.
-
-### Temporal: native, polyfill, or ponyfill
-
-The default entry uses the global `Temporal` implementation without importing any datetime package:
-
-```tsx
-import Neodt from "@olicoad/neodt";
-
-<Neodt referenceTime={Temporal.Now.zonedDateTimeISO("Australia/Sydney")} />;
-```
-
-Your runtime must provide Temporal, either natively or through a global polyfill installed by your application. TypeScript projects need global Temporal declarations (for example, `lib: ["ESNext", "DOM"]` with TypeScript 6 or later). Importing the entry alone does not read or modify the global.
-
-For runtimes without Temporal, install `temporal-polyfill` and use its dedicated entry:
-
-```tsx
-import Neodt, { parseNaturalDate } from "@olicoad/neodt/temporal-polyfill";
-import { Temporal } from "temporal-polyfill";
-
-const referenceTime = Temporal.Now.zonedDateTimeISO("Australia/Sydney");
-const tomorrow = parseNaturalDate("tomorrow 9am", { referenceTime });
-<Neodt referenceTime={referenceTime} defaultValue={tomorrow} />;
-```
-
-For `@js-temporal/polyfill`, use `@olicoad/neodt/js-temporal-polyfill` and import `Temporal` from `@js-temporal/polyfill`. Both entries use their package’s Temporal export and leave global Temporal unchanged. The `temporal-polyfill` package uses native Temporal when available and its own implementation otherwise. For another implementation or a custom build, use `/generic` with `createTemporalAdapter(Temporal)` exported from the root and both polyfill entries. The factory uses structural types; the root entry requires native Temporal declarations, while the polyfill entries use their package’s types.
-
-This zoned control does not accept `PlainDateTime` or `Instant` directly; convert them to a `ZonedDateTime` first. Editing uses the ISO/Gregorian calendar and minute precision.
+See [Datetime libraries](https://neodt.olisworld.com/#/docs/libraries) for available integrations, installation, examples, and timezone configuration. Use `/generic` with an explicit adapter for custom configuration.
 
 ### Custom adapters
 
@@ -246,6 +152,8 @@ Use Node.js 24 or later and pnpm 11 or later.
 pnpm install
 pnpm dev
 ```
+
+To add a datetime library, see [adding integrations](docs/adding-a-library.md).
 
 The demo is served at `http://localhost:3000`. Validate changes with:
 

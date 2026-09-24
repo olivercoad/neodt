@@ -1,8 +1,22 @@
-import type { Moment, MomentInput } from "moment";
+import moment, { type Moment } from "moment";
+import type { MomentInput } from "moment";
 
 import { systemZone, type AdapterOptions, type DateAdapter, type DateFields } from "../adapter";
+import { createLibraryZoneFormatter } from "../adapters/intl-format";
+import {
+  configureNeodt,
+  type ConfiguredNeodtProps,
+  type ConfiguredNaturalDateParseOptions,
+} from "../configured";
 import { fixedOffset, offsetZone } from "../format";
-import { createLibraryZoneFormatter } from "./intl-format";
+import { defineIntegration } from "../integration";
+
+export type NeodtProps = ConfiguredNeodtProps<Moment>;
+export type NaturalDateParseOptions = ConfiguredNaturalDateParseOptions<Moment>;
+
+export const { Neodt, parseNaturalDate } = configureNeodt(createMomentAdapter(moment));
+export default Neodt;
+export * from "../public";
 
 type MomentFactory = ((input?: MomentInput) => Moment) & {
   tz?: ((input: MomentInput, zone: string) => Moment) & { zone?(zone: string): unknown };
@@ -98,3 +112,16 @@ export function createMomentAdapter(
       ),
   };
 }
+
+/** @internal Demo/test setup; omitted from the published entry. */
+export const integration = /* @__PURE__ */ defineIntegration({
+  create: () => createMomentAdapter(moment),
+  zone: (id: string) => id,
+  entry: { default: Neodt, Neodt, parseNaturalDate },
+  async setup() {
+    await import("moment-timezone");
+  },
+  behavior: {
+    offsetLabel: "UTC+05:45",
+  },
+});

@@ -1,6 +1,7 @@
 import { For } from "solid-js";
 
 import Code from "../code/Code";
+import { libraries } from "../libraries";
 
 import styles from "./docs.module.css";
 
@@ -70,7 +71,7 @@ import { Temporal } from "@js-temporal/polyfill";
         the temporal-polyfill entry for browser compatibility, while the getting-started examples
         use native Temporal. Neither the site nor the library installs a global polyfill.
       </p>
-      <h2 id="other-libraries">Other libraries</h2>
+      <h2 id="other-libraries">Available library entries</h2>
       <div class={styles.tableScroll}>
         <table>
           <thead>
@@ -82,80 +83,34 @@ import { Temporal } from "@js-temporal/polyfill";
             </tr>
           </thead>
           <tbody>
-            <For
-              each={[
-                {
-                  name: "Luxon",
-                  homepage: "https://moment.github.io/luxon/",
-                  package: "luxon",
-                  typesPackage: "@types/luxon",
-                  value: "DateTime",
-                },
-                {
-                  name: "Moment.js",
-                  homepage: "https://momentjs.com/",
-                  package: "moment",
-                  value: "Moment",
-                },
-                {
-                  name: "Day.js",
-                  homepage: "https://day.js.org/",
-                  package: "dayjs",
-                  value: "Dayjs",
-                },
-                {
-                  name: "date-fns",
-                  homepage: "https://date-fns.org/",
-                  package: "date-fns",
-                  companionPackage: "@date-fns/tz",
-                  value: "Date",
-                },
-                {
-                  name: "@internationalized/date",
-                  homepage: "https://react-aria.adobe.com/internationalized/date/",
-                  package: "@internationalized/date",
-                  entry: "internationalized-date",
-                  value: "ZonedDateTime",
-                },
-                {
-                  name: "Spacetime",
-                  homepage: "https://spacetime.how/",
-                  package: "spacetime",
-                  value: "Spacetime",
-                },
-              ]}
-            >
+            <For each={libraries}>
               {(library) => (
                 <tr>
                   <td>
-                    <a href={library.homepage}>{library.name}</a>
-                  </td>
-                  <td>
-                    <a href={`https://www.npmjs.com/package/${library.package}`}>
-                      <code>{library.package}</code>
-                    </a>
-                    {library.companionPackage && (
-                      <>
-                        {", "}
-                        <a href={`https://www.npmjs.com/package/${library.companionPackage}`}>
-                          <code>{library.companionPackage}</code>
-                        </a>
-                      </>
-                    )}
-                    {library.typesPackage && (
-                      <>
-                        {", "}
-                        <a href={`https://www.npmjs.com/package/${library.typesPackage}`}>
-                          <code>{library.typesPackage}</code>
-                        </a>
-                      </>
+                    {library.homepage ? (
+                      <a href={library.homepage}>{library.label}</a>
+                    ) : (
+                      library.label
                     )}
                   </td>
                   <td>
-                    <code>/{library.entry ?? library.package}</code>
+                    <For each={[...library.dependencies, ...library.typePackages]}>
+                      {(name, index) => (
+                        <>
+                          {index() > 0 && ", "}
+                          <a href={`https://www.npmjs.com/package/${name}`}>
+                            <code>{name}</code>
+                          </a>
+                        </>
+                      )}
+                    </For>
+                    {!library.dependencies.length && "Built into your runtime"}
                   </td>
                   <td>
-                    <code>{library.value}</code>
+                    <code>{library.entry || "(root)"}</code>
+                  </td>
+                  <td>
+                    <code>{library.type}</code>
                   </td>
                 </tr>
               )}

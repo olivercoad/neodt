@@ -15,7 +15,7 @@ test("uses native Temporal without installing a polyfill on the page", async ({ 
     async (entryPath) => {
       const { parseNaturalDate } = (await import(
         /* @vite-ignore */ entryPath
-      )) as typeof import("../../src");
+      )) as typeof import("../../src/libraries/native-temporal");
       const referenceTime: Temporal.ZonedDateTime = Temporal.ZonedDateTime.from(
         "2026-03-07T12:00-05:00[America/New_York]",
       );
@@ -27,7 +27,7 @@ test("uses native Temporal without installing a polyfill on the page", async ({ 
           Temporal === (window as unknown as { originalTemporal: unknown }).originalTemporal,
       };
     },
-    `/@fs${fileURLToPath(new URL("../../src/index.tsx", import.meta.url))}`,
+    `/@fs${fileURLToPath(new URL("../../src/libraries/native-temporal.ts", import.meta.url))}`,
   );
   expect(result).toEqual({
     native: true,

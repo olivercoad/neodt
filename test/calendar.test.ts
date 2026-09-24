@@ -4,14 +4,11 @@ import { calendarDate } from "../src/calendar";
 import { builtInAdapters } from "./helpers/adapters";
 
 for (const implementation of builtInAdapters)
-  implementation.run(({ adapter, zone }) => {
+  implementation.run(({ adapter, zone, behavior }) => {
     describe(implementation.name, () => {
-      const name = implementation.name;
       // Some native setters choose the earlier side of a fold even when the input is later.
-      const editedOffset = (offset: string) =>
-        ["internationalized-date", "date-fns", "dayjs"].includes(name) ? "-04:00" : offset;
-      const minuteOffset = (offset: string) =>
-        ["internationalized-date", "date-fns"].includes(name) ? "-04:00" : offset;
+      const editedOffset = (offset: string) => behavior.editFoldOffset ?? offset;
+      const minuteOffset = (offset: string) => behavior.minuteFoldOffset ?? offset;
       const reference = calendarDate(adapter, adapter.fromEpochMilliseconds(0, zone("UTC")));
       const date = (value: string, zone = "UTC") => reference.setZoneId(zone).fromISO(value)!;
       it("edits early years using the library's historical timezone rules", () => {
@@ -21,24 +18,9 @@ for (const implementation of builtInAdapters)
             const edited = initial.set({ year }).startOf("minute");
             // Day.js reparses early named-zone years through native Date; date-fns/tz
             // loses sub-minute historical Paris offsets. These are library-owned semantics.
-            const dayjsEarly: Record<string, string[]> = {
-              "America/New_York": [
-                "1901-03-01T12:30",
-                "1902-03-01T12:30",
-                "1920-03-01T12:30",
-                "1999-03-07T12:30",
-              ],
-              "Europe/Paris": [
-                "1901-03-07T03:18",
-                "1902-03-07T03:18",
-                "1920-03-01T12:30",
-                "1999-03-07T12:30",
-              ],
-            };
             const expected =
-              name === "dayjs" && zone !== "UTC"
-                ? dayjsEarly[zone]![[1, 2, 20, 99].indexOf(year)]!
-                : `${String(year).padStart(4, "0")}-03-07T12:${name === "date-fns" && zone === "Europe/Paris" ? "28" : "30"}`;
+              behavior.earlyYearValues?.[zone]?.[[1, 2, 20, 99].indexOf(year)] ??
+              `${String(year).padStart(4, "0")}-03-07T12:${zone === "Europe/Paris" ? (behavior.earlyParisMinute ?? "30") : "30"}`;
             expect(edited.toLocalValue()).toBe(expected);
             expect(edited.set({ year: 2026 }).toLocalValue()).toBe(`2026${expected.slice(4)}`);
           }
@@ -50,7 +32,7 @@ for (const implementation of builtInAdapters)
         expect(reference.fromISO("2000-02-29")).toBeDefined();
         expect(date("2026-01-31T12:30").set({ month: 2 }).toLocalValue()).toBe("2026-02-28T12:30");
         expect(date("2024-02-29T12:30").set({ year: 2025 }).toLocalValue()).toBe(
-          name === "date-fns" ? "2025-03-01T12:30" : "2025-02-28T12:30",
+          behavior.leapYearEdit ?? "2025-02-28T12:30",
         );
         expect(date("2026-01-31T12:30").plus({ months: -1 }).toLocalValue()).toBe(
           "2025-12-31T12:30",
@@ -60,7 +42,7 @@ for (const implementation of builtInAdapters)
       it("uses native fold disambiguation while editing a repeated hour", () => {
         const later = date("2026-11-01T01:30-05:00", "America/New_York");
         expect(later.startOf("minute").toISO()).toBe(
-          `2026-11-01T01:30${name === "date-fns" ? "-04:00" : "-05:00"}`,
+          `2026-11-01T01:30${behavior.exactMinuteFoldOffset ?? "-05:00"}`,
         );
         expect(later.set({ minute: 45 }).toISO()).toBe(`2026-11-01T01:45${editedOffset("-05:00")}`);
         const earlier = date("2026-11-01T01:30-04:00", "America/New_York");
@@ -69,16 +51,10 @@ for (const implementation of builtInAdapters)
 
       it("resolves a half-hour DST gap and a skipped calendar day", () => {
         expect(date("2026-10-04T02:15", "Australia/Lord_Howe").toISO()).toBe(
-          (
-            {
-              dayjs: "2026-10-04T03:45+11:00",
-              "date-fns": "2026-10-04T03:15+11:00",
-              spacetime: "2026-10-04T01:15+10:30",
-            } as Record<string, string>
-          )[name] ?? "2026-10-04T02:45+11:00",
+          behavior.halfHourGap ?? "2026-10-04T02:45+11:00",
         );
         expect(date("2011-12-30T12:00", "Pacific/Apia").toLocalValue()).toBe(
-          name === "spacetime" ? "2011-12-30T12:00" : "2011-12-31T12:00",
+          behavior.skippedDay ?? "2011-12-31T12:00",
         );
       });
 
@@ -121,13 +97,7 @@ for (const implementation of builtInAdapters)
           fixed
             .toLocaleParts("en-US", { timeZoneName: "short" })
             .find((part) => part.type === "timeZoneName")?.value,
-        ).toBe(
-          name === "luxon"
-            ? "UTC+5:45"
-            : ["moment", "spacetime"].includes(name)
-              ? "UTC+05:45"
-              : "GMT+5:45",
-        );
+        ).toBe(behavior.offsetLabel ?? "GMT+5:45");
       });
 
       it("rejects invalid ISO dates and offsets rather than rolling over", () => {

@@ -1,8 +1,22 @@
-import type { Dayjs, ConfigType, ManipulateType, UnitType } from "dayjs";
+import dayjs, { type Dayjs } from "dayjs";
+import type { ConfigType, ManipulateType, UnitType } from "dayjs";
 
 import { systemZone, type AdapterOptions, type DateAdapter, type DateFields } from "../adapter";
+import { createIntlFormatter } from "../adapters/intl-format";
+import {
+  configureNeodt,
+  type ConfiguredNeodtProps,
+  type ConfiguredNaturalDateParseOptions,
+} from "../configured";
 import { fixedOffset, offsetZone } from "../format";
-import { createIntlFormatter } from "./intl-format";
+import { defineIntegration } from "../integration";
+
+export type NeodtProps = ConfiguredNeodtProps<Dayjs>;
+export type NaturalDateParseOptions = ConfiguredNaturalDateParseOptions<Dayjs>;
+
+export const { Neodt, parseNaturalDate } = configureNeodt(createDayjsAdapter(dayjs));
+export default Neodt;
+export * from "../public";
 
 type DayjsFactory = ((input?: ConfigType) => Dayjs) & {
   utc?: (input?: ConfigType) => Dayjs;
@@ -128,3 +142,37 @@ export function createDayjsAdapter(
       createIntlFormatter(zone, locale, options, (value: Dayjs) => value.valueOf()),
   };
 }
+
+/** @internal Demo/test setup; omitted from the published entry. */
+export const integration = /* @__PURE__ */ defineIntegration({
+  create: () => createDayjsAdapter(dayjs),
+  zone: (id: string) => id,
+  entry: { default: Neodt, Neodt, parseNaturalDate },
+  async setup() {
+    const [{ default: utc }, { default: timezone }] = await Promise.all([
+      import("dayjs/plugin/utc.js"),
+      import("dayjs/plugin/timezone.js"),
+    ]);
+    dayjs.extend(utc);
+    dayjs.extend(timezone);
+  },
+  behavior: {
+    earlyYears: false,
+    editFoldOffset: "-04:00",
+    halfHourGap: "2026-10-04T03:45+11:00",
+    earlyYearValues: {
+      "America/New_York": [
+        "1901-03-01T12:30",
+        "1902-03-01T12:30",
+        "1920-03-01T12:30",
+        "1999-03-07T12:30",
+      ],
+      "Europe/Paris": [
+        "1901-03-07T03:18",
+        "1902-03-07T03:18",
+        "1920-03-01T12:30",
+        "1999-03-07T12:30",
+      ],
+    },
+  },
+});

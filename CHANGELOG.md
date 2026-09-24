@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+## [0.3.1] - 2026-09-24
+
+### Fixed
+
+- Fix flaky tests due to race conditions
+
 ## [0.3.0] - 2026-09-24
 
 This is a major change to Neodt! It is now fully datetime-library agnostic, with support for a whole array of datetime libraries, including native Temporal.

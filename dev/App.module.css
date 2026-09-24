@@ -604,3 +604,36 @@ footer span:first-child {
     gap: 1rem;
   }
 }
+
+.libraryPicker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+}
+.libraryPicker select {
+  max-width: 11rem;
+  min-width: 0;
+  padding: 0.4rem;
+  border: 1px solid currentColor;
+  border-radius: 0.25rem;
+  background: white;
+  color: inherit;
+  font: inherit;
+}
+@media (max-width: 720px) {
+  .nav {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    height: auto;
+    min-height: 4.5rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+  .navLinks {
+    flex-wrap: wrap;
+  }
+  .libraryPicker {
+    flex-basis: 100%;
+  }
+}

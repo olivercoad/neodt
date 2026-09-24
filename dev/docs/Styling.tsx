@@ -1,10 +1,9 @@
 import { createMemo, createSignal, For, onCleanup, onMount } from "solid-js";
 import { render } from "solid-js/web";
-import Neodt from "src/temporal-polyfill";
-import { Temporal } from "temporal-polyfill";
 
 import Code from "../code/Code";
 import CodeEditor from "../code/CodeEditor";
+import { useLibrary } from "../library";
 import { createResizeScrollAnchor } from "./createResizeScrollAnchor";
 import { themes } from "./themes";
 
@@ -23,11 +22,13 @@ function Preview(props: {
   state: "Editable" | "Readonly" | "Disabled";
   options: StylingOptions;
 }) {
+  const library = useLibrary();
+  const Neodt = library.Neodt;
   let host!: HTMLDivElement;
   onMount(() => {
     // Isolate reader CSS while sharing the reactive options and theme across states.
     const shadow = host.attachShadow({ mode: "open" });
-    const reference = Temporal.ZonedDateTime.from("2026-08-17T15:30[Australia/Sydney]");
+    const reference = library.date("2026-08-17T15:30[Australia/Sydney]");
     const dispose = render(
       () => (
         <>

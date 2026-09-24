@@ -2,18 +2,15 @@
 // This entry is served by Vite during testing and excluded from the production build.
 import { createSignal } from "solid-js";
 import { render } from "solid-js/web";
-import Neodt from "src/temporal-polyfill";
-import { Temporal } from "temporal-polyfill";
 
-function Fixture() {
+import type { DemoLibrary, DemoValue } from "./library";
+
+function Fixture({ library }: { library: DemoLibrary }) {
+  const Neodt = library.Neodt;
   const query = new URLSearchParams(location.search);
-  const reference = Temporal.PlainDateTime.from("2026-08-17T15:30").toZonedDateTime(
-    query.get("zone") ?? "Australia/Sydney",
-  );
+  const reference = library.date("2026-08-17T15:30", query.get("zone") ?? "Australia/Sydney");
   const [width, setWidth] = createSignal(Number(query.get("width") ?? 420));
-  const [value, setValue] = createSignal<Temporal.ZonedDateTime | null>(
-    query.has("empty") ? null : reference,
-  );
+  const [value, setValue] = createSignal<DemoValue | null>(query.has("empty") ? null : reference);
   const [state, setState] = createSignal(query.get("state") ?? "editable");
   const [locale, setLocale] = createSignal(query.get("locale") ?? "en-GB");
   const [offset, setOffset] = createSignal(query.has("offset"));
@@ -81,9 +78,11 @@ function Fixture() {
           disabled={state() === "disabled"}
         />
       </div>
-      <output>{value()?.toString() ?? "null"}</output>
+      <output>{value() === null ? "null" : value()!.calendar.toISO()}</output>
       <button type="button">Outside</button>
     </>
   );
 }
-render(() => <Fixture />, document.getElementById("root")!);
+export function mountLayout(library: DemoLibrary) {
+  render(() => <Fixture library={library} />, document.getElementById("root")!);
+}

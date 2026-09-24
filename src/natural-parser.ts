@@ -328,7 +328,17 @@ function parseDuration(value: string): Partial<Record<DurationUnit, number>> | u
   if (!match) return undefined;
   const amount = counts[match[1]!] ?? Number(match[1]!);
   const unit = (match[2] ?? "days").replace(/s$/, "") as DurationUnit;
-  return Number.isFinite(amount) ? { [unit]: amount } : undefined;
+  // The editor accepts years 1–9999. Reject larger spans before calling libraries
+  // that clamp huge durations or iterate through every intervening calendar day.
+  const maximum: Record<DurationUnit, number> = {
+    year: 9999,
+    month: 9999 * 12,
+    week: 9999 * 53,
+    day: 9999 * 366,
+    hour: 9999 * 366 * 24,
+    minute: 9999 * 366 * 24 * 60,
+  };
+  return Number.isFinite(amount) && amount <= maximum[unit] ? { [unit]: amount } : undefined;
 }
 function scaleDuration(
   duration: Partial<Record<DurationUnit, number>>,

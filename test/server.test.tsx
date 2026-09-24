@@ -1,13 +1,10 @@
-import { fromAbsolute } from "@internationalized/date";
-import { DateTime } from "luxon";
 import { isServer, renderToString } from "solid-js/web";
-import { describe, expect, it } from "vitest";
+import { Temporal } from "temporal-polyfill";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createLuxonAdapter } from "../src/adapters/luxon";
 import Neodt from "../src/generic";
-import InternationalizedNeodt from "../src/internationalized-date";
-
-const adapter = createLuxonAdapter(DateTime);
+import { builtInAdapters } from "./helpers/adapters";
+import { forEachConfiguredEntry } from "./helpers/entries";
 
 describe("environment", () => {
   it("runs on server", () => {
@@ -16,29 +13,40 @@ describe("environment", () => {
   });
 });
 
-describe("Neodt", () => {
-  it("renders a segmented editor on the server", () => {
-    const html = renderToString(() => (
-      <Neodt
-        adapter={adapter}
-        referenceTime={DateTime.fromISO("2026-08-17T15:30:00Z")}
-        locale="en-GB"
-        value={DateTime.fromISO("2026-08-17T15:30:00Z")}
-      />
-    ));
-    expect(html).toContain("datetime-neo__segment");
-    expect(html).toContain('type="datetime-local"');
+for (const implementation of builtInAdapters)
+  implementation.run(({ adapter, date }) => {
+    describe(implementation.name, () => {
+      it("renders a segmented editor and native value on the server", () => {
+        const referenceTime = date("2026-08-17T15:30:00Z", "Australia/Sydney");
+        const html = renderToString(() => (
+          <Neodt
+            adapter={adapter}
+            referenceTime={referenceTime}
+            locale="en-GB"
+            value={referenceTime}
+          />
+        ));
+        expect(html).toContain("datetime-neo__segment");
+        expect(html).toContain('type="datetime-local"');
+        expect(html).toContain('value="2026-08-18T01:30"');
+      });
+    });
   });
-});
 
-it("renders the internationalized date entry on the server", () => {
-  const referenceTime = fromAbsolute(
-    DateTime.fromISO("2026-08-17T15:30:00Z").toMillis(),
-    "Australia/Sydney",
-  );
-  const html = renderToString(() => (
-    <InternationalizedNeodt referenceTime={referenceTime} value={referenceTime} locale="en-GB" />
-  ));
-  expect(html).toContain("datetime-neo__segment");
-  expect(html).toContain('value="2026-08-18T01:30"');
+forEachConfiguredEntry((name, entry, referenceTime, _epoch, nativeEntry) => {
+  describe(`${name} configured entry`, () => {
+    if (nativeEntry) {
+      beforeEach(() => vi.stubGlobal("Temporal", Temporal));
+      afterEach(() => vi.unstubAllGlobals());
+    }
+    it("renders the configured component on the server", () => {
+      const Neodt = entry.default;
+      const html = renderToString(() => (
+        <Neodt referenceTime={referenceTime} value={referenceTime} locale="en-GB" />
+      ));
+      expect(html).toContain("datetime-neo__segment");
+      expect(html).toContain('type="datetime-local"');
+      expect(html).toContain("2026");
+    });
+  });
 });

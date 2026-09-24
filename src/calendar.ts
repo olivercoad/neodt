@@ -86,7 +86,7 @@ export class CalendarDate {
       const amount = (duration[unit] ?? 0) + (duration[`${unit}s`] ?? 0);
       if (amount) normalized[`${unit}s`] = amount;
     }
-    return this.operations.plus(normalized);
+    return Object.keys(normalized).length ? this.operations.plus(normalized) : this;
   }
   fromObject(fields: Partial<DateFields>) {
     const complete = { year: 2001, month: 1, day: 1, hour: 0, minute: 0, second: 0, ...fields };

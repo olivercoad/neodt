@@ -1,9 +1,5 @@
 import { fromAbsolute, toCalendar, BuddhistCalendar } from "@internationalized/date";
 import { Temporal } from "@js-temporal/polyfill";
-import { toDate } from "date-fns/toDate";
-import dayjs from "dayjs";
-import timezone from "dayjs/plugin/timezone";
-import utc from "dayjs/plugin/utc";
 import { DateTime, Zone } from "luxon";
 import moment from "moment-timezone";
 import { createSignal } from "solid-js";
@@ -12,17 +8,15 @@ import spacetime from "spacetime";
 import { Temporal as OtherTemporal } from "temporal-polyfill";
 import { describe, expect, it, vi } from "vitest";
 
-import { createTemporalAdapter } from "../src";
+import { createTemporalAdapter, type TemporalZonedValue } from "../src";
 import { createDateFnsAdapter } from "../src/date-fns";
-import { createDayjsAdapter } from "../src/dayjs";
 import Neodt, { parseNaturalDate, type DateAdapter } from "../src/generic";
 import { createInternationalizedDateAdapter } from "../src/internationalized-date";
 import { createLuxonAdapter } from "../src/luxon";
 import { createMomentAdapter } from "../src/moment";
 import { createSpacetimeAdapter } from "../src/spacetime";
+import { builtInAdapters } from "./helpers/adapters";
 
-dayjs.extend(utc);
-dayjs.extend(timezone);
 const zone = "America/New_York";
 const referenceMs = Temporal.Instant.from("2026-03-07T17:00:00Z").epochMilliseconds;
 
@@ -163,17 +157,14 @@ function contract<T, TZone>(
   });
 }
 
-contract("@internationalized/date", createInternationalizedDateAdapter(fromAbsolute), zone);
-contract("Luxon", createLuxonAdapter(DateTime), DateTime.now().setZone(zone).zone);
-contract("Moment", createMomentAdapter(moment, { zone }), zone);
-// Day.js tz parses years 1–99 as 1901–1999; partial year entry inherits this limitation.
-contract("Day.js", createDayjsAdapter(dayjs, { zone }), zone, { earlyYears: false });
-contract("date-fns", createDateFnsAdapter(toDate, { zone }), zone);
-contract("Spacetime", createSpacetimeAdapter(spacetime), zone, {
-  gapInstant: "2026-03-08T06:30:00.000Z",
-});
-contract("Temporal @js-temporal/polyfill", createTemporalAdapter(Temporal), zone);
-contract("Temporal temporal-polyfill ponyfill", createTemporalAdapter(OtherTemporal), zone);
+for (const implementation of builtInAdapters)
+  implementation.run(({ name, adapter, zone: nativeZone }) => {
+    contract(name, adapter, nativeZone(zone), {
+      // Day.js tz reparses years 1–99 as 1901–1999 in named zones.
+      earlyYears: name !== "dayjs",
+      gapInstant: name === "spacetime" ? "2026-03-08T06:30:00.000Z" : undefined,
+    });
+  });
 
 it("formats Moment zones that are absent from Intl's database", () => {
   const zone = "Neodt/Custom";
@@ -211,23 +202,28 @@ it("retains Spacetime's own historical offsets when formatting", () => {
   expect(Number(parts.find((part) => part.type === "minute")?.value)).toBe(fields.minute);
 });
 
-it("uses the supplied Temporal implementation for construction and arithmetic", () => {
-  const from = vi.fn(Temporal.ZonedDateTime.from);
-  const fromEpochMilliseconds = vi.fn(Temporal.Instant.fromEpochMilliseconds);
-  const adapter = createTemporalAdapter({
-    ZonedDateTime: { from },
-    Instant: { fromEpochMilliseconds },
+describe.each([
+  ["js-temporal-polyfill", Temporal],
+  ["temporal-polyfill", OtherTemporal],
+] as const)("%s native Temporal contract", (_name, Temporal) => {
+  it("uses the supplied Temporal implementation for construction and arithmetic", () => {
+    const from = vi.fn(Temporal.ZonedDateTime.from);
+    const fromEpochMilliseconds = vi.fn(Temporal.Instant.fromEpochMilliseconds);
+    const adapter = createTemporalAdapter<TemporalZonedValue>({
+      ZonedDateTime: { from },
+      Instant: { fromEpochMilliseconds },
+    });
+    const referenceTime =
+      Temporal.Instant.fromEpochMilliseconds(referenceMs).toZonedDateTimeISO(zone);
+    const value = parseNaturalDate("march 8 2026 9am", { adapter, referenceTime });
+    expect(value).toBeInstanceOf(Temporal.ZonedDateTime);
+    expect(value?.epochMilliseconds).toBe(
+      Temporal.ZonedDateTime.from({ timeZone: zone, year: 2026, month: 3, day: 8, hour: 9 })
+        .epochMilliseconds,
+    );
+    expect(from).toHaveBeenCalled();
+    expect(fromEpochMilliseconds).toHaveBeenCalled();
   });
-  const referenceTime =
-    Temporal.Instant.fromEpochMilliseconds(referenceMs).toZonedDateTimeISO(zone);
-  const value = parseNaturalDate("march 8 2026 9am", { adapter, referenceTime });
-  expect(value).toBeInstanceOf(Temporal.ZonedDateTime);
-  expect(value?.epochMilliseconds).toBe(
-    Temporal.ZonedDateTime.from({ timeZone: zone, year: 2026, month: 3, day: 8, hour: 9 })
-      .epochMilliseconds,
-  );
-  expect(from).toHaveBeenCalled();
-  expect(fromEpochMilliseconds).toHaveBeenCalled();
 });
 
 function opaqueAdapter<TZone>(
@@ -351,41 +347,50 @@ it("converts non-Gregorian internationalized dates by instant and returns Gregor
   expect(referenceTime.toDate().getTime()).toBe(referenceMs);
 });
 
-it("accepts an explicit internationalized date parser timezone", () => {
-  const adapter = createInternationalizedDateAdapter(fromAbsolute);
-  const result = parseNaturalDate("tomorrow 9am", {
-    adapter,
-    referenceTime: fromAbsolute(referenceMs, zone),
-    zone: "Asia/Kathmandu",
-  });
-  expect(result?.timeZone).toBe("Asia/Kathmandu");
-  expect(result?.toAbsoluteString()).toBe("2026-03-08T03:15:00.000Z");
-});
+for (const implementation of builtInAdapters)
+  implementation.run(({ adapter, date, zone }) => {
+    describe(`${implementation.name} adapter integration`, () => {
+      it("accepts an explicit parser timezone", () => {
+        const result = parseNaturalDate("tomorrow 9am", {
+          adapter,
+          referenceTime: date("2026-03-07T17:00Z", "America/New_York"),
+          zone: zone("Asia/Kathmandu"),
+        });
+        expect(adapter.toEpochMilliseconds(result!)).toBe(Date.parse("2026-03-08T03:15:00Z"));
+        expect(adapter.getFields(result!)).toMatchObject({
+          year: 2026,
+          month: 3,
+          day: 8,
+          hour: 9,
+          minute: 0,
+        });
+      });
 
-it("uses adapter offsets for showTimeOffset without deriving them from the zone", () => {
-  const library = createLuxonAdapter(DateTime);
-  const getOffset = vi.fn(() => 345);
-  const adapter = { ...library, getOffset };
-  const referenceTime = DateTime.fromMillis(referenceMs, { zone: "UTC" });
-  const host = document.createElement("div");
-  const dispose = render(
-    () => (
-      <Neodt
-        adapter={adapter}
-        referenceTime={referenceTime}
-        defaultValue={referenceTime}
-        showTimeOffset
-      />
-    ),
-    host,
-  );
-  try {
-    expect(host.querySelector(".datetime-neo__timezone")?.textContent).toBe("+5:45");
-    expect(getOffset).toHaveBeenCalled();
-  } finally {
-    dispose();
-  }
-});
+      it("uses adapter offsets for showTimeOffset without deriving them from the zone", () => {
+        const getOffset = vi.fn(() => 345);
+        const custom = { ...adapter, getOffset };
+        const referenceTime = date("2026-03-07T17:00Z");
+        const host = document.createElement("div");
+        const dispose = render(
+          () => (
+            <Neodt
+              adapter={custom}
+              referenceTime={referenceTime}
+              defaultValue={referenceTime}
+              showTimeOffset
+            />
+          ),
+          host,
+        );
+        try {
+          expect(host.querySelector(".datetime-neo__timezone")?.textContent).toBe("+5:45");
+          expect(getOffset).toHaveBeenCalled();
+        } finally {
+          dispose();
+        }
+      });
+    });
+  });
 
 it("inherits Spacetime's native gap resolution", () => {
   const adapter = createSpacetimeAdapter(spacetime);
@@ -447,8 +452,10 @@ it("supports native Luxon zones without an Intl-compatible identifier", () => {
   }
 });
 
+// The lightweight temporal-polyfill entry supports only ISO/Gregorian calendars.
+
 it("edits Temporal values in ISO/Gregorian fields regardless of their input calendar", () => {
-  const adapter = createTemporalAdapter(Temporal);
+  const adapter = createTemporalAdapter<TemporalZonedValue>(Temporal);
   const reference = Temporal.Instant.fromEpochMilliseconds(referenceMs).toZonedDateTimeISO(zone);
   const hebrew = reference.withCalendar("hebrew");
   expect(adapter.getFields(hebrew)).toEqual(adapter.getFields(reference));

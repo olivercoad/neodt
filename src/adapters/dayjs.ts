@@ -26,7 +26,8 @@ export function createDayjsAdapter(
     const offset = fixedOffset(zone);
     if (offset !== undefined) {
       if (!dayjs.utc) throw new Error("Day.js fixed offsets require the utc plugin");
-      return remember(value.utcOffset(offsetZone(offset)), zone);
+      // Reapplying utcOffset to an already offset Day.js value can shift its wall fields.
+      return remember(value.utc().utcOffset(offsetZone(offset)), zone);
     }
     if (dayjs.tz) return remember(value.tz(zone), zone);
     if (zone === systemZone()) return remember(dayjs(value.valueOf()), zone);

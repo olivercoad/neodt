@@ -1,42 +1,22 @@
-import { fromAbsolute } from "@internationalized/date";
-import { Temporal as JsTemporal } from "@js-temporal/polyfill";
-import { toDate } from "date-fns/toDate";
-import dayjs from "dayjs";
-import { DateTime } from "luxon";
-import moment from "moment";
-import { createSignal, type JSX } from "solid-js";
+import { createSignal } from "solid-js";
 import { render } from "solid-js/web";
-import spacetime from "spacetime";
 import { Temporal as Ponyfill } from "temporal-polyfill";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { libraries } from "../dev/libraries";
+import packageJson from "../package.json";
 import * as native from "../src";
-import type { ConfiguredNeodtProps, ConfiguredNaturalDateParseOptions } from "../src/configured";
-import * as dates from "../src/date-fns";
-import * as days from "../src/dayjs";
-import * as internationalized from "../src/internationalized-date";
-import * as jsTemporal from "../src/js-temporal-polyfill";
-import * as luxon from "../src/luxon";
-import * as moments from "../src/moment";
-import * as spaces from "../src/spacetime";
 import * as temporal from "../src/temporal-polyfill";
+import { builtInAdapters } from "./helpers/adapters";
+import { forEachConfiguredEntry, milliseconds } from "./helpers/entries";
 
-const milliseconds = JsTemporal.Instant.from("2026-04-15T12:30Z").epochMilliseconds;
-
-function contract<T, TZone>(
-  name: string,
-  entry: {
-    default: (props: ConfiguredNeodtProps<T, TZone>) => JSX.Element;
-    Neodt: (props: ConfiguredNeodtProps<T, TZone>) => JSX.Element;
-    parseNaturalDate: (
-      value: string,
-      options: ConfiguredNaturalDateParseOptions<T, TZone>,
-    ) => T | undefined;
-  },
-  referenceTime: T,
-  epoch: (value: T) => number,
-) {
+forEachConfiguredEntry((name, entry, referenceTime, epoch, nativeEntry) => {
+  type T = typeof referenceTime;
   describe(name, () => {
+    if (nativeEntry) {
+      beforeEach(() => vi.stubGlobal("Temporal", Ponyfill));
+      afterEach(() => vi.unstubAllGlobals());
+    }
     it("binds the parser to the selected implementation", () => {
       const result = entry.parseNaturalDate("in 1 hour", { referenceTime });
       expect(result).toBeInstanceOf((referenceTime as object).constructor);
@@ -70,31 +50,7 @@ function contract<T, TZone>(
       }
     });
   });
-}
-
-contract(
-  "@internationalized/date",
-  internationalized,
-  fromAbsolute(milliseconds, "America/New_York"),
-  (value) => value.toDate().getTime(),
-);
-contract("luxon", luxon, DateTime.fromMillis(milliseconds), (value) => value.toMillis());
-contract("moment", moments, moment(milliseconds), (value) => value.valueOf());
-contract("dayjs", days, dayjs(milliseconds), (value) => value.valueOf());
-contract("date-fns", dates, toDate(milliseconds), (value) => value.getTime());
-contract("spacetime", spaces, spacetime(milliseconds), (value) => value.epoch);
-contract(
-  "temporal-polyfill",
-  temporal,
-  Ponyfill.Instant.fromEpochMilliseconds(milliseconds).toZonedDateTimeISO("UTC"),
-  (value) => value.epochMilliseconds,
-);
-contract(
-  "js-temporal-polyfill",
-  jsTemporal,
-  JsTemporal.Instant.fromEpochMilliseconds(milliseconds).toZonedDateTimeISO("UTC"),
-  (value) => value.epochMilliseconds,
-);
+});
 
 it("resolves global Temporal lazily and never installs a polyfill", () => {
   const referenceTime =
@@ -113,4 +69,18 @@ it("resolves global Temporal lazily and never installs a polyfill", () => {
   } finally {
     vi.unstubAllGlobals();
   }
+});
+
+it("covers every configured library export in the unit and browser matrices", () => {
+  const exports = Object.keys(packageJson.exports)
+    .filter((path) => ![".", "./generic", "./package.json", "./style.css"].includes(path))
+    .map((path) => path.slice(2))
+    .sort();
+  expect(builtInAdapters.map(({ name }) => name).sort()).toEqual(exports);
+  expect(libraries.map(({ id }) => id).sort()).toEqual([...exports, "native-temporal"].sort());
+  const configured: string[] = [];
+  forEachConfiguredEntry((name) => {
+    configured.push(name);
+  });
+  expect(configured.sort()).toEqual([...exports, "native-temporal"].sort());
 });

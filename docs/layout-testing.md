@@ -13,7 +13,11 @@ pnpm test:browser
 
 For a faster iteration, use `pnpm test:browser --project chromium`. For the interactive runner, use `pnpm test:browser --ui`. `pnpm check:release` runs the static checks, unit/SSR tests, documentation build, browser tests, and package build. `pnpm check` does not rewrite source files; run `pnpm format` to fix formatting explicitly.
 
-The browser suite uses `dev/layout.html`, a development-only Vite entry with a fixed reference time, system fonts, and no saved demo settings. It imports the actual component and stylesheet. This fixture is not an input to the documentation production build. Query parameters select width, locale, offset, timezone, empty state, readonly/disabled state, and custom font metrics.
+The browser suite visits each library's own entry point (for example `/luxon/` or `/dayjs/`). Add `?fixture=layout` in development to render `dev/layout.tsx` with a fixed reference time, system fonts, and no saved demo settings. It uses the selected adapter and actual component stylesheet. The fixture is removed from production builds. Other query parameters select width, locale, offset, timezone, empty state, readonly/disabled state, and custom font metrics.
+
+The top-navigation library selector performs a full navigation and preserves the current docs section. Each `dev/entries/` module imports only its selected library. The production build checks each entry's complete chunk graph for accidental cross-library imports; browser tests also check loaded script requests.
+
+Unit suites share `test/helpers/adapters.ts`; configured entry-point tests and SSR share `test/helpers/entries.ts`. Common parser, keyboard, accessibility, controlled-state, calendar, and formatter-cache contracts run for all eight library implementations. Native Temporal runs in supporting browsers; its root entry is also exercised with an explicitly supplied global implementation in unit and SSR tests. Calendar expectations document native library differences instead of skipping whole adapters. Library-specific APIs (opaque Luxon zones, Date subclasses, non-Gregorian calendars) keep dedicated tests. Completion and placeholder animation helpers have no adapter dependency and run once.
 
 ## Contracts to preserve
 

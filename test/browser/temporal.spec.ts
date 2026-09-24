@@ -6,7 +6,7 @@ test("uses native Temporal without installing a polyfill on the page", async ({ 
   await page.addInitScript(() => {
     (window as unknown as { originalTemporal: unknown }).originalTemporal = globalThis.Temporal;
   });
-  await page.goto("/layout.html");
+  await page.goto("/native-temporal/?fixture=layout");
   const available = await page.evaluate(() =>
     Boolean((window as unknown as { originalTemporal: unknown }).originalTemporal),
   );

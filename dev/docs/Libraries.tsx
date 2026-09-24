@@ -13,6 +13,12 @@ export default function Libraries() {
         The import path selects the adapter for the component. Native Temporal is the default;
         install another library only when you choose its entry.
       </p>
+      <p>
+        Use the <strong>Library</strong> dropdown in the top navigation to try the lab and styling
+        gallery with any built-in adapter. Each library has its own URL and entry point, so your
+        browser loads only the selected datetime library. Switching preserves the current docs
+        section. Native Temporal requires browser support; either polyfill entry works without it.
+      </p>
       <h2 id="native-temporal">Native Temporal</h2>
       <pre>
         <Code

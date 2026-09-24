@@ -1,16 +1,15 @@
 import { makePersisted, type PersistenceOptions } from "@solid-primitives/storage";
 import { createMemo, createSignal, For, onCleanup, onMount, type Component } from "solid-js";
-import Neodt from "src/temporal-polyfill";
-import { Temporal } from "temporal-polyfill";
 
 import packageJson from "../package.json";
 import Code from "./code/Code";
+import { useLibrary, type DemoValue } from "./library";
 import { locales } from "./locales";
 import SiteNav from "./SiteNav";
 
 import styles from "./App.module.css";
 
-const systemTimezone = Temporal.Now.timeZoneId();
+const systemTimezone = new Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 const timezones = [
   [systemTimezone, `System (${systemTimezone})`],
@@ -27,35 +26,31 @@ const timezones = [
 type DayPeriod = "locale" | "12" | "24";
 type Timezone = string;
 
-const initialValue = Temporal.ZonedDateTime.from("2026-08-24T14:30[Australia/Sydney]");
 const minimumPreviewWidth = 100;
 
 function makePersistedSignal<T>(initialValue: T, options: PersistenceOptions<T, undefined>) {
   return makePersisted(createSignal(initialValue), options);
 }
 
-function iso(date: Temporal.ZonedDateTime | null): string {
+function iso(date: DemoValue | null): string {
   return date?.toString({ smallestUnit: "minute" }) ?? "null";
 }
 
-// Retain saved values from older demos, whose ISO strings lack a bracketed zone.
-function restoreDate(value: string, zone: string): Temporal.ZonedDateTime {
-  try {
-    return Temporal.ZonedDateTime.from(value);
-  } catch {
-    try {
-      return Temporal.Instant.from(value).toZonedDateTimeISO(zone);
-    } catch {
-      return Temporal.Now.zonedDateTimeISO(zone);
-    }
-  }
-}
-
 const App: Component = () => {
+  const library = useLibrary();
+  const Neodt = library.Neodt;
+  const initialValue = library.date("2026-08-24T14:30[Australia/Sydney]");
+  const restoreDate = (value: string, zone: string) => {
+    try {
+      return library.date(value, zone);
+    } catch {
+      return library.now(zone);
+    }
+  };
   const [timezone, setTimezone] = makePersistedSignal<Timezone>(systemTimezone, {
     name: "neodt-configuration-lab-timezone",
   });
-  const [now, setNow] = createSignal(Temporal.Now.zonedDateTimeISO());
+  const [now, setNow] = createSignal(library.now());
   const referenceTimeInputReference = () => now().withTimeZone(timezone());
   const [referenceTime, setReferenceTime] = makePersistedSignal(referenceTimeInputReference(), {
     name: "neodt-configuration-lab-reference-time",
@@ -68,7 +63,7 @@ const App: Component = () => {
   const [dayPeriod, setDayPeriod] = makePersistedSignal<DayPeriod>("locale", {
     name: "neodt-configuration-lab-day-period",
   });
-  const [value, setValue] = makePersistedSignal<Temporal.ZonedDateTime | null>(initialValue, {
+  const [value, setValue] = makePersistedSignal<DemoValue | null>(initialValue, {
     name: "neodt-configuration-lab-value",
     serialize: (value) => iso(value),
     deserialize: (value) => (value === "null" ? null : restoreDate(value, timezone())),
@@ -103,7 +98,7 @@ const App: Component = () => {
     const observer = new ResizeObserver(updateMaximumWidth);
     if (previewInputArea) observer.observe(previewInputArea);
     updateMaximumWidth();
-    const timer = window.setInterval(() => setNow(Temporal.Now.zonedDateTimeISO()), 60_000);
+    const timer = window.setInterval(() => setNow(library.now()), 60_000);
     onCleanup(() => {
       observer.disconnect();
       window.clearInterval(timer);
@@ -129,11 +124,11 @@ const App: Component = () => {
       "  value={value()}",
       "  onValueChange={setValue}",
     ].filter(Boolean);
-    return `import Neodt from '@olicoad/neodt'\nimport { createSignal } from 'solid-js'\n\nconst [referenceTime] = createSignal(Temporal.Now.zonedDateTimeISO())\nconst [value, setValue] = createSignal<Temporal.ZonedDateTime | null>(null)\n\n<Neodt\n${optionLines.join("\n")}\n/>`;
+    return `import Neodt from '@olicoad/neodt${library.entry}'\n${library.imports}\nimport { createSignal } from 'solid-js'\n\nconst [referenceTime] = createSignal(${library.nowExpression})\nconst [value, setValue] = createSignal<${library.type} | null>(null)\n\n<Neodt\n${optionLines.join("\n")}\n/>`;
   });
 
   const reset = () => {
-    setReferenceTime(Temporal.Now.zonedDateTimeISO());
+    setReferenceTime(library.now());
     setTimezone(systemTimezone);
     setLocale(undefined);
     setDayPeriod("locale");
@@ -164,17 +159,12 @@ const App: Component = () => {
           <p class={styles.lede}>
             neodt is a familiar, timezone-aware datetime input for Solid. It speaks your users'
             language, works naturally with a keyboard, and gives your app a robust{" "}
-            <a
-              href="https://tc39.es/proposal-temporal/docs/zoneddatetime.html"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Temporal <code>ZonedDateTime</code>
-            </a>{" "}
-            instead of a string to untangle.
+            <code>{library.type}</code> instead of a string to untangle.
           </p>
           <div class={styles.install}>
-            <code>pnpm add @olicoad/neodt solid-js</code>
+            <code>
+              pnpm add @olicoad/neodt solid-js{library.packages ? ` ${library.packages}` : ""}
+            </code>
             <span>Solid 1.6+</span>
             <a href="https://www.npmjs.com/package/@olicoad/neodt" target="_blank" rel="noreferrer">
               v{packageJson.version} on npm ↗

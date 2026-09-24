@@ -27,23 +27,25 @@ test("library panel works with keyboard, dismisses, and fits narrow screens", as
   await expect(page).toHaveURL(/\/internationalized-date\/$/);
 });
 
-test("width grips stay centered on inputs at different widths and heights", async ({ page }) => {
+test("width grips stay aligned with input tops at different widths and heights", async ({
+  page,
+}) => {
   await page.goto("/#lab");
-  const labGrip = page.getByRole("button", { name: "Resize preview input" });
-  const centered = async (grip: typeof labGrip, control: typeof labGrip) => {
+  const labGrip = page.getByRole("slider", { name: "Resize preview input" });
+  const topAligned = async (grip: typeof labGrip, control: typeof labGrip) => {
     await expect
       .poll(async () => {
         const a = (await grip.boundingBox())!;
         const b = (await control.boundingBox())!;
-        return Math.abs(a.y + a.height / 2 - b.y - b.height / 2);
+        return Math.abs(a.y - b.y);
       })
       .toBeLessThanOrEqual(1);
   };
   const labInput = labGrip.locator("..").locator(".datetime-neo");
-  await centered(labGrip, labInput);
+  await topAligned(labGrip, labInput);
   await labGrip.focus();
   await page.keyboard.press("ArrowLeft");
-  await centered(labGrip, labInput);
+  await topAligned(labGrip, labInput);
   await page.goto("/#/docs/styling");
   for (const id of ["paper", "midnight", "mint", "compact", "seamless"]) {
     const preview = page.locator(`[data-theme-preview=${id}]`);
@@ -52,7 +54,60 @@ test("width grips stay centered on inputs at different widths and heights", asyn
     for (const key of ["Home", "End"]) {
       await grip.focus();
       await page.keyboard.press(key);
-      await centered(grip, control);
+      await topAligned(grip, control);
     }
   }
 });
+
+for (const preview of ["lab", "gallery"] as const) {
+  test(`${preview} grip stays at the input top through wrapping and mouseup`, async ({ page }) => {
+    await page.goto(`/temporal-polyfill/${preview === "gallery" ? "#/docs/styling" : ""}`);
+    const grip = page.getByRole("slider", {
+      name: preview === "lab" ? "Resize preview input" : "Resize Midnight previews",
+    });
+    const control = grip.locator("..").locator(".datetime-neo");
+    await page.evaluate(() => document.fonts.ready);
+    await grip.focus();
+    await page.keyboard.press("End");
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.style.overflowAnchor))
+      .toBe("");
+    await grip.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
+    await grip.hover();
+    const bounds = (await grip.boundingBox())!;
+    const scrollY = await page.evaluate(() => window.scrollY);
+    const wideHeight = (await control.boundingBox())!.height;
+    const width = Number(await grip.getAttribute("aria-valuenow"));
+    const x = bounds.x + 3;
+    const y = bounds.y + bounds.height / 2;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    for (const nextWidth of [100, width, 100]) {
+      await page.mouse.move(x + nextWidth - width, y, { steps: 5 });
+      await expect(grip).toHaveAttribute("aria-valuenow", String(nextWidth));
+      if (nextWidth === 100) {
+        await expect
+          .poll(async () => (await control.boundingBox())!.height)
+          .toBeGreaterThan(wideHeight);
+      } else {
+        await expect.poll(async () => (await control.boundingBox())!.height).toBe(wideHeight);
+      }
+      expect(Math.abs((await grip.boundingBox())!.y - bounds.y)).toBeLessThanOrEqual(0.5);
+      expect(
+        Math.abs((await grip.boundingBox())!.y - (await control.boundingBox())!.y),
+      ).toBeLessThanOrEqual(0.5);
+      // Check the release after both wrapping and unwrapping, including consecutive frames.
+      await page.mouse.up();
+      for (let frame = 0; frame < 4; frame++) {
+        await page.evaluate(() => new Promise(requestAnimationFrame));
+        expect(Math.abs((await grip.boundingBox())!.y - bounds.y)).toBeLessThanOrEqual(0.5);
+        expect(
+          Math.abs((await grip.boundingBox())!.y - (await control.boundingBox())!.y),
+        ).toBeLessThanOrEqual(0.5);
+        if (preview === "lab") expect(await page.evaluate(() => window.scrollY)).toBe(scrollY);
+      }
+      await page.mouse.down();
+    }
+    await page.mouse.up();
+  });
+}

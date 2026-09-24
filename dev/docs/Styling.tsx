@@ -1,9 +1,10 @@
-import { createMemo, createSignal, For, onCleanup, onMount, type JSX } from "solid-js";
+import { createSignal, For, onCleanup, onMount, type JSX } from "solid-js";
 import { render } from "solid-js/web";
 
 import Code from "../code/Code";
 import CodeEditor from "../code/CodeEditor";
 import { useLibrary } from "../library";
+import ResizablePreview from "../ResizablePreview";
 import { createResizeScrollAnchor } from "./createResizeScrollAnchor";
 import { themes } from "./themes";
 
@@ -72,7 +73,6 @@ function ThemeExample(props: {
   onResizeEnd: () => void;
 }) {
   const [css, setCss] = createSignal(props.theme.css);
-  const [maximumWidth, setMaximumWidth] = createSignal(400);
   const [copied, setCopied] = createSignal(false);
   const [copyError, setCopyError] = createSignal("");
   let copyTimer: ReturnType<typeof setTimeout> | undefined;
@@ -82,24 +82,7 @@ function ThemeExample(props: {
     setCopyError("");
   };
   onCleanup(() => clearTimeout(copyTimer));
-  const minimumWidth = 100;
-  let stage!: HTMLDivElement;
   let editor!: HTMLTextAreaElement;
-  let dragStart: { pointerId: number; x: number; width: number } | undefined;
-  const clampWidth = (value: number) =>
-    Math.round(Math.max(minimumWidth, Math.min(value, maximumWidth())));
-  const width = createMemo(() => clampWidth(props.width));
-  const setWidth = (value: number) => props.onWidthChange(clampWidth(value));
-  onMount(() => {
-    const resize = () => {
-      // Leave space beside the previews for the grip and its width label.
-      setMaximumWidth(Math.max(minimumWidth, stage.clientWidth - 60));
-    };
-    const observer = new ResizeObserver(resize);
-    observer.observe(stage);
-    resize();
-    onCleanup(() => observer.disconnect());
-  });
   const copy = async () => {
     clearCopyStatus();
     try {
@@ -120,82 +103,24 @@ function ThemeExample(props: {
       </div>
       <div class={styles.exampleColumns}>
         <div class={styles.preview}>
-          <div ref={stage}>
-            <div
-              class={styles.previewSizer}
-              data-theme-preview={props.theme.id}
-              style={{ width: `${width()}px` }}
-            >
+          <ResizablePreview
+            width={props.width}
+            onWidthChange={props.onWidthChange}
+            label={`Resize ${props.theme.name} previews`}
+            themeId={props.theme.id}
+            onResizeStart={props.onResizeStart}
+            onResizeEnd={props.onResizeEnd}
+          >
+            {(grip) => (
               <For each={["Editable", "Readonly", "Disabled"] as const}>
                 {(state) => (
                   <Preview theme={props.theme} css={css()} state={state} options={props.options}>
-                    {state === "Editable" && (
-                      <button
-                        type="button"
-                        role="slider"
-                        class={styles.resizeHandle}
-                        aria-label={`Resize ${props.theme.name} previews`}
-                        aria-valuemin={minimumWidth}
-                        aria-valuemax={maximumWidth()}
-                        aria-valuenow={width()}
-                        aria-valuetext={`${width()} pixels`}
-                        onKeyDown={(event) => {
-                          const next =
-                            event.key === "Home"
-                              ? minimumWidth
-                              : event.key === "End"
-                                ? maximumWidth()
-                                : event.key === "ArrowLeft" || event.key === "ArrowDown"
-                                  ? width() - 10
-                                  : event.key === "ArrowRight" || event.key === "ArrowUp"
-                                    ? width() + 10
-                                    : undefined;
-                          if (next === undefined) return;
-                          event.preventDefault();
-                          props.onResizeStart(event.currentTarget);
-                          setWidth(clampWidth(next));
-                          props.onResizeEnd();
-                        }}
-                        onPointerDown={(event) => {
-                          if (event.button !== 0) return;
-                          props.onResizeStart(event.currentTarget);
-                          dragStart = {
-                            pointerId: event.pointerId,
-                            x: event.clientX,
-                            width: width(),
-                          };
-                          event.currentTarget.setPointerCapture(event.pointerId);
-                          event.preventDefault();
-                        }}
-                        onPointerMove={(event) => {
-                          if (dragStart?.pointerId !== event.pointerId) return;
-                          setWidth(clampWidth(dragStart.width + event.clientX - dragStart.x));
-                        }}
-                        onPointerUp={(event) => {
-                          if (dragStart?.pointerId !== event.pointerId) return;
-                          dragStart = undefined;
-                          event.currentTarget.releasePointerCapture(event.pointerId);
-                          props.onResizeEnd();
-                        }}
-                        onPointerCancel={() => {
-                          dragStart = undefined;
-                          props.onResizeEnd();
-                        }}
-                        onLostPointerCapture={() => {
-                          if (!dragStart) return;
-                          dragStart = undefined;
-                          props.onResizeEnd();
-                        }}
-                      >
-                        <span class={styles.resizeGrip} aria-hidden="true" />
-                        <span>{width()}px</span>
-                      </button>
-                    )}
+                    {state === "Editable" && grip}
                   </Preview>
                 )}
               </For>
-            </div>
-          </div>
+            )}
+          </ResizablePreview>
           <span class={styles.usageCode}>
             <Code
               value={`<Neodt

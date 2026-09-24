@@ -167,13 +167,6 @@
   background: #f0f4f8;
   font-size: 0.85rem;
 }
-.previewSizer {
-  max-width: calc(100% - 60px);
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 1rem;
-}
 .variantLabel {
   display: block;
   color: var(--muted);
@@ -185,30 +178,6 @@
 }
 .previewHost {
   display: grid;
-}
-.resizeHandle {
-  align-items: center;
-  background: transparent;
-  border: 0;
-  color: var(--muted);
-  cursor: col-resize;
-  display: flex;
-  font-family: "DM Sans", system-ui, sans-serif;
-  font-variant-numeric: tabular-nums;
-  font-size: 0.65rem;
-  gap: 0.3rem;
-  left: calc(100% + 0.75rem);
-  padding: 0.55rem 0;
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  touch-action: none;
-}
-.resizeGrip {
-  background-image: radial-gradient(circle, currentColor 1px, transparent 1.5px);
-  background-size: 4px 4px;
-  height: 1rem;
-  width: 0.3rem;
 }
 .galleryControls {
   border: 0;

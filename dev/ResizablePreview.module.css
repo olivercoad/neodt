@@ -1,0 +1,36 @@
+.sizer {
+  max-width: calc(100% - 60px);
+  position: relative;
+  display: grid;
+  /* Allow previews to shrink below the input's intrinsic content width. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+.resizeHandle {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  cursor: col-resize;
+  display: flex;
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.65rem;
+  gap: 0.3rem;
+  left: calc(100% + 0.75rem);
+  padding: 0;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  touch-action: none;
+}
+.resizeHandle:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 0.2rem;
+}
+.resizeGrip {
+  background-image: radial-gradient(circle, currentColor 1px, transparent 1.5px);
+  background-size: 4px 4px;
+  height: 1rem;
+  width: 0.3rem;
+}

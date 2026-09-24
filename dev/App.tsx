@@ -5,6 +5,7 @@ import packageJson from "../package.json";
 import Code from "./code/Code";
 import { useLibrary, type DemoValue } from "./library";
 import { locales } from "./locales";
+import ResizablePreview from "./ResizablePreview";
 import SiteNav from "./SiteNav";
 
 import styles from "./App.module.css";
@@ -25,8 +26,6 @@ const timezones = [
 
 type DayPeriod = "locale" | "12" | "24";
 type Timezone = string;
-
-const minimumPreviewWidth = 100;
 
 function makePersistedSignal<T>(initialValue: T, options: PersistenceOptions<T, undefined>) {
   return makePersisted(createSignal(initialValue), options);
@@ -80,29 +79,9 @@ const App: Component = () => {
   const [previewWidth, setPreviewWidth] = makePersistedSignal(260, {
     name: "neodt-configuration-lab-preview-width",
   });
-  let previewInputArea: HTMLDivElement | undefined;
-  let dragStart: { pointerId: number; x: number; width: number } | undefined;
-
-  const maximumPreviewWidth = () =>
-    Math.max(minimumPreviewWidth, (previewInputArea?.clientWidth ?? minimumPreviewWidth) - 60);
-  const clampPreviewWidth = (width: number) =>
-    Math.round(Math.max(minimumPreviewWidth, Math.min(width, maximumPreviewWidth())));
-
   onMount(() => {
-    const updateMaximumWidth = () => {
-      setPreviewWidth((width) => {
-        const nextWidth = clampPreviewWidth(width);
-        return nextWidth === width ? width : nextWidth;
-      });
-    };
-    const observer = new ResizeObserver(updateMaximumWidth);
-    if (previewInputArea) observer.observe(previewInputArea);
-    updateMaximumWidth();
     const timer = window.setInterval(() => setNow(library.now()), 60_000);
-    onCleanup(() => {
-      observer.disconnect();
-      window.clearInterval(timer);
-    });
+    onCleanup(() => window.clearInterval(timer));
   });
 
   const formatOptions = createMemo<Intl.DateTimeFormatOptions>(() => {
@@ -320,61 +299,28 @@ const App: Component = () => {
               <code>{referenceTime().timeZoneId}</code>
             </div>
             <label>Appointment time</label>
-            <div
-              class={styles.resizablePreviewInput}
-              ref={(element) => (previewInputArea = element)}
+            <ResizablePreview
+              width={previewWidth()}
+              onWidthChange={setPreviewWidth}
+              label="Resize preview input"
             >
-              <div class={styles.previewInputSizer} style={{ width: `${previewWidth()}px` }}>
-                <Neodt
-                  class={styles.previewInput}
-                  referenceTime={referenceTime()}
-                  value={value()}
-                  {...(locale() ? { locale: locale() } : {})}
-                  formatOptions={formatOptions()}
-                  showTimeOffset={showTimeOffset()}
-                  readonly={readonly()}
-                  disabled={disabled()}
-                  onValueChange={setValue}
-                />
-                <button
-                  class={styles.resizeHandle}
-                  type="button"
-                  aria-label="Resize preview input"
-                  aria-valuetext={`${previewWidth()}px`}
-                  onKeyDown={(event) => {
-                    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
-                    event.preventDefault();
-                    setPreviewWidth(
-                      clampPreviewWidth(previewWidth() + (event.key === "ArrowRight" ? 10 : -10)),
-                    );
-                  }}
-                  onPointerDown={(event) => {
-                    dragStart = {
-                      pointerId: event.pointerId,
-                      x: event.clientX,
-                      width: previewWidth(),
-                    };
-                    event.currentTarget.setPointerCapture(event.pointerId);
-                    event.preventDefault();
-                  }}
-                  onPointerMove={(event) => {
-                    if (dragStart?.pointerId !== event.pointerId) return;
-                    setPreviewWidth(
-                      clampPreviewWidth(dragStart.width + event.clientX - dragStart.x),
-                    );
-                  }}
-                  onPointerUp={(event) => {
-                    if (dragStart?.pointerId !== event.pointerId) return;
-                    dragStart = undefined;
-                    event.currentTarget.releasePointerCapture(event.pointerId);
-                  }}
-                  onLostPointerCapture={() => (dragStart = undefined)}
-                >
-                  <span class={styles.resizeGrip} aria-hidden="true" />
-                  <span>{previewWidth()}px</span>
-                </button>
-              </div>
-            </div>
+              {(grip) => (
+                <>
+                  <Neodt
+                    class={styles.previewInput}
+                    referenceTime={referenceTime()}
+                    value={value()}
+                    {...(locale() ? { locale: locale() } : {})}
+                    formatOptions={formatOptions()}
+                    showTimeOffset={showTimeOffset()}
+                    readonly={readonly()}
+                    disabled={disabled()}
+                    onValueChange={setValue}
+                  />
+                  {grip}
+                </>
+              )}
+            </ResizablePreview>
             <div class={styles.valueLine}>
               <span>Current value</span>
               <code>{iso(value())}</code>

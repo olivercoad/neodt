@@ -182,6 +182,34 @@ for (const library of libraries) {
       await expect(nav.getByRole("group", { name: "All previews" })).toHaveCount(0);
     });
 
+    test("lab preview shrinks below 180px and remembers its width", async ({ page }) => {
+      await page.goto("./");
+      const grip = page.getByRole("slider", { name: "Resize preview input" });
+      const control = grip.locator("..").locator(".datetime-neo");
+      await page.evaluate(() => document.fonts.ready);
+      await grip.hover();
+      const start = Number(await grip.getAttribute("aria-valuenow"));
+      const bounds = (await grip.boundingBox())!;
+      const x = bounds.x + bounds.width / 2;
+      const y = bounds.y + bounds.height / 2;
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      for (const width of [150, 100]) {
+        await page.mouse.move(x + width - start, y, { steps: 5 });
+        await expect(grip).toHaveAttribute("aria-valuenow", String(width));
+        await expect.poll(async () => (await control.boundingBox())!.width).toBe(width);
+      }
+      await page.mouse.up();
+      await page.reload();
+      await expect(grip).toHaveAttribute("aria-valuenow", "100");
+      await expect.poll(async () => (await control.boundingBox())!.width).toBe(100);
+      await grip.focus();
+      await page.keyboard.press("ArrowRight");
+      await expect.poll(async () => (await control.boundingBox())!.width).toBe(110);
+      await page.keyboard.press("Home");
+      await expect.poll(async () => (await control.boundingBox())!.width).toBe(100);
+    });
+
     test("every width grip resizes the entire gallery with pointer and keyboard", async ({
       page,
     }) => {

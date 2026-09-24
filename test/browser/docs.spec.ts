@@ -248,6 +248,13 @@ for (const library of libraries) {
       await expect(grip).toHaveAttribute("aria-valuenow", String(start - 40));
       await page.keyboard.press("Home");
       await expect(grip).toHaveAttribute("aria-valuenow", "100");
+      // Exercise widths below the inputs' intrinsic size, regardless of the host's fonts.
+      // Seamless deliberately sets its own minimum width; the other themes should fill the sizer.
+      for (const control of await page
+        .locator("[data-theme-preview] .datetime-neo:not(.theme-seamless)")
+        .all()) {
+        await expect.poll(async () => (await control.boundingBox())!.width).toBe(100);
+      }
       await page.keyboard.press("ArrowLeft");
       await expect(grip).toHaveAttribute("aria-valuenow", "100");
       await page.keyboard.press("End");

@@ -14,7 +14,8 @@ for (const library of libraries) {
     });
 
     test("configuration TSX highlighting follows live options", async ({ page }) => {
-      await page.goto("./#lab");
+      // Let Playwright scroll to the controls without racing the #lab smooth scroll.
+      await page.goto("./");
       const code = page.locator('#lab code[data-language="tsx"]');
       await expect(code.locator(".token.keyword").first()).toHaveText("import");
       await expect(code.locator(".token.tag").first()).toContainText("Neodt");

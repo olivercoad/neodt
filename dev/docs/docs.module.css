@@ -178,6 +178,8 @@
 }
 .previewHost {
   display: grid;
+  /* Keep the shadow-root input's intrinsic width from expanding the grid track. */
+  grid-template-columns: minmax(0, 1fr);
 }
 .galleryControls {
   border: 0;

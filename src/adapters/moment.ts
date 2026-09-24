@@ -2,7 +2,7 @@ import type { Moment, MomentInput } from "moment";
 
 import { systemZone, type AdapterOptions, type DateAdapter, type DateFields } from "../adapter";
 import { fixedOffset, offsetZone } from "../format";
-import { formatWithIntl } from "./intl-format";
+import { createLibraryZoneFormatter } from "./intl-format";
 
 type MomentFactory = ((input?: MomentInput) => Moment) & {
   tz?: ((input: MomentInput, zone: string) => Moment) & { zone?(zone: string): unknown };
@@ -88,14 +88,13 @@ export function createMomentAdapter(
     getDaysInMonth: (value) => native(value).daysInMonth(),
     getOffset: (value) => native(value).utcOffset(),
     setZoneId: inZone,
-    formatToParts: (value, locale, options) =>
-      formatWithIntl(
-        native(value).utc(true).valueOf(),
-        native(value).utcOffset(),
+    createFormatter: (zone, locale, options) =>
+      createLibraryZoneFormatter(
+        zone,
         locale,
         options,
-        zoneOf(value),
-        value.valueOf(),
+        (value: Moment) => value.valueOf(),
+        (value) => native(value).utcOffset(),
       ),
   };
 }

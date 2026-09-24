@@ -10,7 +10,7 @@ import {
 } from "date-fns";
 
 import { systemZone, type AdapterOptions, type DateAdapter, type DateFields } from "../adapter";
-import { formatWithIntl } from "./intl-format";
+import { createIntlFormatter } from "./intl-format";
 
 /** date-fns owns calendar operations; @date-fns/tz supplies named-zone Date operations. */
 export function createDateFnsAdapter<T extends Date = Date>(
@@ -65,14 +65,7 @@ export function createDateFnsAdapter<T extends Date = Date>(
     getDaysInMonth: (value) => getDaysInMonth(zoned(value)),
     getOffset: (value) => -zoned(value).getTimezoneOffset(),
     setZoneId: (value, zone) => output(new TZDate(value.getTime(), zone), zone),
-    formatToParts: (value, locale, options) =>
-      formatWithIntl(
-        set(new TZDate(0, "UTC"), { ...values(fields(value)), milliseconds: 0 }).getTime(),
-        -zoned(value).getTimezoneOffset(),
-        locale,
-        options,
-        zoneOf(value),
-        value.getTime(),
-      ),
+    createFormatter: (zone, locale, options) =>
+      createIntlFormatter(zone, locale, options, (value: T) => value.getTime()),
   };
 }

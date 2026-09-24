@@ -38,14 +38,14 @@ export function createLuxonAdapter(
     getOffset: (value) => value.offset,
     isOffsetFixed: (value) => value.isOffsetFixed ?? false,
     setZoneId: (value, zone) => valid(value.setZone(normalizeZone(zone))),
-    formatToParts: (value, locale, options) =>
-      value
-        .reconfigure({
-          ...(locale === undefined
-            ? {}
-            : { locale: new Intl.DateTimeFormat(locale).resolvedOptions().locale }),
-          outputCalendar: "gregory",
-        })
-        .toLocaleParts(options),
+    createFormatter: (_zone, locale, options) => {
+      const localeName = (Array.isArray(locale) ? locale[0] : locale)?.toString();
+      return {
+        formatToParts: (value) => {
+          const localized = localeName ? value.setLocale(localeName) : value;
+          return localized.reconfigure({ outputCalendar: "gregory" }).toLocaleParts(options);
+        },
+      };
+    },
   };
 }

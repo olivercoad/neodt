@@ -1,33 +1,57 @@
 import { fixedOffset, offsetZone } from "../format";
 
-/** Formatting bridge for libraries without a format-to-parts API.
- * The adapter's library supplies a UTC timestamp with the desired wall-clock fields.
- * This helper only formats it; it performs no field-to-timestamp conversion.
- */
-export function formatWithIntl(
-  wallClockMilliseconds: number,
-  offset: number,
+/** Format the actual instant and zone together, reusing one Intl formatter. */
+export function createIntlFormatter<T>(
+  zone: string,
   locale: Intl.LocalesArgument | undefined,
   options: Intl.DateTimeFormatOptions,
-  zoneName?: string,
-  milliseconds?: number,
-): Intl.DateTimeFormatPart[] {
-  const parts = new Intl.DateTimeFormat(locale, {
+  milliseconds: (value: T) => number,
+) {
+  const offset = fixedOffset(zone);
+  const formatter = new Intl.DateTimeFormat(locale, {
+    ...options,
+    timeZone: offset === undefined ? zone : offset === 0 ? "UTC" : offsetZone(offset),
+    calendar: "gregory",
+  });
+  return { formatToParts: (value: T) => formatter.formatToParts(milliseconds(value)) };
+}
+
+/** Moment and Spacetime own timezone data that can differ from Intl's database.
+ * Preserve their offsets for the fields, and use Intl only to localize zone names.
+ */
+export function createLibraryZoneFormatter<T>(
+  zone: string,
+  locale: Intl.LocalesArgument | undefined,
+  options: Intl.DateTimeFormatOptions,
+  milliseconds: (value: T) => number,
+  offset: (value: T) => number,
+) {
+  const formatter = new Intl.DateTimeFormat(locale, {
     ...options,
     timeZone: "UTC",
     calendar: "gregory",
-  }).formatToParts(wallClockMilliseconds);
-  if (!options.timeZoneName) return parts;
-  let label = offset === 0 ? "UTC" : `UTC${offsetZone(offset)}`;
-  if (zoneName && fixedOffset(zoneName) === undefined && milliseconds !== undefined) {
+  });
+  let zoneFormatter: Intl.DateTimeFormat | undefined;
+  if (options.timeZoneName && fixedOffset(zone) === undefined) {
     try {
-      label =
-        new Intl.DateTimeFormat(locale, { timeZone: zoneName, timeZoneName: options.timeZoneName })
-          .formatToParts(milliseconds)
-          .find((part) => part.type === "timeZoneName")?.value ?? label;
+      zoneFormatter = new Intl.DateTimeFormat(locale, {
+        timeZone: zone,
+        timeZoneName: options.timeZoneName,
+      });
     } catch {
-      /* Opaque/fixed zones use the library's numeric offset label. */
+      // Library-only zones retain a numeric offset label.
     }
   }
-  return parts.map((part) => (part.type === "timeZoneName" ? { ...part, value: label } : part));
+  return {
+    formatToParts(value: T) {
+      const ms = milliseconds(value);
+      const minutes = offset(value);
+      const parts = formatter.formatToParts(ms + minutes * 60_000);
+      if (!options.timeZoneName) return parts;
+      const label =
+        zoneFormatter?.formatToParts(ms).find((part) => part.type === "timeZoneName")?.value ??
+        (minutes === 0 ? "UTC" : `UTC${offsetZone(minutes)}`);
+      return parts.map((part) => (part.type === "timeZoneName" ? { ...part, value: label } : part));
+    },
+  };
 }

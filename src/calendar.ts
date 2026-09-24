@@ -1,5 +1,6 @@
 import type { DateAdapter, DateBoundary, DateDuration, DateFields, DurationUnit } from "./adapter";
 import { fixedOffset, offsetZone } from "./format";
+import { formatterFor } from "./formatter-cache";
 
 export type { DurationUnit } from "./adapter";
 
@@ -175,6 +176,6 @@ export function calendarDate<T, TZone>(adapter: DateAdapter<T, TZone>, value: T)
     plus: (duration) => wrap(adapter.add(value, duration)),
     startOf: (unit) => wrap(adapter.startOf(value, unit)),
     setZoneId: (id) => wrap(adapter.setZoneId(value, id)),
-    format: (locale, options) => adapter.formatToParts(value, locale, options),
+    format: (locale, options) => formatterFor(adapter, zone, locale, options).formatToParts(value),
   });
 }

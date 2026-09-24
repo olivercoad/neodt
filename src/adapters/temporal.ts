@@ -1,6 +1,6 @@
 import type { DateAdapter, DateDuration, DateFields } from "../adapter";
 import { fixedOffset } from "../format";
-import { formatWithIntl } from "./intl-format";
+import { createIntlFormatter } from "./intl-format";
 
 /** Structural types keep this entry independent of any Temporal package or global. */
 export interface TemporalZonedValue {
@@ -74,14 +74,7 @@ export function createTemporalAdapter<T extends TemporalZonedValue>(
     getOffset: (value) => value.offsetNanoseconds / 60_000_000_000,
     isOffsetFixed: (value) => fixedOffset(value.timeZoneId) !== undefined,
     setZoneId: (value, zone) => own(value.withTimeZone(zone)),
-    formatToParts: (value, locale, options) =>
-      formatWithIntl(
-        Temporal.ZonedDateTime.from({ ...fields(value), timeZone: "UTC" }).epochMilliseconds,
-        value.offsetNanoseconds / 60_000_000_000,
-        locale,
-        options,
-        value.timeZoneId,
-        value.epochMilliseconds,
-      ),
+    createFormatter: (zone, locale, options) =>
+      createIntlFormatter(zone, locale, options, (value: T) => value.epochMilliseconds),
   };
 }

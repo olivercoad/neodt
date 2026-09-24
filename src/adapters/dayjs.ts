@@ -2,7 +2,7 @@ import type { Dayjs, ConfigType, ManipulateType, UnitType } from "dayjs";
 
 import { systemZone, type AdapterOptions, type DateAdapter, type DateFields } from "../adapter";
 import { fixedOffset, offsetZone } from "../format";
-import { formatWithIntl } from "./intl-format";
+import { createIntlFormatter } from "./intl-format";
 
 type DayjsFactory = ((input?: ConfigType) => Dayjs) & {
   utc?: (input?: ConfigType) => Dayjs;
@@ -123,14 +123,7 @@ export function createDayjsAdapter(
     getDaysInMonth: (value) => native(value).daysInMonth(),
     getOffset: (value) => native(value).utcOffset(),
     setZoneId: inZone,
-    formatToParts: (value, locale, options) =>
-      formatWithIntl(
-        dayjs(`${native(value).format("YYYY-MM-DDTHH:mm:ss.SSS")}Z`).valueOf(),
-        native(value).utcOffset(),
-        locale,
-        options,
-        zoneOf(value),
-        value.valueOf(),
-      ),
+    createFormatter: (zone, locale, options) =>
+      createIntlFormatter(zone, locale, options, (value: Dayjs) => value.valueOf()),
   };
 }

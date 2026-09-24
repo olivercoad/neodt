@@ -2,12 +2,11 @@ import {
   CalendarDateTime,
   getDayOfWeek,
   toZoned,
-  toCalendarDateTime,
   type ZonedDateTime,
 } from "@internationalized/date";
 
 import type { DateAdapter } from "../adapter";
-import { formatWithIntl } from "./intl-format";
+import { createIntlFormatter } from "./intl-format";
 
 export function createInternationalizedDateAdapter(
   fromAbsolute: typeof import("@internationalized/date").fromAbsolute,
@@ -62,15 +61,8 @@ export function createInternationalizedDateAdapter(
     },
     getOffset: (value) => value.offset / 60_000,
     setZoneId: (value, zone) => fromAbsolute(value.toDate().getTime(), zone),
-    formatToParts: (value, locale, options) =>
-      formatWithIntl(
-        toZoned(toCalendarDateTime(iso(value)), "UTC")
-          .toDate()
-          .getTime(),
-        value.offset / 60_000,
-        locale,
-        options,
-        value.timeZone,
+    createFormatter: (zone, locale, options) =>
+      createIntlFormatter(zone, locale, options, (value: ZonedDateTime) =>
         value.toDate().getTime(),
       ),
   };

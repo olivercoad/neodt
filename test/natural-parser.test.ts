@@ -138,11 +138,11 @@ it("keeps incomplete and out-of-range text safe in the component's parser", () =
 it("asks the adapter for locale field order", () => {
   const custom = {
     ...adapter,
-    formatToParts: (
-      value: DateTime,
+    createFormatter: (
+      zone: Parameters<typeof adapter.createFormatter>[0],
       _locale: Intl.LocalesArgument | undefined,
       options: Intl.DateTimeFormatOptions,
-    ) => adapter.formatToParts(value, "en-GB", options),
+    ) => adapter.createFormatter(zone, "en-GB", options),
   };
   const result = parseNaturalDate("8/4", {
     adapter: custom,

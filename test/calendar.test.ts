@@ -102,7 +102,7 @@ describe.each(references)("original editor calendar behavior: %s", (name, refere
       fixed
         .toLocaleParts("en-US", { timeZoneName: "short" })
         .find((part) => part.type === "timeZoneName")?.value,
-    ).toBe(name === "Luxon" ? "UTC+5:45" : "UTC+05:45");
+    ).toBe(name === "Luxon" ? "UTC+5:45" : "GMT+5:45");
   });
 
   it("rejects invalid ISO dates and offsets rather than rolling over", () => {

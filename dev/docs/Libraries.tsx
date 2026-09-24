@@ -281,8 +281,10 @@ const referenceTime = constructNow(0);
         Zones may be strings or opaque objects and are retained unchanged on output.
         <code>getOffset</code> supplies the selected date's offset for <code>showTimeOffset</code>;
         <code>setZoneId</code> handles zones explicitly named in parser text. Locale formatting is
-        supplied by <code>formatToParts</code>. The core performs no timezone resolution. The public
-        prop type is <code>NeodtProps&lt;T, TZone&gt;</code>.
+        supplied by <code>createFormatter(zone, locale, options)</code>, which returns an object
+        with <code>formatToParts(value)</code>. The core caches up to 32 formatters per adapter by
+        zone, locale, and options. The core performs no timezone resolution. The public prop type is{" "}
+        <code>NeodtProps&lt;T, TZone&gt;</code>.
       </p>
     </>
   );

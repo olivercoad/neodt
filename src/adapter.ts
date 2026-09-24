@@ -33,11 +33,15 @@ export interface DateAdapter<T, TZone = string> {
   readonly isOffsetFixed?: (value: T) => boolean;
   /** Interpret an explicit timezone in user-entered text, preserving the instant. */
   readonly setZoneId: (value: T, zoneId: string) => T;
-  readonly formatToParts: (
-    value: T,
+  /** Create reusable locale formatting for values in this zone.
+   * The core caches at most 32 formatters per adapter, by zone, locale and options.
+   * A formatter must support different instants (including DST changes) in its zone.
+   */
+  readonly createFormatter: (
+    zone: TZone,
     locale: Intl.LocalesArgument | undefined,
     options: Intl.DateTimeFormatOptions,
-  ) => Intl.DateTimeFormatPart[];
+  ) => { formatToParts(value: T): Intl.DateTimeFormatPart[] };
 }
 
 export interface AdapterOptions {

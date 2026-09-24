@@ -2,7 +2,7 @@ import type { Spacetime, SpacetimeConstructor, TimeUnit } from "spacetime";
 
 import type { DateAdapter, DateFields } from "../adapter";
 import { fixedOffset } from "../format";
-import { formatWithIntl } from "./intl-format";
+import { createLibraryZoneFormatter } from "./intl-format";
 
 export function createSpacetimeAdapter(spacetime: SpacetimeConstructor): DateAdapter<Spacetime> {
   const zones = new WeakMap<Spacetime, string>();
@@ -78,14 +78,13 @@ export function createSpacetimeAdapter(spacetime: SpacetimeConstructor): DateAda
     getDaysInMonth: (value) => value.daysInMonth(),
     getOffset: (value) => value.timezone().current.offset * 60,
     setZoneId: (value, zone) => remember(value.goto(libraryZone(zone)), zone),
-    formatToParts: (value, locale, options) =>
-      formatWithIntl(
-        fromFields(fields(value), "UTC").epoch,
-        value.timezone().current.offset * 60,
+    createFormatter: (zone, locale, options) =>
+      createLibraryZoneFormatter(
+        zone,
         locale,
         options,
-        zoneOf(value),
-        value.epoch,
+        (value: Spacetime) => value.epoch,
+        (value) => value.timezone().current.offset * 60,
       ),
   };
 }

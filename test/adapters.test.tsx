@@ -76,7 +76,7 @@ function contract<T, TZone>(
     it("formats library wall-clock fields and zone labels without mutating values", () => {
       const value = adapter.add(referenceTime, { days: 1 });
       const before = adapter.toEpochMilliseconds(value);
-      const parts = adapter.formatToParts(value, "en-US", {
+      const formatter = adapter.createFormatter(adapter.getZone(value), "en-US", {
         year: "numeric",
         month: "numeric",
         day: "numeric",
@@ -85,6 +85,7 @@ function contract<T, TZone>(
         hourCycle: "h23",
         timeZoneName: "short",
       });
+      const parts = formatter.formatToParts(value);
       const part = (type: string) => parts.find((part) => part.type === type)?.value;
       expect(part("year")).toBe("2026");
       expect(part("month")).toBe("3");
@@ -94,6 +95,9 @@ function contract<T, TZone>(
       expect(part("timeZoneName")).toBe("EDT");
       expect(adapter.toEpochMilliseconds(value)).toBe(before);
       expect(adapter.getOffset(value)).toBe(-240);
+      const earlierParts = formatter.formatToParts(referenceTime);
+      expect(earlierParts.find((part) => part.type === "hour")?.value).toBe("12");
+      expect(earlierParts.find((part) => part.type === "timeZoneName")?.value).toBe("EST");
     });
 
     it("does not mutate the reference value", () => {
@@ -171,6 +175,42 @@ contract("Spacetime", createSpacetimeAdapter(spacetime), zone, {
 contract("Temporal @js-temporal/polyfill", createTemporalAdapter(Temporal), zone);
 contract("Temporal temporal-polyfill ponyfill", createTemporalAdapter(OtherTemporal), zone);
 
+it("formats Moment zones that are absent from Intl's database", () => {
+  const zone = "Neodt/Custom";
+  moment.tz.add(`${zone}|NDT|-5J|0|`);
+  const adapter = createMomentAdapter(moment);
+  const value = adapter.fromEpochMilliseconds(0, zone);
+  const parts = adapter
+    .createFormatter(zone, "en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+      timeZoneName: "short",
+    })
+    .formatToParts(value);
+  expect(parts.find((part) => part.type === "hour")?.value).toBe("05");
+  expect(parts.find((part) => part.type === "minute")?.value).toBe("45");
+  expect(parts.find((part) => part.type === "timeZoneName")?.value).toBe("UTC+05:45");
+});
+
+it("retains Spacetime's own historical offsets when formatting", () => {
+  const adapter = createSpacetimeAdapter(spacetime);
+  const value = adapter.fromEpochMilliseconds(
+    Temporal.Instant.from("1900-01-01T00:00Z").epochMilliseconds,
+    "Europe/Paris",
+  );
+  const fields = adapter.getFields(value);
+  const parts = adapter
+    .createFormatter(adapter.getZone(value), "en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    })
+    .formatToParts(value);
+  expect(Number(parts.find((part) => part.type === "hour")?.value)).toBe(fields.hour);
+  expect(Number(parts.find((part) => part.type === "minute")?.value)).toBe(fields.minute);
+});
+
 it("uses the supplied Temporal implementation for construction and arithmetic", () => {
   const from = vi.fn(Temporal.ZonedDateTime.from);
   const fromEpochMilliseconds = vi.fn(Temporal.Instant.fromEpochMilliseconds);
@@ -211,8 +251,10 @@ function opaqueAdapter<TZone>(
     getDaysInMonth: (value) => library.getDaysInMonth(native(value)),
     getOffset: (value) => library.getOffset(native(value)),
     setZoneId: (value, id) => pack(library.setZoneId(native(value), id), zoneFromId(id)),
-    formatToParts: (value, locale, options) =>
-      library.formatToParts(native(value), locale, options),
+    createFormatter: (zone, locale, options) => {
+      const formatter = library.createFormatter(zoneName(zone), locale, options);
+      return { formatToParts: (value) => formatter.formatToParts(native(value)) };
+    },
   };
 }
 

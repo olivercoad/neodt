@@ -186,6 +186,7 @@ for (const library of libraries) {
       await page.goto("./");
       const grip = page.getByRole("slider", { name: "Resize preview input" });
       const control = grip.locator("..").locator(".datetime-neo");
+      await expect(grip).toBeVisible();
       await page.evaluate(() => document.fonts.ready);
       await grip.hover();
       const start = Number(await grip.getAttribute("aria-valuenow"));
@@ -216,6 +217,9 @@ for (const library of libraries) {
       await page.goto("./#/docs/styling");
       const preview = page.locator("[data-theme-preview=paper]");
       const grip = page.getByRole("slider", { name: "Resize Paper & ink previews" });
+      // Async adapter setup can outlive page.goto(); fonts.ready on an empty page resolves early.
+      // Wait for rendered content to request its fonts before measuring pointer coordinates.
+      await expect(grip).toBeVisible();
       await page.evaluate(() => document.fonts.ready);
       // Hover waits for layout stability and hit testing before the raw pointer drag.
       await grip.hover();
@@ -270,8 +274,9 @@ for (const library of libraries) {
       page,
     }) => {
       await page.goto("./#/docs/styling");
-      await page.evaluate(() => document.fonts.ready);
       const preview = page.locator("[data-theme-preview=seamless]");
+      await expect(preview).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
       for (const control of await preview.locator(".datetime-neo").all()) {
         await expect(control).toHaveCSS("font-size", "16px");
         await expect(control).toHaveCSS("line-height", "normal");
@@ -304,8 +309,9 @@ for (const library of libraries) {
       }) => {
         await page.emulateMedia({ reducedMotion: "reduce" });
         await page.goto("./#/docs/styling");
-        await page.evaluate(() => document.fonts.ready);
         const preview = page.locator("[data-theme-preview=seamless]");
+        await expect(preview).toBeVisible();
+        await page.evaluate(() => document.fonts.ready);
         await preview.evaluate((el, width) => (el.style.width = `${width}px`), width);
         const control = preview.locator("[data-preview-state=editable] .datetime-neo");
         const geometry = () =>
@@ -377,6 +383,7 @@ for (const library of libraries) {
         await page.setViewportSize({ width: 1000, height: 800 });
         await page.goto("./#/docs/styling");
         const grip = page.getByRole("slider", { name: "Resize Compact console previews" });
+        await expect(grip).toBeVisible();
         await page.evaluate(() => document.fonts.ready);
         await grip.focus();
         await page.keyboard.press("End");

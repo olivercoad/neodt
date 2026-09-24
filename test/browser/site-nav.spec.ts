@@ -66,6 +66,8 @@ for (const preview of ["lab", "gallery"] as const) {
       name: preview === "lab" ? "Resize preview input" : "Resize Midnight previews",
     });
     const control = grip.locator("..").locator(".datetime-neo");
+    // Async adapter startup must render the preview before fonts.ready can cover its fonts.
+    await expect(grip).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
     await grip.focus();
     await page.keyboard.press("End");

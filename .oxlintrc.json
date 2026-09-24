@@ -16,5 +16,48 @@
     "typescript/no-unnecessary-type-assertion": "warn",
     "typescript/no-unnecessary-condition": "warn",
     "typescript/no-useless-empty-export": "warn"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["src/**/*.ts", "src/**/*.tsx"],
+      "rules": {
+        "no-restricted-globals": [
+          "error",
+          {
+            "name": "Date",
+            "message": "Use the selected datetime adapter. Native Date belongs only in adapters that require it."
+          }
+        ],
+        "no-restricted-properties": [
+          "error",
+          {
+            "object": "globalThis",
+            "property": "Date",
+            "message": "Use the selected datetime adapter."
+          },
+          {
+            "object": "window",
+            "property": "Date",
+            "message": "Use the selected datetime adapter."
+          },
+          {
+            "object": "global",
+            "property": "Date",
+            "message": "Use the selected datetime adapter."
+          },
+          {
+            "object": "self",
+            "property": "Date",
+            "message": "Use the selected datetime adapter."
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/adapters/date-fns.ts", "src/date-fns.tsx"],
+      "rules": {
+        "no-restricted-globals": "off"
+      }
+    }
+  ]
 }

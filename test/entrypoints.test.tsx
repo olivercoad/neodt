@@ -1,5 +1,6 @@
 import { fromAbsolute } from "@internationalized/date";
 import { Temporal as JsTemporal } from "@js-temporal/polyfill";
+import { toDate } from "date-fns/toDate";
 import dayjs from "dayjs";
 import { DateTime } from "luxon";
 import moment from "moment";
@@ -20,7 +21,7 @@ import * as moments from "../src/moment";
 import * as spaces from "../src/spacetime";
 import * as temporal from "../src/temporal-polyfill";
 
-const milliseconds = Date.parse("2026-04-15T12:30Z");
+const milliseconds = JsTemporal.Instant.from("2026-04-15T12:30Z").epochMilliseconds;
 
 function contract<T, TZone>(
   name: string,
@@ -80,7 +81,7 @@ contract(
 contract("luxon", luxon, DateTime.fromMillis(milliseconds), (value) => value.toMillis());
 contract("moment", moments, moment(milliseconds), (value) => value.valueOf());
 contract("dayjs", days, dayjs(milliseconds), (value) => value.valueOf());
-contract("date-fns", dates, new Date(milliseconds), (value) => value.getTime());
+contract("date-fns", dates, toDate(milliseconds), (value) => value.getTime());
 contract("spacetime", spaces, spacetime(milliseconds), (value) => value.epoch);
 contract(
   "temporal-polyfill",

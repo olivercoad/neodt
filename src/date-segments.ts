@@ -1,4 +1,4 @@
-import { CalendarDate as DateTime, daysInMonth } from "./calendar";
+import type { CalendarDate as DateTime } from "./calendar";
 
 export const segmentNames = ["year", "month", "day", "hour", "minute", "dayPeriod"] as const;
 export type SegmentName = (typeof segmentNames)[number];
@@ -8,9 +8,9 @@ export type DisplayPart = Segment | { type: string; value: string; editable: fal
 const editableTypes = new Set<string>(segmentNames);
 const timeTypes = new Set<SegmentName>(["hour", "minute", "dayPeriod"]);
 
-export function parseLocal(value: string, zone: string): DateTime | undefined {
+export function parseLocal(value: string, reference: DateTime): DateTime | undefined {
   if (!value) return undefined;
-  const date = DateTime.fromISO(value, { zone });
+  const date = reference.fromISO(value);
   return date;
 }
 
@@ -20,13 +20,13 @@ export function toLocalValue(date: DateTime): string {
 
 export function partsFor(
   value: string,
-  zone: string,
+  reference: DateTime,
   locale: Intl.LocalesArgument | undefined,
   options: Intl.DateTimeFormatOptions | undefined,
 ): DisplayPart[] {
   const date =
-    parseLocal(value, zone) ??
-    DateTime.fromObject({ year: 2001, month: 2, day: 3, hour: 4, minute: 5 }, { zone });
+    parseLocal(value, reference) ??
+    reference.fromObject({ year: 2001, month: 2, day: 3, hour: 4, minute: 5 });
   return date
     .toLocaleParts(locale, {
       year: "numeric",
@@ -52,7 +52,7 @@ export function naturalPreview(
   locale: Intl.LocalesArgument | undefined,
   options: Intl.DateTimeFormatOptions | undefined,
 ): string {
-  return partsFor(toLocalValue(date), date.zone, locale, options)
+  return partsFor(toLocalValue(date), date, locale, options)
     .map((part) => part.value)
     .join("");
 }
@@ -117,12 +117,13 @@ export function closestYear(twoDigitYear: string, referenceTime: DateTime): numb
   return candidate;
 }
 
-export function nearestLeapYear(year: number): number {
+export function nearestLeapYear(year: number, reference: DateTime): number {
   for (let distance = 0; ; distance += 1) {
     const earlier = year - distance;
-    if (earlier >= 1 && daysInMonth(earlier, 2) === 29) return earlier;
+    if (earlier >= 1 && reference.fromObject({ year: earlier, month: 2 }).daysInMonth === 29)
+      return earlier;
     const later = year + distance;
-    if (daysInMonth(later, 2) === 29) return later;
+    if (reference.fromObject({ year: later, month: 2 }).daysInMonth === 29) return later;
   }
 }
 

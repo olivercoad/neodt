@@ -18,6 +18,7 @@ const datetimePackages = [
   "moment",
   "dayjs",
   "date-fns",
+  "@date-fns/tz",
   "spacetime",
   "@js-temporal/polyfill",
   "temporal-polyfill",
@@ -31,6 +32,8 @@ const cases = [
     name: "native",
     packages: [],
     entry: "",
+    factory: "createTemporalAdapter",
+    implementation: "Temporal",
     source: `const referenceTime = Temporal.Now.zonedDateTimeISO();`,
     callback: "value?.toInstant()",
   },
@@ -39,19 +42,23 @@ const cases = [
     entry: "/generic",
     generic: true,
     packages: [],
-    source: `import { createTemporalAdapter } from "@olicoad/neodt/adapters/temporal";
-class Zoned {
-  constructor(readonly epochMilliseconds: number, readonly timeZoneId: string) {}
-  applicationMethod() { return "native"; }
+    source: `import { createTemporalAdapter } from "@olicoad/neodt";
+const implementation = {
+  ZonedDateTime: { from: (fields: Parameters<typeof Temporal.ZonedDateTime.from>[0]) => decorate(Temporal.ZonedDateTime.from(fields)) },
+  Instant: { fromEpochMilliseconds: (ms: number) => ({ toZonedDateTimeISO: (zone: string) => decorate(Temporal.Instant.fromEpochMilliseconds(ms).toZonedDateTimeISO(zone)) }) }
+};
+function decorate(value: Temporal.ZonedDateTime) {
+  return Object.assign(value, { applicationMethod: () => "native" });
 }
-const Temporal = { Instant: { fromEpochMilliseconds: (ms: number) => ({ toZonedDateTimeISO: (zone: string) => new Zoned(ms, zone) }) } };
-const adapter = createTemporalAdapter(Temporal);
-const referenceTime = new Zoned(0, "UTC");`,
+const adapter = createTemporalAdapter(implementation);
+const referenceTime = decorate(Temporal.Instant.fromEpochMilliseconds(0).toZonedDateTimeISO("UTC"));`,
     callback: "value?.applicationMethod()",
   },
   {
     name: "luxon",
     entry: "/luxon",
+    factory: "createLuxonAdapter",
+    implementation: "DateTime",
     packages: ["luxon", "@types/luxon"],
     source: `import { DateTime } from "luxon";
 const referenceTime: DateTime = DateTime.now();`,
@@ -60,6 +67,8 @@ const referenceTime: DateTime = DateTime.now();`,
   {
     name: "moment",
     entry: "/moment",
+    factory: "createMomentAdapter",
+    implementation: "moment",
     packages: ["moment"],
     source: `import moment from "moment";
 const referenceTime = moment();`,
@@ -68,6 +77,8 @@ const referenceTime = moment();`,
   {
     name: "dayjs",
     entry: "/dayjs",
+    factory: "createDayjsAdapter",
+    implementation: "dayjs",
     packages: ["dayjs"],
     source: `import dayjs from "dayjs";
 const referenceTime = dayjs();`,
@@ -76,13 +87,18 @@ const referenceTime = dayjs();`,
   {
     name: "date-fns",
     entry: "/date-fns",
-    packages: ["date-fns"],
-    source: `const referenceTime = new Date();`,
+    factory: "createDateFnsAdapter",
+    implementation: "toDate",
+    packages: ["date-fns", "@date-fns/tz"],
+    source: `import { toDate, constructNow } from "date-fns";
+const referenceTime = constructNow(0);`,
     callback: "value?.getTime()",
   },
   {
     name: "spacetime",
     entry: "/spacetime",
+    factory: "createSpacetimeAdapter",
+    implementation: "spacetime",
     packages: ["spacetime"],
     source: `import spacetime from "spacetime";
 const referenceTime = spacetime.now();`,
@@ -91,8 +107,10 @@ const referenceTime = spacetime.now();`,
   {
     name: "internationalized-date",
     entry: "/internationalized-date",
+    factory: "createInternationalizedDateAdapter",
+    implementation: "fromAbsolute",
     packages: ["@internationalized/date"],
-    source: `import { now } from "@internationalized/date";
+    source: `import { fromAbsolute, now } from "@internationalized/date";
 const referenceTime = now("Australia/Sydney");`,
     callback: "value?.toAbsoluteString()",
   },
@@ -102,7 +120,7 @@ const referenceTime = now("Australia/Sydney");`,
     generic: true,
     packages: ["@internationalized/date"],
     source: `import { fromAbsolute, now } from "@internationalized/date";
-import { createInternationalizedDateAdapter } from "@olicoad/neodt/adapters/internationalized-date";
+import { createInternationalizedDateAdapter } from "@olicoad/neodt/internationalized-date";
 const adapter = createInternationalizedDateAdapter(fromAbsolute);
 const referenceTime = now("Australia/Sydney");`,
     callback: "value?.toAbsoluteString()",
@@ -110,6 +128,8 @@ const referenceTime = now("Australia/Sydney");`,
   ...["@js-temporal/polyfill", "temporal-polyfill"].map((name) => ({
     name: name.replaceAll("/", "-"),
     entry: name === "temporal-polyfill" ? "/temporal-polyfill" : "/js-temporal-polyfill",
+    factory: "createTemporalAdapter",
+    implementation: "Temporal",
     packages: [name],
     source: `import { Temporal } from "${name}";
 const referenceTime = Temporal.Now.zonedDateTimeISO();`,
@@ -134,6 +154,14 @@ try {
       path.join(cwd, "consumer.tsx"),
       `import Neodt, { parseNaturalDate, type NeodtProps, type NaturalDateParseOptions } from "@olicoad/neodt${fixture.entry}";
 ${fixture.source}
+${
+  fixture.factory
+    ? `import { ${fixture.factory} } from "@olicoad/neodt${fixture.entry}";
+import { parseNaturalDate as parseGenericNaturalDate } from "@olicoad/neodt/generic";
+const adapter = ${fixture.factory}(${fixture.implementation});
+export const adapted: typeof referenceTime | undefined = parseGenericNaturalDate("tomorrow", { adapter, referenceTime });`
+    : ""
+}
 const result = parseNaturalDate("tomorrow", { ${fixture.generic ? "adapter, " : ""}referenceTime });
 const same: typeof referenceTime | undefined = result;
 export { same };
@@ -164,7 +192,7 @@ export const control = <Neodt ${fixture.generic ? "adapter={adapter} " : ""} ref
           strict: true,
           skipLibCheck: false,
           target: "ESNext",
-          lib: [fixture.name === "native" ? "ESNext" : "ES2022", "DOM"],
+          lib: [["native", "custom-temporal"].includes(fixture.name) ? "ESNext" : "ES2022", "DOM"],
           module: "ESNext",
           moduleResolution: "bundler",
           jsx: "preserve",

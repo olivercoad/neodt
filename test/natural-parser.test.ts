@@ -2,7 +2,7 @@ import { DateTime, Info } from "luxon";
 import { describe, expect, it } from "vitest";
 
 import { createLuxonAdapter } from "../src/adapters/luxon";
-import { CalendarDate } from "../src/calendar";
+import { calendarDate } from "../src/calendar";
 import { parseNaturalDate, parseInternalDate } from "../src/natural-parser";
 import { naturalTextExamples } from "../src/natural-placeholder";
 
@@ -122,12 +122,33 @@ describe("parseNaturalDate", () => {
 });
 
 it("keeps incomplete and out-of-range text safe in the component's parser", () => {
-  const referenceTime = CalendarDate.fromISO("2026-01-01T12:00Z")!;
+  const referenceTime = calendarDate(
+    adapter,
+    DateTime.fromISO("2026-01-01T12:00Z", { zone: "UTC" }),
+  );
   for (const text of [
     "in 999999999999 years",
     "today plus 999999999999 days",
     "tomorrow 9am America/Invalid",
   ]) {
-    expect(parseInternalDate(text, { referenceTime, zone: "UTC" })).toBeUndefined();
+    expect(parseInternalDate(text, { referenceTime })).toBeUndefined();
   }
+});
+
+it("asks the adapter for locale field order", () => {
+  const custom = {
+    ...adapter,
+    formatToParts: (
+      value: DateTime,
+      _locale: Intl.LocalesArgument | undefined,
+      options: Intl.DateTimeFormatOptions,
+    ) => adapter.formatToParts(value, "en-GB", options),
+  };
+  const result = parseNaturalDate("8/4", {
+    adapter: custom,
+    referenceTime,
+    zone: "UTC",
+    locale: "en-US",
+  });
+  expect(result?.toISODate()).toBe("2026-04-08");
 });

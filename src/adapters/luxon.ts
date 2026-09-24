@@ -1,17 +1,51 @@
 import type { DateTime, Zone } from "luxon";
 
 import type { DateAdapter } from "../adapter";
-
+import { fixedOffset } from "../format";
 export type LuxonZone = string | Zone;
 
-/** Pass the DateTime constructor from the application's Luxon installation. */
 export function createLuxonAdapter(
-  DateTime: Pick<typeof import("luxon").DateTime, "fromMillis">,
+  DateTime: Pick<typeof import("luxon").DateTime, "fromMillis" | "fromObject">,
 ): DateAdapter<DateTime, LuxonZone> {
+  const valid = (value: DateTime) => {
+    if (!value.isValid) throw new RangeError(value.invalidExplanation ?? "Invalid datetime");
+    return value;
+  };
+  const normalizeZone = (zone: LuxonZone) =>
+    typeof zone === "string" && fixedOffset(zone) !== undefined && !/^(UTC|GMT)/i.test(zone)
+      ? `UTC${zone === "Z" ? "" : zone}`
+      : zone;
+  const fields = (value: DateTime) => ({
+    year: value.year,
+    month: value.month,
+    day: value.day,
+    hour: value.hour,
+    minute: value.minute,
+    second: value.second,
+  });
   return {
     toEpochMilliseconds: (value) => value.toMillis(),
-    fromEpochMilliseconds: (milliseconds, zone) => DateTime.fromMillis(milliseconds, { zone }),
+    fromEpochMilliseconds: (ms, zone) =>
+      valid(DateTime.fromMillis(ms, { zone: normalizeZone(zone) })),
     getZone: (value) => value.zone,
-    getZoneId: (zone) => (typeof zone === "string" ? zone : zone.name),
+    getFields: fields,
+    fromFields: (fields, zone) => valid(DateTime.fromObject(fields, { zone: normalizeZone(zone) })),
+    setFields: (value, fields) => valid(value.set(fields)),
+    add: (value, duration) => valid(value.plus(duration)),
+    startOf: (value, unit) => valid(value.startOf(unit)),
+    getWeekday: (value) => value.weekday,
+    getDaysInMonth: (value) => value.daysInMonth!,
+    getOffset: (value) => value.offset,
+    isOffsetFixed: (value) => value.isOffsetFixed ?? false,
+    setZoneId: (value, zone) => valid(value.setZone(normalizeZone(zone))),
+    formatToParts: (value, locale, options) =>
+      value
+        .reconfigure({
+          ...(locale === undefined
+            ? {}
+            : { locale: new Intl.DateTimeFormat(locale).resolvedOptions().locale }),
+          outputCalendar: "gregory",
+        })
+        .toLocaleParts(options),
   };
 }

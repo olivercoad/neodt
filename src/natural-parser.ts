@@ -1,11 +1,9 @@
 import type { DateAdapter } from "./adapter";
-import { CalendarDate as DateTime, type DurationUnit } from "./calendar";
+import { calendarDate, type CalendarDate as DateTime, type DurationUnit } from "./calendar";
 
 interface InternalParseOptions {
   /** The instant used for relative expressions and omitted years. */
   referenceTime: DateTime;
-  /** IANA zone in which date-only and wall-clock expressions are interpreted. */
-  zone: string;
   /** Locale used to disambiguate short numeric dates such as `8/4`. */
   locale?: Intl.LocalesArgument;
 }
@@ -105,21 +103,20 @@ export function parseInternalDate(
 }
 
 function parseDateExpression(value: string, options: InternalParseOptions): DateTime | undefined {
-  const zone = options.zone ?? options.referenceTime.zone;
-  const now = options.referenceTime.setZone(zone).startOf("minute");
+  const now = options.referenceTime.startOf("minute");
   const input = normalize(value);
   if (!input) return undefined;
   if (input === "now") return now;
 
-  const iso = DateTime.fromISO(value.trim(), { zone });
-  if (iso && /\d{4}-\d{2}-\d{2}/.test(value)) return iso.setZone(zone).startOf("minute");
+  const iso = now.fromISO(value.trim());
+  if (iso && /\d{4}-\d{2}-\d{2}/.test(value)) return iso.inZoneOf(now).startOf("minute");
 
   const zoned = value.trim().match(/^(.*?)(?:\s+([A-Za-z_]+(?:\/[\w+-]+)+|UTC))$/i);
   if (zoned) {
     const zz = zoned[2]!;
     try {
-      const parsed = parseInternalDate(zoned[1]!, { ...options, zone: zz });
-      return parsed?.setZone(zone);
+      const parsed = parseInternalDate(zoned[1]!, { ...options, referenceTime: now.setZoneId(zz) });
+      return parsed?.inZoneOf(now);
     } catch {
       return undefined;
     }
@@ -232,7 +229,7 @@ function parseDate(
   if (numeric) {
     const first = Number(numeric[1]);
     const second = Number(numeric[2]);
-    const parts = numericDateParts(first, second, locale);
+    const parts = numericDateParts(first, second, now, locale);
     return parts
       ? makeDate(
           now,
@@ -276,21 +273,25 @@ function parseDate(
 function numericDateParts(
   first: number,
   second: number,
+  reference: DateTime,
   locale?: Intl.LocalesArgument,
 ): [number, number] | undefined {
   if (first < 1 || second < 1 || first > 31 || second > 31) return undefined;
-  const dayFirst = localeUsesDayFirst(locale);
+  const dayFirst = localeUsesDayFirst(reference, locale);
   const month = dayFirst ? second : first;
   const day = dayFirst ? first : second;
   return month <= 12 ? [month, day] : undefined;
 }
 
-function localeUsesDayFirst(locale: Intl.LocalesArgument | undefined): boolean {
-  const parts = new Intl.DateTimeFormat(locale ?? "en-US", {
+function localeUsesDayFirst(
+  reference: DateTime,
+  locale: Intl.LocalesArgument | undefined,
+): boolean {
+  const parts = reference.toLocaleParts(locale ?? "en-US", {
     day: "numeric",
     month: "numeric",
     year: "numeric",
-  }).formatToParts(new Date(Date.UTC(2001, 1, 3)));
+  });
   return (
     parts.findIndex((part) => part.type === "day") <
     parts.findIndex((part) => part.type === "month")
@@ -299,7 +300,7 @@ function localeUsesDayFirst(locale: Intl.LocalesArgument | undefined): boolean {
 
 function makeDate(now: DateTime, year: number, month: number, day: number): DateTime | undefined {
   try {
-    return DateTime.fromObject({ year, month, day }, { zone: now.zone });
+    return now.fromObject({ year, month, day });
   } catch {
     return undefined;
   }
@@ -355,10 +356,11 @@ export function parseNaturalDate<T, TZone>(
   try {
     const { adapter, referenceTime } = options;
     const zone = options.zone === undefined ? adapter.getZone(referenceTime) : options.zone;
-    const zoneId = adapter.getZoneId(zone);
     const parsed = parseInternalDate(value, {
-      referenceTime: new DateTime(adapter.toEpochMilliseconds(referenceTime), zoneId),
-      zone: zoneId,
+      referenceTime: calendarDate(
+        adapter,
+        adapter.fromEpochMilliseconds(adapter.toEpochMilliseconds(referenceTime), zone),
+      ),
       locale: options.locale,
     });
     return parsed ? adapter.fromEpochMilliseconds(parsed.milliseconds, zone) : undefined;

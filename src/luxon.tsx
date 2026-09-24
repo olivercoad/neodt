@@ -14,4 +14,13 @@ export const { Neodt, parseNaturalDate } = configureNeodt(createLuxonAdapter(Dat
 export default Neodt;
 export { getNaturalDateCompletions } from "./natural-completion";
 export type { NaturalDateCompletion } from "./natural-completion";
-export type { DateAdapter, AdapterOptions } from "./adapter";
+export type {
+  DateAdapter,
+  AdapterOptions,
+  DateFields,
+  DateDuration,
+  DateBoundary,
+  DurationUnit,
+} from "./adapter";
+export { createLuxonAdapter } from "./adapters/luxon";
+export type { LuxonZone } from "./adapters/luxon";

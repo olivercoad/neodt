@@ -14,14 +14,14 @@ import { Temporal as Ponyfill } from "temporal-polyfill";
 // Compiled by lint:types. These assertions also protect JSX's generic inference.
 import { expectTypeOf } from "vitest";
 
-import { createDateFnsAdapter } from "../src/adapters/date-fns";
-import { createDayjsAdapter } from "../src/adapters/dayjs";
-import { createInternationalizedDateAdapter } from "../src/adapters/internationalized-date";
-import { createLuxonAdapter, type LuxonZone } from "../src/adapters/luxon";
-import { createMomentAdapter } from "../src/adapters/moment";
-import { createSpacetimeAdapter } from "../src/adapters/spacetime";
-import { createTemporalAdapter } from "../src/adapters/temporal";
+import { createTemporalAdapter } from "../src";
+import { createDateFnsAdapter } from "../src/date-fns";
+import { createDayjsAdapter } from "../src/dayjs";
 import Neodt, { parseNaturalDate, type NeodtProps } from "../src/generic";
+import { createInternationalizedDateAdapter } from "../src/internationalized-date";
+import { createLuxonAdapter, type LuxonZone } from "../src/luxon";
+import { createMomentAdapter } from "../src/moment";
+import { createSpacetimeAdapter } from "../src/spacetime";
 
 export function checkAdapterTypes() {
   const internationalized = createInternationalizedDateAdapter(fromAbsolute);
@@ -64,9 +64,9 @@ export function checkAdapterTypes() {
   expectTypeOf(parseNaturalDate("now", { adapter: days, referenceTime: dayjs() })).toEqualTypeOf<
     Dayjs | undefined
   >();
-  expectTypeOf(
-    parseNaturalDate("now", { adapter: dates, referenceTime: new Date() }),
-  ).toEqualTypeOf<Date | undefined>();
+  expectTypeOf(parseNaturalDate("now", { adapter: dates, referenceTime: toDate(0) })).toEqualTypeOf<
+    Date | undefined
+  >();
   expectTypeOf(
     parseNaturalDate("now", { adapter: spaces, referenceTime: spacetime.now() }),
   ).toEqualTypeOf<Spacetime | undefined>();
@@ -94,7 +94,7 @@ export function checkAdapterTypes() {
   />;
   <Neodt
     adapter={dates}
-    referenceTime={new Date()}
+    referenceTime={toDate(0)}
     onValueChange={(value) => expectTypeOf(value).toEqualTypeOf<Date | null>()}
   />;
   <Neodt
@@ -116,7 +116,7 @@ export function checkAdapterTypes() {
   // @ts-expect-error The adapter is required; there is no implicit library.
   <Neodt referenceTime={reference} />;
   // @ts-expect-error A value cannot widen or change the adapter's type.
-  <Neodt adapter={luxon} referenceTime={reference} value={new Date()} />;
+  <Neodt adapter={luxon} referenceTime={reference} value={toDate(0)} />;
   // @ts-expect-error Initial values must match the adapter.
   <Neodt adapter={luxon} referenceTime={reference} defaultValue={moment()} />;
   // @ts-expect-error The reference must match the adapter.

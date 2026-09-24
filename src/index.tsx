@@ -10,6 +10,11 @@ export type NaturalDateParseOptions = ConfiguredNaturalDateParseOptions<Temporal
 
 export const { Neodt, parseNaturalDate } = configureNeodt(
   createTemporalAdapter<Temporal.ZonedDateTime>({
+    ZonedDateTime: {
+      from(fields, options) {
+        return Temporal.ZonedDateTime.from(fields, options);
+      },
+    },
     Instant: {
       fromEpochMilliseconds(milliseconds) {
         if (typeof Temporal === "undefined") {
@@ -25,4 +30,13 @@ export const { Neodt, parseNaturalDate } = configureNeodt(
 export default Neodt;
 export { getNaturalDateCompletions } from "./natural-completion";
 export type { NaturalDateCompletion } from "./natural-completion";
-export type { DateAdapter, AdapterOptions } from "./adapter";
+export type {
+  DateAdapter,
+  AdapterOptions,
+  DateFields,
+  DateDuration,
+  DateBoundary,
+  DurationUnit,
+} from "./adapter";
+export { createTemporalAdapter } from "./adapters/temporal";
+export type { TemporalImplementation, TemporalZonedValue } from "./adapters/temporal";

@@ -51,7 +51,7 @@ The import path selects the adapter for both `Neodt` and `parseNaturalDate`. No 
 
 `referenceTime`, `value`, `defaultValue`, parser results, and `onValueChange` use the selected implementation's type. Mixing library types is a TypeScript error. Each configured entry exports concrete `NeodtProps` and `NaturalDateParseOptions` types. The parser accepts the adapter's native zone type: Luxon accepts `Zone` objects or strings; the other built-in adapters use string zone identifiers.
 
-For custom configuration, use `/generic` with the existing factories under `/adapters/*`. Those factories accept your application's library instance, never import a runtime library, and never register plugins or install a polyfill. The following examples show this explicit configuration; pass the resulting adapter to `<Neodt adapter={adapter} referenceTime={...} />` imported from `/generic`.
+For custom configuration, use `/generic` with the adapter factory exported from the corresponding library entry (for example, `createLuxonAdapter` from `/luxon`). These factories accept your application's library instance and never register plugins or install a polyfill. The following examples show this explicit configuration; pass the resulting adapter to `<Neodt adapter={adapter} referenceTime={...} />` imported from `/generic`.
 
 ### Luxon
 
@@ -60,13 +60,13 @@ The `/luxon` entry uses the reference value's zone, including Luxon `Zone` objec
 ### Moment.js
 
 ```ts
-import moment from "moment";
-import { createMomentAdapter } from "@olicoad/neodt/adapters/moment";
+import moment from "moment-timezone";
+import { createMomentAdapter } from "@olicoad/neodt/moment";
 
 const adapter = createMomentAdapter(moment, { zone: "Australia/Sydney" });
 ```
 
-Moment.js alone works, including IANA-zone editing through Intl. Output values carry the correct fixed offset; the adapter remembers their editing zone. Supply `moment-timezone` instead of `moment` to retain named zones on the Moment values themselves. Without a configured zone, the adapter reads the value's named zone, fixed offset, or system zone. Input Moment values are never mutated. Use an explicit zone if your application clones fixed-offset Moment outputs and needs to preserve IANA daylight-saving rules.
+Moment.js handles system-local and fixed-offset editing. Install and supply `moment-timezone` for named-zone editing outside the system zone. Without a configured zone, the adapter reads the value's named zone, fixed offset, or system zone. Input Moment values are never mutated.
 
 ### Day.js
 
@@ -74,36 +74,36 @@ Moment.js alone works, including IANA-zone editing through Intl. Output values c
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
-import { createDayjsAdapter } from "@olicoad/neodt/adapters/dayjs";
+import { createDayjsAdapter } from "@olicoad/neodt/dayjs";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 const adapter = createDayjsAdapter(dayjs, { zone: "Australia/Sydney" });
 ```
 
-Day.js uses the configured zone, defaulting to the system zone. Register the `utc` plugin for fixed-offset output and both `utc` and `timezone` for IANA-zone output. System-local editing needs neither plugin. The adapter does not inspect Day.js's private timezone metadata.
+Day.js uses the configured zone, defaulting to the system zone. Register the `utc` plugin for fixed-offset output and both `utc` and `timezone` for IANA-zone output. System-local editing needs neither plugin. The adapter does not inspect Day.js's private timezone metadata. Day.js timezone parsing has limitations for years 1–99; incremental year entry can encounter these because partial digits are valid draft years. Luxon and Temporal support these drafts.
 
 ### date-fns
 
 ```ts
-import { toDate } from "date-fns/toDate";
-import { createDateFnsAdapter } from "@olicoad/neodt/adapters/date-fns";
+import { toDate, constructNow } from "date-fns";
+import { createDateFnsAdapter } from "@olicoad/neodt/date-fns";
 
 const adapter = createDateFnsAdapter(toDate, { zone: "Australia/Sydney" });
 ```
 
-Native `Date` values store instants, so configure their editing zone explicitly or use the default system zone. No date-fns timezone package is required. A Date's own local getters still use the system zone. For a Date subclass, pass `createDateFnsAdapter<MyDate>(ms => new MyDate(ms), options)`.
+Native `Date` values store instants, so configure their editing zone explicitly or use the default system zone. Install both `date-fns` and `@date-fns/tz`: calendar operations use date-fns with `TZDate` for the configured zone. A Date's own local getters still use the system zone. For a Date subclass, pass `createDateFnsAdapter<MyDate>(ms => new MyDate(ms), options)`.
 
 ### Spacetime
 
 ```ts
 import spacetime from "spacetime";
-import { createSpacetimeAdapter } from "@olicoad/neodt/adapters/spacetime";
+import { createSpacetimeAdapter } from "@olicoad/neodt/spacetime";
 
 const adapter = createSpacetimeAdapter(spacetime);
 ```
 
-The adapter reads the value's timezone. Named zones must be supported by Intl and your Spacetime installation. Fixed-offset outputs use an equivalent non-DST zone in Spacetime's database; unsupported offsets throw instead of silently changing the clock.
+The adapter reads the value's timezone. Named zones and timezone rules come from your Spacetime installation. Fixed-offset outputs use an equivalent non-DST zone in Spacetime's database; unsupported offsets throw instead of silently changing the clock.
 
 ### Temporal: native, polyfill, or ponyfill
 
@@ -128,7 +128,7 @@ const tomorrow = parseNaturalDate("tomorrow 9am", { referenceTime });
 <Neodt referenceTime={referenceTime} defaultValue={tomorrow} />;
 ```
 
-For `@js-temporal/polyfill`, use `@olicoad/neodt/js-temporal-polyfill` and import `Temporal` from `@js-temporal/polyfill`. Both entries use their package’s Temporal export and leave global Temporal unchanged. The `temporal-polyfill` package uses native Temporal when available and its own implementation otherwise. For another implementation or a custom build, use `/generic` with `createTemporalAdapter(Temporal)` from `/adapters/temporal`; its structural types do not require global Temporal declarations.
+For `@js-temporal/polyfill`, use `@olicoad/neodt/js-temporal-polyfill` and import `Temporal` from `@js-temporal/polyfill`. Both entries use their package’s Temporal export and leave global Temporal unchanged. The `temporal-polyfill` package uses native Temporal when available and its own implementation otherwise. For another implementation or a custom build, use `/generic` with `createTemporalAdapter(Temporal)` exported from the root and both polyfill entries. The factory uses structural types; the root entry requires native Temporal declarations, while the polyfill entries use their package’s types.
 
 This zoned control does not accept `PlainDateTime` or `Instant` directly; convert them to a `ZonedDateTime` first. Editing uses the ISO/Gregorian calendar and minute precision.
 
@@ -137,22 +137,33 @@ This zoned control does not accept `PlainDateTime` or `Instant` directly; conver
 ```tsx
 import Neodt, { parseNaturalDate, type DateAdapter } from "@olicoad/neodt/generic";
 
-const adapter: DateAdapter<Date> = {
-  toEpochMilliseconds: (value) => value.getTime(),
-  fromEpochMilliseconds: (milliseconds) => new Date(milliseconds),
-  getZone: () => "UTC",
-  getZoneId: (zone) => zone,
-};
-const referenceTime = new Date();
+import { createDateFnsAdapter } from "@olicoad/neodt/date-fns";
+import { toDate, constructNow } from "date-fns";
+
+const adapter: DateAdapter<Date> = createDateFnsAdapter(toDate, { zone: "UTC" });
+const referenceTime = constructNow(0);
 const tomorrow = parseNaturalDate("tomorrow", { adapter, referenceTime });
 <Neodt adapter={adapter} referenceTime={referenceTime} defaultValue={tomorrow} />;
 ```
 
 The generic entry requires an explicit adapter and exports `NeodtProps<T, TZone>` and `NaturalDateParseOptions<T, TZone>`. Use it with your own adapter or a configured built-in factory. It has no datetime dependencies.
 
-Implement `DateAdapter<T, TZone>` with non-mutating functions: `toEpochMilliseconds(value)`, `fromEpochMilliseconds(milliseconds, zone)`, `getZone(value)`, and `getZoneId(zone)`. Choose any native zone representation, including opaque objects. `getZoneId` provides a one-way IANA identifier or `±HH:MM` projection for the shared calendar. The original zone is retained and passed unchanged to `fromEpochMilliseconds`; no conversion back from a string is needed. Conversions must preserve the instant. No datetime library is required for a custom adapter.
+Reuse a built-in factory as above, or implement `DateAdapter<T, TZone>` by delegating these non-mutating operations to your library:
 
-Calendar calculations and locale formatting are shared across adapters and use the platform's Intl timezone data. Adding a day preserves wall-clock time across DST; adding 24 hours preserves elapsed time. New ambiguous wall times select the earlier instant, and nonexistent times move forward by the DST gap. Editing an existing repeated time preserves its offset where possible. Offsetless ISO input is interpreted in the reference zone.
+| Methods                                                   | Responsibility                                                         |
+| --------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `toEpochMilliseconds`, `fromEpochMilliseconds`, `getZone` | Preserve instants and native zones at the boundary.                    |
+| `getFields`, `fromFields`, `setFields`                    | Read, construct, and edit ISO/Gregorian fields (months 1–12).          |
+| `add`, `startOf`                                          | Calendar/elapsed arithmetic and minute/day/month boundaries.           |
+| `getWeekday`, `getDaysInMonth`                            | Monday-based weekday (1–7) and library-provided month length.          |
+| `getOffset`                                               | Minutes east of UTC at the selected instant, used by `showTimeOffset`. |
+| `setZoneId`                                               | Convert an instant to a zone explicitly named in parser input.         |
+| `formatToParts`                                           | Locale presentation; Intl may be used here.                            |
+| `isOffsetFixed` (optional)                                | Let layout measurement know the offset cannot vary by date.            |
+
+Zones may be strings or opaque objects. The core retains the native zone and never converts it to a string. `getZoneId` is no longer part of the contract. Custom Temporal implementations must provide `ZonedDateTime.from` and the standard value operations as well as `Instant.fromEpochMilliseconds`.
+
+Calendar arithmetic, month lengths, UTC offsets, and timezone resolution belong to the selected library. neodt parses input syntax and checks field ranges using the library's month length; it does not implement timezone transitions or Gregorian arithmetic. Native JavaScript `Date` access is confined to adapters whose library APIs require it (date-fns and `@internationalized/date`). Luxon supplies its own format parts; other adapters prepare formatting timestamps through their selected library. The shared core does not construct or manipulate native dates. Luxon and Temporal preserve the original editor's calendar-day versus elapsed-hour behavior, month/year clamping, and repeated-time editing. Other adapters inherit their library's rules and limitations, including Spacetime's handling of nonexistent local times. Offsetless ISO input is interpreted in the reference zone.
 
 ### Migrating from 0.2
 

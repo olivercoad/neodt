@@ -32,7 +32,10 @@ describe("Neodt", () => {
 });
 
 it("renders the internationalized date entry on the server", () => {
-  const referenceTime = fromAbsolute(Date.parse("2026-08-17T15:30:00Z"), "Australia/Sydney");
+  const referenceTime = fromAbsolute(
+    DateTime.fromISO("2026-08-17T15:30:00Z").toMillis(),
+    "Australia/Sydney",
+  );
   const html = renderToString(() => (
     <InternationalizedNeodt referenceTime={referenceTime} value={referenceTime} locale="en-GB" />
   ));

@@ -35,13 +35,6 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": "./dist/index.jsx",
-    "./adapters/date-fns": "./dist/adapters/date-fns.jsx",
-    "./adapters/dayjs": "./dist/adapters/dayjs.jsx",
-    "./adapters/internationalized-date": "./dist/adapters/internationalized-date.jsx",
-    "./adapters/luxon": "./dist/adapters/luxon.jsx",
-    "./adapters/moment": "./dist/adapters/moment.jsx",
-    "./adapters/spacetime": "./dist/adapters/spacetime.jsx",
-    "./adapters/temporal": "./dist/adapters/temporal.jsx",
     "./date-fns": "./dist/date-fns.jsx",
     "./dayjs": "./dist/dayjs.jsx",
     "./generic": "./dist/generic.jsx",
@@ -82,6 +75,7 @@
     "@solid-primitives/storage": "^4.4.0"
   },
   "devDependencies": {
+    "@date-fns/tz": "^1.5.0",
     "@internationalized/date": "^3.12.4",
     "@js-temporal/polyfill": "^0.5.1",
     "@playwright/test": "^1.63.0",
@@ -95,6 +89,7 @@
     "jsdom": "^30.0.1",
     "luxon": "^3.7.2",
     "moment": "^2.31.0",
+    "moment-timezone": "^0.6.4",
     "oxfmt": "^0.64.0",
     "oxlint": "^1.79.0",
     "prismjs": "^1.30.0",
@@ -108,6 +103,7 @@
     "vitest": "^4.1.11"
   },
   "peerDependencies": {
+    "@date-fns/tz": "^1.5.0",
     "@internationalized/date": "^3.12.4",
     "@js-temporal/polyfill": "^0.5.1",
     "date-fns": "^4.4.0",
@@ -141,6 +137,9 @@
       "optional": true
     },
     "@internationalized/date": {
+      "optional": true
+    },
+    "@date-fns/tz": {
       "optional": true
     }
   },

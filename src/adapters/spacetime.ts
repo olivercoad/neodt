@@ -1,38 +1,91 @@
-import type { Spacetime } from "spacetime";
+import type { Spacetime, SpacetimeConstructor, TimeUnit } from "spacetime";
 
-import type { DateAdapter } from "../adapter";
-import { fixedOffset, offsetZone } from "../calendar";
+import type { DateAdapter, DateFields } from "../adapter";
+import { fixedOffset } from "../format";
+import { formatWithIntl } from "./intl-format";
 
-export function createSpacetimeAdapter(
-  spacetime: (milliseconds: number, zone?: string) => Spacetime,
-): DateAdapter<Spacetime> {
+export function createSpacetimeAdapter(spacetime: SpacetimeConstructor): DateAdapter<Spacetime> {
   const zones = new WeakMap<Spacetime, string>();
+  const zoneOf = (value: Spacetime) => zones.get(value) ?? value.timezone().name;
+  const remember = (value: Spacetime, zone: string) => {
+    if (!value.isValid()) throw new RangeError("Invalid datetime");
+    zones.set(value, zone);
+    return value;
+  };
+  const libraryZone = (zone: string) => {
+    const offset = fixedOffset(zone);
+    if (offset === undefined) return zone;
+    if (offset === 0) return "UTC";
+    const database = spacetime(0, "UTC").timezones;
+    const target = Object.keys(database).find(
+      (name) => !database[name]!.dst && database[name]!.offset * 60 === offset,
+    );
+    if (!target) throw new RangeError(`Spacetime does not support fixed offset ${zone}`);
+    return target;
+  };
+  const fields = (value: Spacetime) => ({
+    year: value.year(),
+    month: value.month() + 1,
+    day: value.date(),
+    hour: value.hour(),
+    minute: value.minute(),
+    second: value.second(),
+  });
+  const fromFields = (fields: DateFields, zone: string) =>
+    remember(
+      spacetime(
+        [
+          fields.year,
+          fields.month - 1,
+          fields.day,
+          fields.hour,
+          fields.minute,
+          fields.second ?? 0,
+          0,
+        ],
+        libraryZone(zone),
+      ),
+      zone,
+    );
   return {
-    getZoneId: (zone) => zone,
     toEpochMilliseconds: (value) => value.epoch,
-    fromEpochMilliseconds: (milliseconds, zone) => {
-      const offset = fixedOffset(zone);
-      let value = spacetime(milliseconds, offset === undefined ? zone : "UTC");
-      if (offset !== undefined && offset !== 0) {
-        // Use the caller's zone database without changing its global entries.
-        const target = Object.keys(value.timezones).find((name) => {
-          const entry = value.timezones[name]!;
-          return !entry.dst && entry.offset * 60 === offset;
-        });
-        if (!target) throw new RangeError(`Spacetime does not support fixed offset ${zone}`);
-        value = value.goto(target);
+    fromEpochMilliseconds: (ms, zone) => remember(spacetime(ms, libraryZone(zone)), zone),
+    getZone: zoneOf,
+    getFields: fields,
+    fromFields,
+    setFields: (value, changes) => {
+      let date = value.clone();
+      for (const key of ["year", "month", "day", "hour", "minute", "second"] as const) {
+        const amount = changes[key];
+        if (amount === undefined) continue;
+        if (key === "year") date = date.year(amount);
+        if (key === "month") date = date.month(amount - 1);
+        if (key === "day") date = date.date(amount);
+        if (key === "hour") date = date.hour(amount);
+        if (key === "minute") date = date.minute(amount);
+        if (key === "second") date = date.second(amount);
       }
-      zones.set(value, zone);
-      return value;
+      return remember(date, zoneOf(value));
     },
-    getZone: (value) => {
-      const remembered = zones.get(value);
-      if (remembered) return remembered;
-      const info = value.timezone();
-      // Spacetime includes fractional Etc/GMT names that Intl does not recognize.
-      return /^Etc\/GMT[+-]\d+\.\d+$/i.test(info.name)
-        ? offsetZone(info.current.offset * 60)
-        : info.name;
+    add: (value, duration) => {
+      let date = value.clone();
+      for (const [unit, amount] of Object.entries(duration))
+        date = date.add(amount, unit as TimeUnit);
+      return remember(date, zoneOf(value));
     },
+    startOf: (value, unit) => remember(value.startOf(unit), zoneOf(value)),
+    getWeekday: (value) => value.day() || 7,
+    getDaysInMonth: (value) => value.daysInMonth(),
+    getOffset: (value) => value.timezone().current.offset * 60,
+    setZoneId: (value, zone) => remember(value.goto(libraryZone(zone)), zone),
+    formatToParts: (value, locale, options) =>
+      formatWithIntl(
+        fromFields(fields(value), "UTC").epoch,
+        value.timezone().current.offset * 60,
+        locale,
+        options,
+        zoneOf(value),
+        value.epoch,
+      ),
   };
 }

@@ -13,7 +13,6 @@ export default defineConfig([
       "src/internationalized-date.tsx",
       "src/temporal-polyfill.tsx",
       "src/js-temporal-polyfill.tsx",
-      "src/adapters/*.ts",
     ],
     platform: "neutral",
     deps: {
@@ -22,6 +21,7 @@ export default defineConfig([
         "moment",
         "dayjs",
         "date-fns",
+        "@date-fns/tz",
         "spacetime",
         "@internationalized/date",
         "temporal-polyfill",

@@ -101,6 +101,7 @@ import { Temporal } from "@js-temporal/polyfill";
                   name: "date-fns",
                   homepage: "https://date-fns.org/",
                   package: "date-fns",
+                  companionPackage: "@date-fns/tz",
                   value: "Date",
                 },
                 {
@@ -127,6 +128,14 @@ import { Temporal } from "@js-temporal/polyfill";
                     <a href={`https://www.npmjs.com/package/${library.package}`}>
                       <code>{library.package}</code>
                     </a>
+                    {library.companionPackage && (
+                      <>
+                        {", "}
+                        <a href={`https://www.npmjs.com/package/${library.companionPackage}`}>
+                          <code>{library.companionPackage}</code>
+                        </a>
+                      </>
+                    )}
                     {library.typesPackage && (
                       <>
                         {", "}
@@ -191,22 +200,17 @@ const [value, setValue] = createSignal<DateTime | null>(null);
         <Code
           language="tsx"
           value={`import Neodt from "@olicoad/neodt/generic";
-import { createMomentAdapter } from "@olicoad/neodt/adapters/moment";
-import moment from "moment";
+import { createMomentAdapter } from "@olicoad/neodt/moment";
+import moment from "moment-timezone";
 
 const adapter = createMomentAdapter(moment, { zone: "Australia/Sydney" });
 <Neodt adapter={adapter} referenceTime={moment()} />;`}
         />
       </pre>
       <p>
-        Moment.js alone is enough for this setup. neodt uses Intl for timezone calculations and
-        returns values with the correct UTC offset. To retain the named timezone on the returned
-        values too, install <a href="https://momentjs.com/timezone/">Moment Timezone</a> and import{" "}
-        <code>moment</code> from{" "}
-        <a href="https://www.npmjs.com/package/moment-timezone">
-          <code>moment-timezone</code>
-        </a>{" "}
-        in the example above.
+        Moment.js handles local and fixed-offset editing. Named-zone editing outside the system zone
+        requires <a href="https://momentjs.com/timezone/">Moment Timezone</a>, which owns the
+        timezone calculations and preserves named zones on returned values.
       </p>
       <h3>Day.js</h3>
       <p>
@@ -218,7 +222,7 @@ const adapter = createMomentAdapter(moment, { zone: "Australia/Sydney" });
         <Code
           language="tsx"
           value={`import Neodt from "@olicoad/neodt/generic";
-import { createDayjsAdapter } from "@olicoad/neodt/adapters/dayjs";
+import { createDayjsAdapter } from "@olicoad/neodt/dayjs";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
@@ -243,17 +247,18 @@ const adapter = createDayjsAdapter(dayjs, { zone: "Australia/Sydney" });
         <Code
           language="tsx"
           value={`import Neodt from "@olicoad/neodt/generic";
-import { createDateFnsAdapter } from "@olicoad/neodt/adapters/date-fns";
-import { toDate } from "date-fns/toDate";
+import { createDateFnsAdapter } from "@olicoad/neodt/date-fns";
+import { toDate, constructNow } from "date-fns";
 
 const adapter = createDateFnsAdapter(toDate, { zone: "Australia/Sydney" });
-<Neodt adapter={adapter} referenceTime={new Date()} />;`}
+<Neodt adapter={adapter} referenceTime={constructNow(0)} />;`}
         />
       </pre>
       <p>
-        No additional timezone package is needed. Returned values are still ordinary{" "}
-        <code>Date</code> objects: methods such as <code>getHours()</code> use the system timezone,
-        while neodt displays the same instant in the configured zone.
+        Install both date-fns and @date-fns/tz. The adapter uses date-fns operations with TZDate for
+        timezone handling. Returned values are still ordinary <code>Date</code> objects: methods
+        such as <code>getHours()</code> use the system timezone, while neodt displays the same
+        instant in the configured zone.
       </p>
       <h2 id="custom-adapters">Custom adapters</h2>
       <pre>
@@ -261,23 +266,23 @@ const adapter = createDateFnsAdapter(toDate, { zone: "Australia/Sydney" });
           language="tsx"
           value={`import Neodt, { type DateAdapter } from "@olicoad/neodt/generic";
 
-const adapter: DateAdapter<Date> = {
-  toEpochMilliseconds: (value) => value.getTime(),
-  fromEpochMilliseconds: (milliseconds) => new Date(milliseconds),
-  getZone: () => "UTC",
-  getZoneId: (zone) => zone,
-};
-const referenceTime = new Date();
+import { createDateFnsAdapter } from "@olicoad/neodt/date-fns";
+import { toDate, constructNow } from "date-fns";
+
+const adapter: DateAdapter<Date> = createDateFnsAdapter(toDate, { zone: "UTC" });
+const referenceTime = constructNow(0);
 <Neodt adapter={adapter} referenceTime={referenceTime} />;`}
         />
       </pre>
       <p>
-        The generic entry requires an adapter. Implement <code>DateAdapter&lt;T, TZone&gt;</code>{" "}
-        with non-mutating conversions that preserve the instant. Zones may be strings or opaque
-        objects: <code>getZoneId</code> projects a zone to an Intl-compatible IANA identifier or
-        fixed offset, while the original zone is passed unchanged to{" "}
-        <code>fromEpochMilliseconds</code>. The public prop type is{" "}
-        <code>NeodtProps&lt;T, TZone&gt;</code>.
+        The generic entry requires an adapter. Implement <code>DateAdapter&lt;T, TZone&gt;</code> by
+        delegating field construction and editing, addition, date boundaries, month lengths,
+        weekdays, and offsets to your library. Reuse a built-in factory as above when possible.
+        Zones may be strings or opaque objects and are retained unchanged on output.
+        <code>getOffset</code> supplies the selected date's offset for <code>showTimeOffset</code>;
+        <code>setZoneId</code> handles zones explicitly named in parser text. Locale formatting is
+        supplied by <code>formatToParts</code>. The core performs no timezone resolution. The public
+        prop type is <code>NeodtProps&lt;T, TZone&gt;</code>.
       </p>
     </>
   );

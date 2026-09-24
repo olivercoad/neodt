@@ -12,7 +12,7 @@ import {
 } from "solid-js";
 
 import type { DateAdapter } from "./adapter";
-import { CalendarDate as DateTime, fixedOffset } from "./calendar";
+import { CalendarDate as DateTime, calendarDate } from "./calendar";
 import {
   closestYear,
   digitLimit,
@@ -78,11 +78,7 @@ function Neodt<T, TZone>(props: NeodtProps<T, TZone>): JSX.Element {
     "defaultValue",
     "onValueChange",
   ]);
-  const convert = (value: T) =>
-    new DateTime(
-      local.adapter.toEpochMilliseconds(value),
-      local.adapter.getZoneId(local.adapter.getZone(value)),
-    );
+  const convert = (value: T) => calendarDate(local.adapter, value);
   return (
     <NeodtControl
       {...rest}
@@ -144,13 +140,13 @@ function NeodtControl(props: InternalProps): JSX.Element {
   const [naturalPlaceholder, setNaturalPlaceholder] = createSignal("");
   const [naturalSuggestion, setNaturalSuggestion] = createSignal(0);
   const [naturalMode, setNaturalMode] = createSignal(false);
-  const referenceZone = () => local.referenceTime.zone;
+  const referenceDate = () => local.referenceTime;
   const value = () =>
-    (local.value === undefined ? uncontrolledValue() : (local.value ?? undefined))?.setZone(
-      referenceZone(),
+    (local.value === undefined ? uncontrolledValue() : (local.value ?? undefined))?.inZoneOf(
+      referenceDate(),
     );
   const [draftDate, setDraftDate] = createSignal(
-    (value() ?? local.referenceTime.setZone(referenceZone())).startOf("minute"),
+    (value() ?? local.referenceTime).startOf("minute"),
   );
   const nativeValue = () => toLocalValue(value() ?? draftDate());
   const [cleared, setCleared] = createSignal<Set<SegmentName>>(
@@ -170,7 +166,7 @@ function NeodtControl(props: InternalProps): JSX.Element {
         setTyped(undefined);
         setAllSegmentsSelected(false);
         setDraftDate(
-          (controlledValue ?? local.referenceTime).setZone(referenceZone()).startOf("minute"),
+          (controlledValue ?? local.referenceTime).inZoneOf(referenceDate()).startOf("minute"),
         );
         setCleared(new Set<SegmentName>(controlledValue ? [] : segmentNames));
       },
@@ -179,7 +175,7 @@ function NeodtControl(props: InternalProps): JSX.Element {
   const segments = createMemo(() =>
     partsFor(
       toLocalValue(cleared().size ? draftDate() : (value() ?? draftDate())),
-      referenceZone(),
+      referenceDate(),
       locale(),
       local.formatOptions,
     ),
@@ -191,7 +187,7 @@ function NeodtControl(props: InternalProps): JSX.Element {
     const labelForHour = (hour: number) =>
       partsFor(
         `2001-02-03T${hour.toString().padStart(2, "0")}:05`,
-        referenceZone(),
+        referenceDate(),
         locale(),
         local.formatOptions,
       ).find((part) => part.type === "dayPeriod")?.value;
@@ -223,7 +219,6 @@ function NeodtControl(props: InternalProps): JSX.Element {
   const naturalDate = createMemo(() =>
     parseInternalDate(naturalText(), {
       referenceTime: local.referenceTime,
-      zone: local.referenceTime.zone,
       locale: locale(),
     }),
   );
@@ -236,7 +231,7 @@ function NeodtControl(props: InternalProps): JSX.Element {
       splitDateAndTime(
         partsFor(
           `2088-12-28T${hour.toString().padStart(2, "0")}:59`,
-          referenceZone(),
+          referenceDate(),
           locale(),
           local.formatOptions,
         ),
@@ -423,7 +418,7 @@ function NeodtControl(props: InternalProps): JSX.Element {
             // Reset to January as Jan has 31 days
             date = date.set({ month: 1 });
           } else if (isCleared("year") && (date.month === 2 || (date.month === 3 && amount < 0))) {
-            date = date.set({ year: nearestLeapYear(date.year) });
+            date = date.set({ year: nearestLeapYear(date.year, date) });
           }
         }
         date = date.plus({ days: amount });
@@ -481,7 +476,7 @@ function NeodtControl(props: InternalProps): JSX.Element {
       // Retain a valid backing date while its hidden segments are incomplete.
       if (isCleared("month")) date = date.set({ month: 1 });
       else if (isCleared("year") && date.month === 2 && number === 29)
-        date = date.set({ year: nearestLeapYear(date.year) });
+        date = date.set({ year: nearestLeapYear(date.year, date) });
       if (number <= (date.daysInMonth ?? 31)) date = date.set({ day: number });
     }
     if (segment === "hour") {
@@ -576,7 +571,7 @@ function NeodtControl(props: InternalProps): JSX.Element {
       emitValue(undefined);
       return;
     }
-    const date = parseLocal(next, referenceZone());
+    const date = parseLocal(next, referenceDate());
     if (!date) return;
     setDraftDate(date.startOf("minute"));
     emitValue(date);
@@ -588,7 +583,6 @@ function NeodtControl(props: InternalProps): JSX.Element {
     if (naturalMode() || local.disabled || local.readonly) return;
     const date = parseInternalDate(event.clipboardData?.getData("text") ?? "", {
       referenceTime: local.referenceTime,
-      zone: referenceZone(),
       locale: locale(),
     });
     if (!date) return;
@@ -1038,7 +1032,7 @@ function NeodtControl(props: InternalProps): JSX.Element {
 
   function renderTrailing(measurement = false) {
     const offset = measurement
-      ? fixedOffset(referenceZone()) !== undefined
+      ? local.referenceTime.isOffsetFixed
         ? timeOffset(local.referenceTime)
         : { hours: "+88", minutes: ":88", hasZeroMinutes: false }
       : timeOffset(
@@ -1158,4 +1152,11 @@ export { parseNaturalDate } from "./natural-parser";
 export type { NaturalDateCompletion } from "./natural-completion";
 export type { NaturalDateParseOptions } from "./natural-parser";
 
-export type { DateAdapter, AdapterOptions } from "./adapter";
+export type {
+  DateAdapter,
+  AdapterOptions,
+  DateFields,
+  DateDuration,
+  DateBoundary,
+  DurationUnit,
+} from "./adapter";

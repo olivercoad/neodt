@@ -1,17 +1,77 @@
-import type { ZonedDateTime } from "@internationalized/date";
+import {
+  CalendarDateTime,
+  getDayOfWeek,
+  toZoned,
+  toCalendarDateTime,
+  type ZonedDateTime,
+} from "@internationalized/date";
 
 import type { DateAdapter } from "../adapter";
+import { formatWithIntl } from "./intl-format";
 
-/** Pass fromAbsolute from the application's @internationalized/date installation.
- * Input calendars preserve their instant; output uses the Gregorian calendar.
- */
 export function createInternationalizedDateAdapter(
   fromAbsolute: typeof import("@internationalized/date").fromAbsolute,
 ): DateAdapter<ZonedDateTime> {
+  const iso = (value: ZonedDateTime) => fromAbsolute(value.toDate().getTime(), value.timeZone);
+  const fields = (value: ZonedDateTime) => {
+    const date = iso(value);
+    return {
+      year: date.year,
+      month: date.month,
+      day: date.day,
+      hour: date.hour,
+      minute: date.minute,
+      second: date.second,
+    };
+  };
   return {
     toEpochMilliseconds: (value) => value.toDate().getTime(),
-    fromEpochMilliseconds: (milliseconds, zone) => fromAbsolute(milliseconds, zone),
+    fromEpochMilliseconds: (ms, zone) => fromAbsolute(ms, zone),
     getZone: (value) => value.timeZone,
-    getZoneId: (zone) => zone,
+    getFields: fields,
+    fromFields: (fields, zone) =>
+      toZoned(
+        new CalendarDateTime(
+          fields.year,
+          fields.month,
+          fields.day,
+          fields.hour,
+          fields.minute,
+          fields.second ?? 0,
+        ),
+        zone,
+      ),
+    setFields: (value, fields) => iso(value).set(fields),
+    add: (value, duration) => iso(value).add(duration),
+    startOf: (value, unit) =>
+      iso(value).set(
+        unit === "minute"
+          ? { second: 0, millisecond: 0 }
+          : {
+              ...(unit === "month" ? { day: 1 } : {}),
+              hour: 0,
+              minute: 0,
+              second: 0,
+              millisecond: 0,
+            },
+      ),
+    getWeekday: (value) => getDayOfWeek(iso(value), "en-GB", "mon") + 1,
+    getDaysInMonth: (value) => {
+      const date = iso(value);
+      return date.calendar.getDaysInMonth(date);
+    },
+    getOffset: (value) => value.offset / 60_000,
+    setZoneId: (value, zone) => fromAbsolute(value.toDate().getTime(), zone),
+    formatToParts: (value, locale, options) =>
+      formatWithIntl(
+        toZoned(toCalendarDateTime(iso(value)), "UTC")
+          .toDate()
+          .getTime(),
+        value.offset / 60_000,
+        locale,
+        options,
+        value.timeZone,
+        value.toDate().getTime(),
+      ),
   };
 }

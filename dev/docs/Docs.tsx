@@ -204,9 +204,8 @@ function Api() {
         Values are normalised to the zone of <code>referenceTime</code>. Locale controls
         presentation, not the timezone. The offset shown belongs to the selected date, so it can
         change across daylight saving transitions. Calendar arithmetic, month lengths, offsets, and
-        timezone resolution are provided by the selected datetime library. Luxon and Temporal retain
-        the original editor's calendar-day and elapsed-hour behavior; other adapters follow their
-        library's timezone rules. Intl is used only for presentation.
+        timezone resolution are provided by the selected datetime library. Every adapter follows its
+        library's arithmetic and timezone rules. Intl is used only for presentation.
       </p>
       <h2 id="natural-language-parser">Natural-language parser</h2>
       <pre>

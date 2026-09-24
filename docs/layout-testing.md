@@ -24,7 +24,7 @@ The browser suite uses `dev/layout.html`, a development-only Vite entry with a f
 - Whole-hour offset minutes collapse in the appropriate idle/active state. Half- and quarter-hour offset minutes stay visible.
 - Date/time rows, natural input, completion text, and the parsed preview share segment metrics. An empty parsed preview still occupies one line; native input minimum heights must not override a theme’s line-height.
 - Segments and parsed previews occupy `1lh` plus theme padding. In browsers with text trimming, a `1cap` text box and equal block margins share that line height, centering the glyphs without relying on alignment inside a trimmed fixed-height box. Wrapped natural entry reserves two equal rows even when a theme hides the parsed result; action buttons inherit the control font so swapping icons cannot change the height.
-- The natural input retains its native placeholder for sizing, while the existing completion overlay paints the placeholder using the same typography as suggestions. Check both empty and typed states; native placeholder baselines can differ from entered text.
+- The natural input uses its native placeholder for sizing, while the completion overlay paints the placeholder using the same typography as suggestions. Check both empty and typed states; native placeholder baselines can differ from entered text.
 - At very narrow widths, focusing a segment scrolls it into view inside the editor. The overflow mask must reflect whether more content is hidden at the end.
 - Measurements can update after a font, locale, state, offset, or width change. Layout transitions are suspended while measurement changes settle, then restored. Reduced-motion users receive no transitions.
 
@@ -34,7 +34,7 @@ The browser suite uses `dev/layout.html`, a development-only Vite entry with a f
 
 `test/browser/layout.spec.ts` checks rendered row coordinates, containment, focus scrolling, visibility/opacity, intrinsic heights, runtime font/locale changes, disabled/readonly states, natural entry, and reduced motion. Assertions poll observable results while transitions settle. A one-pixel tolerance accommodates fractional layout rounding; it should not conceal overlap or clipped content.
 
-`test/browser/docs.spec.ts` checks navigation, live CSS isolation, copying and its fallback, reset, and mobile overflow. Unit tests continue to cover parsing, keyboard editing, controlled state, and DOM structure; they no longer match CSS source text with regular expressions.
+`test/browser/docs.spec.ts` checks navigation, live CSS isolation, copying and its fallback, reset, and mobile overflow. Unit tests cover parsing, keyboard editing, controlled state, and DOM structure.
 
 On failure, Playwright saves a screenshot and trace in `test-results/`. Open `pnpm exec playwright show-report` or use `pnpm exec playwright show-trace <trace.zip>` to inspect the failing layout. These artifacts are uploaded by CI.
 

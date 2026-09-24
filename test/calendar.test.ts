@@ -7,8 +7,9 @@ import { createLuxonAdapter } from "../src/adapters/luxon";
 import { createTemporalAdapter } from "../src/adapters/temporal";
 import { calendarDate } from "../src/calendar";
 
-// Regression baseline: the editor before adapters called Luxon set/plus/startOf directly.
-// Both Temporal implementations must retain the same editing behavior.
+// Migration sanity checks: the editor before adapters called Luxon set/plus/startOf directly.
+// Luxon and Temporal are trusted regression references for these cases. All adapters delegate
+// date math to their libraries; these expectations do not prescribe special-case adapter logic.
 const references = [
   ["Luxon", calendarDate(createLuxonAdapter(DateTime), DateTime.fromMillis(0, { zone: "UTC" }))],
   [

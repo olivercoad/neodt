@@ -165,11 +165,9 @@ Reuse a built-in factory as above, or implement `DateAdapter<T, TZone>` by deleg
 
 Zones may be strings or opaque objects. Custom Temporal implementations must provide `ZonedDateTime.from` and the standard value operations as well as `Instant.fromEpochMilliseconds`.
 
-Calendar arithmetic, month lengths, UTC offsets, and timezone resolution belong to the selected library. neodt parses input syntax and checks field ranges using the library's month length; it does not implement timezone transitions or Gregorian arithmetic. Native JavaScript `Date` access is confined to adapters whose library APIs require it (date-fns and `@internationalized/date`). Luxon supplies its own format parts. Temporal, date-fns, Day.js, and `@internationalized/date` format the actual instant and zone with Intl. Moment and Spacetime retain their own timezone offsets when formatting because their timezone databases can differ from Intl. The shared core does not construct or manipulate native dates. Luxon and Temporal preserve the original editor's calendar-day versus elapsed-hour behavior, month/year clamping, and repeated-time editing. Other adapters inherit their library's rules and limitations, including Spacetime's handling of nonexistent local times. Offsetless ISO input is interpreted in the reference zone.
+Calendar arithmetic, month lengths, UTC offsets, and timezone resolution belong to the selected library. Every adapter follows its library's semantics for calendar-day versus elapsed-hour arithmetic, month/year overflow, and ambiguous or nonexistent local times.
 
-### Migrating from 0.2
-
-Change existing Luxon imports to `@olicoad/neodt/luxon` and install Luxon in your application. No `adapter` prop is needed. `NeodtProps` and `NaturalDateParseOptions` from `/luxon` remain concrete Luxon types. The root import now uses native Temporal. For explicit adapters, import from `/generic` and use its generic prop/parser types. Parser `zone` values use the selected adapter's native type and can be omitted to use the reference's zone; existing Luxon `Zone` objects still work.
+neodt parses input syntax and checks field ranges using the library's month length; it does not implement timezone transitions or Gregorian arithmetic. Native JavaScript `Date` access is confined to adapters whose library APIs require it (date-fns and `@internationalized/date`). Luxon supplies its own format parts. Temporal, date-fns, Day.js, and `@internationalized/date` format the actual instant and zone with Intl. Moment and Spacetime retain their own timezone offsets when formatting because their timezone databases can differ from Intl. The shared core does not construct or manipulate native dates. Offsetless ISO input is interpreted in the reference zone.
 
 ## Documentation
 
@@ -267,12 +265,7 @@ GitHub Actions publishes the npm package when a pushed `v*` tag exactly matches 
 
 1. Set the intended version in `package.json` and update `pnpm-lock.yaml` with `pnpm install --lockfile-only`.
 2. Run `pnpm check:release && pnpm pack --dry-run`.
-3. Commit the release, push it to `main`, then create and push the matching annotated tag. eg For the first release:
-
-```bash
-git tag -a v0.1.0 -m "Release v0.1.0"
-git push origin v0.1.0
-```
+3. Commit the release, push it to `main`, then create and push an annotated `v<version>` tag matching `package.json` exactly.
 
 The `Publish npm package` workflow verifies the tag/version match, validates the package, and publishes it with npm provenance. Vercel handles demo deployments through its Git integration.
 

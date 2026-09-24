@@ -1,3 +1,4 @@
+import { fromAbsolute, toCalendar, BuddhistCalendar } from "@internationalized/date";
 import { Temporal } from "@js-temporal/polyfill";
 import { toDate } from "date-fns/toDate";
 import dayjs from "dayjs";
@@ -13,6 +14,7 @@ import { describe, expect, it } from "vitest";
 
 import { createDateFnsAdapter } from "../src/adapters/date-fns";
 import { createDayjsAdapter } from "../src/adapters/dayjs";
+import { createInternationalizedDateAdapter } from "../src/adapters/internationalized-date";
 import { createLuxonAdapter } from "../src/adapters/luxon";
 import { createMomentAdapter } from "../src/adapters/moment";
 import { createSpacetimeAdapter } from "../src/adapters/spacetime";
@@ -112,6 +114,7 @@ function contract<T, TZone>(name: string, adapter: DateAdapter<T, TZone>, native
   });
 }
 
+contract("@internationalized/date", createInternationalizedDateAdapter(fromAbsolute), zone);
 contract("Luxon", createLuxonAdapter(DateTime), DateTime.now().setZone(zone).zone);
 contract("Moment", createMomentAdapter(moment, { zone }), zone);
 contract("Day.js", createDayjsAdapter(dayjs, { zone }), zone);
@@ -225,4 +228,28 @@ it("passes an explicitly supplied null zone to adapters that support it", () => 
   });
   expect(result?.zone).toBeNull();
   expect(result?.ms).toBe(Date.parse("2026-03-08T00:00Z"));
+});
+
+it("converts non-Gregorian internationalized dates by instant and returns Gregorian values", () => {
+  const adapter = createInternationalizedDateAdapter(fromAbsolute);
+  const referenceTime = toCalendar(fromAbsolute(referenceMs, zone), new BuddhistCalendar());
+  const result = parseNaturalDate("in 1 day", { adapter, referenceTime });
+  expect(result?.calendar.identifier).toBe("gregory");
+  expect(result?.year).toBe(2026);
+  expect(result?.timeZone).toBe(zone);
+  expect(result?.toAbsoluteString()).toBe("2026-03-08T16:00:00.000Z");
+  expect(referenceTime.calendar.identifier).toBe("buddhist");
+  expect(referenceTime.year).toBe(2569);
+  expect(referenceTime.toDate().getTime()).toBe(referenceMs);
+});
+
+it("accepts an explicit internationalized date parser timezone", () => {
+  const adapter = createInternationalizedDateAdapter(fromAbsolute);
+  const result = parseNaturalDate("tomorrow 9am", {
+    adapter,
+    referenceTime: fromAbsolute(referenceMs, zone),
+    zone: "Asia/Kathmandu",
+  });
+  expect(result?.timeZone).toBe("Asia/Kathmandu");
+  expect(result?.toAbsoluteString()).toBe("2026-03-08T03:15:00.000Z");
 });

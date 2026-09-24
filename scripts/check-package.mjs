@@ -13,6 +13,7 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 const temporary = await mkdtemp(path.join(tmpdir(), "neodt-consumer-"));
 const packageJson = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
 const datetimePackages = [
+  "@internationalized/date",
   "luxon",
   "moment",
   "dayjs",
@@ -86,6 +87,25 @@ const referenceTime = dayjs();`,
     source: `import spacetime from "spacetime";
 const referenceTime = spacetime.now();`,
     callback: "value?.epoch",
+  },
+  {
+    name: "internationalized-date",
+    entry: "/internationalized-date",
+    packages: ["@internationalized/date"],
+    source: `import { now } from "@internationalized/date";
+const referenceTime = now("Australia/Sydney");`,
+    callback: "value?.toAbsoluteString()",
+  },
+  {
+    name: "internationalized-date-adapter",
+    entry: "/generic",
+    generic: true,
+    packages: ["@internationalized/date"],
+    source: `import { fromAbsolute, now } from "@internationalized/date";
+import { createInternationalizedDateAdapter } from "@olicoad/neodt/adapters/internationalized-date";
+const adapter = createInternationalizedDateAdapter(fromAbsolute);
+const referenceTime = now("Australia/Sydney");`,
+    callback: "value?.toAbsoluteString()",
   },
   ...["@js-temporal/polyfill", "temporal-polyfill"].map((name) => ({
     name: name.replaceAll("/", "-"),

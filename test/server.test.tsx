@@ -1,9 +1,11 @@
+import { fromAbsolute } from "@internationalized/date";
 import { DateTime } from "luxon";
 import { isServer, renderToString } from "solid-js/web";
 import { describe, expect, it } from "vitest";
 
 import { createLuxonAdapter } from "../src/adapters/luxon";
 import Neodt from "../src/generic";
+import InternationalizedNeodt from "../src/internationalized-date";
 
 const adapter = createLuxonAdapter(DateTime);
 
@@ -27,4 +29,13 @@ describe("Neodt", () => {
     expect(html).toContain("datetime-neo__segment");
     expect(html).toContain('type="datetime-local"');
   });
+});
+
+it("renders the internationalized date entry on the server", () => {
+  const referenceTime = fromAbsolute(Date.parse("2026-08-17T15:30:00Z"), "Australia/Sydney");
+  const html = renderToString(() => (
+    <InternationalizedNeodt referenceTime={referenceTime} value={referenceTime} locale="en-GB" />
+  ));
+  expect(html).toContain("datetime-neo__segment");
+  expect(html).toContain('value="2026-08-18T01:30"');
 });

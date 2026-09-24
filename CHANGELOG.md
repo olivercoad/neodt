@@ -4,7 +4,7 @@ This is a major change to Neodt! It is now fully datetime-library agnostic, with
 
 ### Added
 
-- Imports for Luxon, Moment.js, Day.js, date-fns, Spacetime, and Temporal polyfills that select the adapter automatically. Use `/generic` for custom adapters.
+- Imports for Luxon, Moment.js, Day.js, date-fns, Spacetime, @internationalized/date, and Temporal polyfills that select the adapter automatically. Use `/generic` for custom adapters.
 - Datetime libraries documentation with timezone configuration examples.
 
 ### Changed

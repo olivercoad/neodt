@@ -104,6 +104,13 @@ import { Temporal } from "@js-temporal/polyfill";
                   value: "Date",
                 },
                 {
+                  name: "@internationalized/date",
+                  homepage: "https://react-aria.adobe.com/internationalized/date/",
+                  package: "@internationalized/date",
+                  entry: "internationalized-date",
+                  value: "ZonedDateTime",
+                },
+                {
                   name: "Spacetime",
                   homepage: "https://spacetime.how/",
                   package: "spacetime",
@@ -130,7 +137,7 @@ import { Temporal } from "@js-temporal/polyfill";
                     )}
                   </td>
                   <td>
-                    <code>/{library.package}</code>
+                    <code>/{library.entry ?? library.package}</code>
                   </td>
                   <td>
                     <code>{library.value}</code>
@@ -161,8 +168,9 @@ const [value, setValue] = createSignal<DateTime | null>(null);
       </p>
       <h2 id="timezone-configuration">Timezone configuration</h2>
       <p>
-        Temporal, Luxon, and Spacetime carry a timezone in each value. Set the zone on{" "}
-        <code>referenceTime</code> and neodt uses it for display, editing, and returned values.{" "}
+        Temporal, Luxon, Spacetime, and @internationalized/date carry a timezone in each value. Set
+        the zone on <code>referenceTime</code> and neodt uses it for display, editing, and returned
+        values.{" "}
         <span class={styles.justWorks}>
           It just works<sup>™</sup>
         </span>

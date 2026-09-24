@@ -37,6 +37,7 @@
     ".": "./dist/index.jsx",
     "./adapters/date-fns": "./dist/adapters/date-fns.jsx",
     "./adapters/dayjs": "./dist/adapters/dayjs.jsx",
+    "./adapters/internationalized-date": "./dist/adapters/internationalized-date.jsx",
     "./adapters/luxon": "./dist/adapters/luxon.jsx",
     "./adapters/moment": "./dist/adapters/moment.jsx",
     "./adapters/spacetime": "./dist/adapters/spacetime.jsx",
@@ -44,6 +45,7 @@
     "./date-fns": "./dist/date-fns.jsx",
     "./dayjs": "./dist/dayjs.jsx",
     "./generic": "./dist/generic.jsx",
+    "./internationalized-date": "./dist/internationalized-date.jsx",
     "./js-temporal-polyfill": "./dist/js-temporal-polyfill.jsx",
     "./luxon": "./dist/luxon.jsx",
     "./moment": "./dist/moment.jsx",
@@ -80,6 +82,7 @@
     "@solid-primitives/storage": "^4.4.0"
   },
   "devDependencies": {
+    "@internationalized/date": "^3.12.4",
     "@js-temporal/polyfill": "^0.5.1",
     "@playwright/test": "^1.63.0",
     "@tsdown/css": "^0.22.14",
@@ -105,6 +108,7 @@
     "vitest": "^4.1.11"
   },
   "peerDependencies": {
+    "@internationalized/date": "^3.12.4",
     "@js-temporal/polyfill": "^0.5.1",
     "date-fns": "^4.4.0",
     "dayjs": "^1.11.23",
@@ -134,6 +138,9 @@
       "optional": true
     },
     "@js-temporal/polyfill": {
+      "optional": true
+    },
+    "@internationalized/date": {
       "optional": true
     }
   },

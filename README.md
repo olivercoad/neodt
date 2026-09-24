@@ -36,17 +36,18 @@ function Appointment() {
 
 The import path selects the adapter for both `Neodt` and `parseNaturalDate`. No `adapter` prop or parser option is needed for these entries. Only the selected library is loaded; datetime packages are optional peer dependencies.
 
-| Import                                | Implementation          | Value type                   |
-| ------------------------------------- | ----------------------- | ---------------------------- |
-| `@olicoad/neodt`                      | Native/global Temporal  | `Temporal.ZonedDateTime`     |
-| `@olicoad/neodt/luxon`                | `luxon`                 | `DateTime`                   |
-| `@olicoad/neodt/moment`               | `moment`                | `Moment`                     |
-| `@olicoad/neodt/dayjs`                | `dayjs`                 | `Dayjs`                      |
-| `@olicoad/neodt/date-fns`             | `date-fns`              | `Date`                       |
-| `@olicoad/neodt/spacetime`            | `spacetime`             | `Spacetime`                  |
-| `@olicoad/neodt/temporal-polyfill`    | `temporal-polyfill`     | Its `Temporal.ZonedDateTime` |
-| `@olicoad/neodt/js-temporal-polyfill` | `@js-temporal/polyfill` | Its `Temporal.ZonedDateTime` |
-| `@olicoad/neodt/generic`              | Your explicit `adapter` | Your adapter's value type    |
+| Import                                  | Implementation            | Value type                   |
+| --------------------------------------- | ------------------------- | ---------------------------- |
+| `@olicoad/neodt`                        | Native/global Temporal    | `Temporal.ZonedDateTime`     |
+| `@olicoad/neodt/luxon`                  | `luxon`                   | `DateTime`                   |
+| `@olicoad/neodt/moment`                 | `moment`                  | `Moment`                     |
+| `@olicoad/neodt/dayjs`                  | `dayjs`                   | `Dayjs`                      |
+| `@olicoad/neodt/date-fns`               | `date-fns`                | `Date`                       |
+| `@olicoad/neodt/internationalized-date` | `@internationalized/date` | `ZonedDateTime`              |
+| `@olicoad/neodt/spacetime`              | `spacetime`               | `Spacetime`                  |
+| `@olicoad/neodt/temporal-polyfill`      | `temporal-polyfill`       | Its `Temporal.ZonedDateTime` |
+| `@olicoad/neodt/js-temporal-polyfill`   | `@js-temporal/polyfill`   | Its `Temporal.ZonedDateTime` |
+| `@olicoad/neodt/generic`                | Your explicit `adapter`   | Your adapter's value type    |
 
 `referenceTime`, `value`, `defaultValue`, parser results, and `onValueChange` use the selected implementation's type. Mixing library types is a TypeScript error. Each configured entry exports concrete `NeodtProps` and `NaturalDateParseOptions` types. The parser accepts the adapter's native zone type: Luxon accepts `Zone` objects or strings; the other built-in adapters use string zone identifiers.
 

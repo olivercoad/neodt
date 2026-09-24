@@ -1,3 +1,9 @@
+import {
+  fromAbsolute,
+  CalendarDate,
+  CalendarDateTime,
+  type ZonedDateTime,
+} from "@internationalized/date";
 import { Temporal } from "@js-temporal/polyfill";
 import { toDate } from "date-fns/toDate";
 import dayjs, { type Dayjs } from "dayjs";
@@ -10,6 +16,7 @@ import { expectTypeOf } from "vitest";
 
 import { createDateFnsAdapter } from "../src/adapters/date-fns";
 import { createDayjsAdapter } from "../src/adapters/dayjs";
+import { createInternationalizedDateAdapter } from "../src/adapters/internationalized-date";
 import { createLuxonAdapter, type LuxonZone } from "../src/adapters/luxon";
 import { createMomentAdapter } from "../src/adapters/moment";
 import { createSpacetimeAdapter } from "../src/adapters/spacetime";
@@ -17,6 +24,8 @@ import { createTemporalAdapter } from "../src/adapters/temporal";
 import Neodt, { parseNaturalDate, type NeodtProps } from "../src/generic";
 
 export function checkAdapterTypes() {
+  const internationalized = createInternationalizedDateAdapter(fromAbsolute);
+  const internationalizedReference = fromAbsolute(0, "UTC");
   const luxon = createLuxonAdapter(DateTime);
   const moments = createMomentAdapter(moment);
   const days = createDayjsAdapter(dayjs);
@@ -24,6 +33,24 @@ export function checkAdapterTypes() {
   const spaces = createSpacetimeAdapter(spacetime);
   const temporal = createTemporalAdapter(Temporal);
   const ponyfill = createTemporalAdapter(Ponyfill);
+  expectTypeOf(
+    parseNaturalDate("now", {
+      adapter: internationalized,
+      referenceTime: internationalizedReference,
+    }),
+  ).toEqualTypeOf<ZonedDateTime | undefined>();
+  <Neodt
+    adapter={internationalized}
+    referenceTime={internationalizedReference}
+    onValueChange={(value) => expectTypeOf(value).toEqualTypeOf<ZonedDateTime | null>()}
+  />;
+  // @ts-expect-error CalendarDate has no time or timezone.
+  <Neodt adapter={internationalized} referenceTime={new CalendarDate(2026, 1, 1)} />;
+  parseNaturalDate("now", {
+    adapter: internationalized,
+    // @ts-expect-error CalendarDateTime has no timezone.
+    referenceTime: new CalendarDateTime(2026, 1, 1),
+  });
   const reference = DateTime.now();
   const zdt = Temporal.Now.zonedDateTimeISO();
   const ponyDate = Ponyfill.Now.zonedDateTimeISO();

@@ -70,7 +70,7 @@ import { Temporal } from "@js-temporal/polyfill";
           <thead>
             <tr>
               <th>Library</th>
-              <th>npm package</th>
+              <th>npm packages</th>
               <th>Import under @olicoad/neodt</th>
               <th>Value type</th>
             </tr>
@@ -82,6 +82,7 @@ import { Temporal } from "@js-temporal/polyfill";
                   name: "Luxon",
                   homepage: "https://moment.github.io/luxon/",
                   package: "luxon",
+                  typesPackage: "@types/luxon",
                   value: "DateTime",
                 },
                 {
@@ -119,6 +120,14 @@ import { Temporal } from "@js-temporal/polyfill";
                     <a href={`https://www.npmjs.com/package/${library.package}`}>
                       <code>{library.package}</code>
                     </a>
+                    {library.typesPackage && (
+                      <>
+                        {", "}
+                        <a href={`https://www.npmjs.com/package/${library.typesPackage}`}>
+                          <code>{library.typesPackage}</code>
+                        </a>
+                      </>
+                    )}
                   </td>
                   <td>
                     <code>/{library.package}</code>
@@ -132,13 +141,6 @@ import { Temporal } from "@js-temporal/polyfill";
           </tbody>
         </table>
       </div>
-      <p>
-        For Luxon in TypeScript projects, also install{" "}
-        <a href="https://www.npmjs.com/package/@types/luxon">
-          <code>@types/luxon</code>
-        </a>
-        .
-      </p>
       <pre>
         <Code
           language="tsx"

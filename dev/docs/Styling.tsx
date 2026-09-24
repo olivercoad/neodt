@@ -1,4 +1,4 @@
-import { createMemo, createSignal, For, onCleanup, onMount } from "solid-js";
+import { createMemo, createSignal, For, onCleanup, onMount, type JSX } from "solid-js";
 import { render } from "solid-js/web";
 
 import Code from "../code/Code";
@@ -19,6 +19,7 @@ export interface StylingOptions {
 function Preview(props: {
   theme: (typeof themes)[number];
   css: string;
+  children?: JSX.Element;
   state: "Editable" | "Readonly" | "Disabled";
   options: StylingOptions;
 }) {
@@ -54,7 +55,10 @@ function Preview(props: {
   return (
     <div class={styles.previewVariant} data-preview-state={props.state.toLowerCase()}>
       <span class={styles.variantLabel}>{props.state}</span>
-      <div ref={host} />
+      <div class={styles.previewControl}>
+        <div class={styles.previewHost} ref={host} />
+        {props.children}
+      </div>
     </div>
   );
 }
@@ -124,65 +128,72 @@ function ThemeExample(props: {
             >
               <For each={["Editable", "Readonly", "Disabled"] as const}>
                 {(state) => (
-                  <Preview theme={props.theme} css={css()} state={state} options={props.options} />
+                  <Preview theme={props.theme} css={css()} state={state} options={props.options}>
+                    {state === "Editable" && (
+                      <button
+                        type="button"
+                        role="slider"
+                        class={styles.resizeHandle}
+                        aria-label={`Resize ${props.theme.name} previews`}
+                        aria-valuemin={minimumWidth}
+                        aria-valuemax={maximumWidth()}
+                        aria-valuenow={width()}
+                        aria-valuetext={`${width()} pixels`}
+                        onKeyDown={(event) => {
+                          const next =
+                            event.key === "Home"
+                              ? minimumWidth
+                              : event.key === "End"
+                                ? maximumWidth()
+                                : event.key === "ArrowLeft" || event.key === "ArrowDown"
+                                  ? width() - 10
+                                  : event.key === "ArrowRight" || event.key === "ArrowUp"
+                                    ? width() + 10
+                                    : undefined;
+                          if (next === undefined) return;
+                          event.preventDefault();
+                          props.onResizeStart(event.currentTarget);
+                          setWidth(clampWidth(next));
+                          props.onResizeEnd();
+                        }}
+                        onPointerDown={(event) => {
+                          if (event.button !== 0) return;
+                          props.onResizeStart(event.currentTarget);
+                          dragStart = {
+                            pointerId: event.pointerId,
+                            x: event.clientX,
+                            width: width(),
+                          };
+                          event.currentTarget.setPointerCapture(event.pointerId);
+                          event.preventDefault();
+                        }}
+                        onPointerMove={(event) => {
+                          if (dragStart?.pointerId !== event.pointerId) return;
+                          setWidth(clampWidth(dragStart.width + event.clientX - dragStart.x));
+                        }}
+                        onPointerUp={(event) => {
+                          if (dragStart?.pointerId !== event.pointerId) return;
+                          dragStart = undefined;
+                          event.currentTarget.releasePointerCapture(event.pointerId);
+                          props.onResizeEnd();
+                        }}
+                        onPointerCancel={() => {
+                          dragStart = undefined;
+                          props.onResizeEnd();
+                        }}
+                        onLostPointerCapture={() => {
+                          if (!dragStart) return;
+                          dragStart = undefined;
+                          props.onResizeEnd();
+                        }}
+                      >
+                        <span class={styles.resizeGrip} aria-hidden="true" />
+                        <span>{width()}px</span>
+                      </button>
+                    )}
+                  </Preview>
                 )}
               </For>
-              <button
-                type="button"
-                role="slider"
-                class={styles.resizeHandle}
-                aria-label={`Resize ${props.theme.name} previews`}
-                aria-valuemin={minimumWidth}
-                aria-valuemax={maximumWidth()}
-                aria-valuenow={width()}
-                aria-valuetext={`${width()} pixels`}
-                onKeyDown={(event) => {
-                  const next =
-                    event.key === "Home"
-                      ? minimumWidth
-                      : event.key === "End"
-                        ? maximumWidth()
-                        : event.key === "ArrowLeft" || event.key === "ArrowDown"
-                          ? width() - 10
-                          : event.key === "ArrowRight" || event.key === "ArrowUp"
-                            ? width() + 10
-                            : undefined;
-                  if (next === undefined) return;
-                  event.preventDefault();
-                  props.onResizeStart(event.currentTarget);
-                  setWidth(clampWidth(next));
-                  props.onResizeEnd();
-                }}
-                onPointerDown={(event) => {
-                  if (event.button !== 0) return;
-                  props.onResizeStart(event.currentTarget);
-                  dragStart = { pointerId: event.pointerId, x: event.clientX, width: width() };
-                  event.currentTarget.setPointerCapture(event.pointerId);
-                  event.preventDefault();
-                }}
-                onPointerMove={(event) => {
-                  if (dragStart?.pointerId !== event.pointerId) return;
-                  setWidth(clampWidth(dragStart.width + event.clientX - dragStart.x));
-                }}
-                onPointerUp={(event) => {
-                  if (dragStart?.pointerId !== event.pointerId) return;
-                  dragStart = undefined;
-                  event.currentTarget.releasePointerCapture(event.pointerId);
-                  props.onResizeEnd();
-                }}
-                onPointerCancel={() => {
-                  dragStart = undefined;
-                  props.onResizeEnd();
-                }}
-                onLostPointerCapture={() => {
-                  if (!dragStart) return;
-                  dragStart = undefined;
-                  props.onResizeEnd();
-                }}
-              >
-                <span class={styles.resizeGrip} aria-hidden="true" />
-                <span>{width()}px</span>
-              </button>
             </div>
           </div>
           <span class={styles.usageCode}>

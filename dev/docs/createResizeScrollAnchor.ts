@@ -23,6 +23,9 @@ export function createResizeScrollAnchor(cards: () => HTMLElement) {
         grip === previousGrip && Math.abs(currentTop - previousTop) <= 1 ? previousTop : currentTop;
       previousGrip = grip;
       previousTop = top;
+      // Keep the grip under the pointer while its input wraps to a new height.
+      const previousGripTop = grip.style.top;
+      grip.style.top = getComputedStyle(grip).top;
       const rootStyle = document.documentElement.style;
       const previousAnchor = rootStyle.getPropertyValue("overflow-anchor");
       const previousPriority = rootStyle.getPropertyPriority("overflow-anchor");
@@ -44,6 +47,7 @@ export function createResizeScrollAnchor(cards: () => HTMLElement) {
       for (const { card, height } of heights) card.style.height = `${height}px`;
 
       cleanup = (preservePosition) => {
+        grip.style.top = previousGripTop;
         for (const { card, previous, priority } of heights) {
           if (previous) card.style.setProperty("height", previous, priority);
           else card.style.removeProperty("height");

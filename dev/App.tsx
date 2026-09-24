@@ -148,7 +148,7 @@ const App: Component = () => {
     <main class={styles.page}>
       <SiteNav />
 
-      <section id="top" class={styles.hero}>
+      <section class={styles.hero}>
         <div class={styles.heroCopy}>
           <p class={styles.kicker}>A DATETIME INPUT FOR SOLID</p>
           <h1>
@@ -416,7 +416,7 @@ const App: Component = () => {
       <footer>
         <span>neodt</span>
         <span>Local time, without compromises.</span>
-        <a href="#top">Back to top ↑</a>
+        <a href="#/docs/getting-started">Get started ↗</a>
       </footer>
     </main>
   );

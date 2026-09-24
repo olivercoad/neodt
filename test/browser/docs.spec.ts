@@ -276,7 +276,7 @@ for (const library of libraries) {
         const geometry = () =>
           control.evaluate((el) => {
             const host = (el.getRootNode() as ShadowRoot).host;
-            const variant = host.parentElement!;
+            const variant = host.closest("[data-preview-state]")!;
             return {
               control: el.getBoundingClientRect().height,
               host: host.getBoundingClientRect().height,

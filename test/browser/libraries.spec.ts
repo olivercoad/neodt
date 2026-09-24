@@ -1,6 +1,14 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 import { libraries, libraryPath } from "../../dev/libraries";
+
+async function expectLibrary(page: Page, library: (typeof libraries)[number]) {
+  if (await page.getByRole("combobox", { name: "Datetime library" }).count()) {
+    await expect(page.getByRole("combobox", { name: "Datetime library" })).toHaveValue(library.id);
+  } else {
+    await expect(page.getByLabel("Datetime library", { exact: true })).toContainText(library.label);
+  }
+}
 
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const dependencyPatterns = Object.fromEntries(
@@ -21,7 +29,7 @@ for (const library of libraries) {
     await page.goto(`/${library.id}?direct=1#/docs/libraries`);
     await expect(page).toHaveURL(`http://127.0.0.1:3000/${library.id}/?direct=1#/docs/libraries`);
     await expect(page.locator("html")).toHaveAttribute("data-adapter", library.id);
-    await expect(page.getByRole("combobox", { name: "Datetime library" })).toHaveValue(library.id);
+    await expectLibrary(page, library);
   });
 
   test(`${library.id}: loads only the selected datetime dependency`, async ({ page }) => {
@@ -33,7 +41,7 @@ for (const library of libraries) {
       library.id !== "native-temporal" ||
       (await page.evaluate(() => typeof Temporal !== "undefined"));
     await page.goto(`${libraryPath(library.id)}#/docs/styling`);
-    await expect(page.getByRole("combobox", { name: "Datetime library" })).toHaveValue(library.id);
+    await expectLibrary(page, library);
     if (supported) {
       await expect(
         page
@@ -60,15 +68,20 @@ for (const library of libraries) {
     page,
   }) => {
     await page.goto("/temporal-polyfill/#/docs/libraries/temporal-polyfills");
-    await page.getByRole("combobox", { name: "Datetime library" }).selectOption(library.id);
+    await page.getByLabel("Datetime library", { exact: true }).click();
+    await page
+      .getByRole("navigation", { name: "Main navigation" })
+      .getByRole("link", { name: library.label, exact: true })
+      .click();
     await expect(page).toHaveURL(new RegExp(`/${library.id}/#/docs/libraries/temporal-polyfills$`));
     await expect(page.locator("html")).toHaveAttribute("data-adapter", library.id);
     await page.reload();
-    await expect(page.getByRole("combobox", { name: "Datetime library" })).toHaveValue(library.id);
+    await expectLibrary(page, library);
     if (library.id !== "temporal-polyfill") {
       await page.goBack();
-      await expect(page.getByRole("combobox", { name: "Datetime library" })).toHaveValue(
-        "temporal-polyfill",
+      await expectLibrary(
+        page,
+        libraries.find(({ id }) => id === "temporal-polyfill")!,
       );
     }
   });

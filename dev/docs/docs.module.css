@@ -180,6 +180,12 @@
   font-size: 0.75rem;
   margin-bottom: 0.35rem;
 }
+.previewControl {
+  position: relative;
+}
+.previewHost {
+  display: grid;
+}
 .resizeHandle {
   align-items: center;
   background: transparent;
@@ -187,13 +193,15 @@
   color: var(--muted);
   cursor: col-resize;
   display: flex;
-  font-family: ui-monospace, monospace;
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
   font-size: 0.65rem;
   gap: 0.3rem;
   left: calc(100% + 0.75rem);
   padding: 0.55rem 0;
   position: absolute;
-  top: 1.6rem;
+  top: 50%;
+  transform: translateY(-50%);
   touch-action: none;
 }
 .resizeGrip {

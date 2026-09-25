@@ -5,17 +5,27 @@ The framework registry (`frameworks.ts`) and datetime registry (`libraries.ts`) 
 1. Install the framework and its build/type tooling as development dependencies. Declare consumer runtime packages as optional peers. Consumers install their selected framework and datetime library only.
 2. Add `frameworks/<id>/generic.ts` (or `.tsx`). This is the native framework boundary: compose `CoreProps<T, TZone>` with native root attributes/slots, allocate a hydration-safe ID, create one controller per component instance, subscribe to its immutable snapshots, update its props, and clean up subscriptions and browser effects. Keep library instances out of deep reactive proxies. Export `Neodt`, `NeodtProps`, `configureNeodt`, and the shared parser/public utilities. Use the React and Vue bindings as contrasting examples. Editing behavior belongs in `src/core/controller.ts`; rendering belongs in `src/components/*.lite.tsx`.
 3. Supply the small integration modules in the same directory:
-   - `build.ts`: tsdown settings or plugins for the target's output format; copy compiler-native assets when required.
-   - `vite.ts`: plugins for compiling this target's generated components in the demo and test runners. Scope JSX transforms to this framework's directories.
-   - `demo.ts`: adapt the target's mount/update/dispose operations to the Solid documentation shell using `frameworkHost`. The site shell does not become a dependency of the published control.
+   - `tooling.ts`: export a default object satisfying `FrameworkTooling` from `../tooling.ts`. This single configuration serves development, tests, package builds, and isolated consumer checks. See the defaults and hooks below.
+   - `demo.ts`: export a `mount` function satisfying `DemoRenderer` from `../../dev/framework-host` (a type-only import). Implement native mount/update/dispose operations; the Vite plugin supplies the documentation-shell wrapper. Solid uses its component directly and needs no demo module. The site shell does not become a dependency of the published control.
    - `test.ts` / `.tsx`: native server rendering, client mounting and hydration.
-   - `consumer.ts`: isolated consumer compiler, bundler plugins, and native component syntax. Its checks must reject mixed datetime types and infer callback values, including `/generic`.
    - `example.ts`: framework-native documentation examples using the shared library metadata.
    - `tsconfig.json` and any asset declarations needed by the binding.
 4. Register its ID, label, Mitosis generator/options, source/output extensions, runtime/type dependencies, JSX settings, code language, and example function in `frameworks.ts`. Do not import framework runtimes into registry metadata. The framework and library dropdowns and Frameworks page derive from this registration.
 5. Run `pnpm generate`, `pnpm check`, and `pnpm test:browser`. Inspect generated code and actual behavior; Mitosis target support alone does not establish neodt compatibility. The browser layout suite and framework contract suites include each registration automatically.
 
-`pnpm dev` and builds generate components automatically. Editing a `.lite.tsx` file while the demo server is running regenerates all targets and reloads the page. Generated files live in ignored `generated/<id>/` directories and are never edited by hand. Pin the Mitosis version; validate all targets before upgrading it.
+`pnpm dev`, Vite/Vitest invocations, and package builds generate components automatically. Editing a `.lite.tsx` file while the demo server is running regenerates all targets and reloads the page. Generated files live in ignored `generated/<id>/` directories and are never edited by hand. Pin the Mitosis version; validate all targets before upgrading it.
+
+## Tooling defaults and hooks
+
+An ordinary JSX target starts with `export default {} satisfies FrameworkTooling`. The shared tooling uses registry metadata for package output extensions, automatic JSX transforms, and consumer source extensions. Consumer checks default to `tsc`, JSX fixtures that verify callback inference and reject mixed datetime types, and no extra Vite plugins.
+
+Override only the pieces the framework needs:
+
+- `plugins({ mode, include })`: compiler plugins shared by the demo, client/server tests, and isolated consumers. `mode` is `development`, `client-test`, `server-test`, or `consumer`. `include` scopes transforms to the framework's source and generated directories; consumer mode must compile the isolated consumer and installed package instead. Solid demonstrates this distinction. Vue uses the same compiler plugin in all modes.
+- `build`: tsdown overrides, such as React's `"use client"` banner or Vue's native asset handling. The shared build supplies entrypoints, dependencies, declarations, and output paths.
+- `consumer`: override `compiler`, `extension`, `render(generic, callback)`, or `wrap(script)` for non-JSX syntax. Preserve positive callback-inference checks and negative mixed-value checks for configured and `/generic` entries. Vue demonstrates template fixtures.
+
+Keep this Node-only tooling separate from `frameworks.ts`: the metadata registry also runs in the documentation browser. Adding a framework requires no edits to Vite, Vitest, tsdown, or the package-check runner.
 
 The shared view uses stable primitive keys, preserving editable DOM nodes and focus in Solid, React, and Vue. The controller owns synchronous editing transitions and emits snapshots; framework state stores only the latest snapshot. Native DOM listeners handle keyboard, clipboard, input, and focus events consistently. Root click/mousedown handlers are composed with the consumer's native handlers at the binding boundary.
 

@@ -168,7 +168,7 @@
     "dev:typecheck": "tsc --noEmit -p dev/tsconfig.json",
     "build": "pnpm generate && node scripts/clean-build.ts && tsdown && node scripts/package-exports.ts",
     "test": "concurrently pnpm:test:client pnpm:test:ssr",
-    "test:client": "pnpm generate && TZ=Australia/Melbourne LANG=C.UTF-8 LC_ALL=C.UTF-8 vitest",
+    "test:client": "TZ=Australia/Melbourne LANG=C.UTF-8 LC_ALL=C.UTF-8 vitest",
     "test:ssr": "pnpm run test:client --mode ssr",
     "prepack": "pnpm build",
     "format": "oxfmt --write .",

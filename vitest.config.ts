@@ -1,8 +1,6 @@
-import path from "node:path";
-
 import { defineConfig, type ViteUserConfig } from "vitest/config";
 
-import { frameworks } from "./frameworks";
+import { frameworkPlugins } from "./dev/framework-plugin.ts";
 
 export default defineConfig(async ({ mode }): Promise<ViteUserConfig> => {
   // to test in server environment, run with "--mode ssr" or "--mode test:ssr" flag
@@ -10,16 +8,7 @@ export default defineConfig(async ({ mode }): Promise<ViteUserConfig> => {
   const testSSR = mode === "test:ssr" || mode === "ssr";
 
   return {
-    plugins: (
-      await Promise.all(
-        frameworks.map(async (framework) => {
-          const integration = await import(
-            path.resolve(import.meta.dirname, "frameworks", framework.id, "vite.ts")
-          );
-          return integration.plugins(testSSR);
-        }),
-      )
-    ).flat(),
+    plugins: await frameworkPlugins(testSSR ? "server-test" : "client-test"),
     oxc: { jsx: { development: !testSSR } },
     test: {
       watch: false,

@@ -1,8 +1,8 @@
 import { createApp, h, shallowRef } from "vue";
 
-import { frameworkHost } from "../../dev/framework-host";
+import type { DemoRenderer } from "../../dev/framework-host";
 import Neodt, { type NeodtProps } from "./generic";
-export const Control = frameworkHost((element, initial) => {
+export const mount: DemoRenderer = (element, initial) => {
   const props = shallowRef(initial);
   const app = createApp({
     setup: () => () =>
@@ -15,4 +15,4 @@ export const Control = frameworkHost((element, initial) => {
     },
     dispose: () => app.unmount(),
   };
-});
+};

@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { build } from "vite";
 
 import { frameworks, frameworkPackages } from "../frameworks.ts";
+import { loadFrameworkTooling } from "../frameworks/tooling.ts";
 import { libraries, datetimePackages } from "../libraries.ts";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
@@ -21,7 +22,7 @@ for (const name of [...datetimePackages, ...frameworkPackages]) {
 assert(!packageJson.exports["."], "Framework-less compatibility entries must not be published");
 try {
   for (const framework of frameworks) {
-    const host = await import(`../frameworks/${framework.id}/consumer.ts`);
+    const { consumer: host, plugins } = await loadFrameworkTooling(framework.id);
     for (const library of libraries) {
       const cwd = path.join(temporary, framework.id, library.id);
       const installed = path.join(cwd, "node_modules", "@olicoad", "neodt");
@@ -96,7 +97,7 @@ ${host.render(true, library.callback)}
         root: cwd,
         logLevel: "silent",
         plugins: [
-          ...host.plugins(),
+          ...plugins("consumer"),
           {
             name: "record-modules",
             moduleParsed(module) {

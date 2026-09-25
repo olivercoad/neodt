@@ -2,9 +2,9 @@ import { createElement } from "react";
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 
-import { frameworkHost } from "../../dev/framework-host";
+import type { DemoRenderer } from "../../dev/framework-host";
 import Neodt, { type NeodtProps } from "./generic";
-export const Control = frameworkHost((element, initial) => {
+export const mount: DemoRenderer = (element, initial) => {
   const root = createRoot(element);
   const update = (props: Record<string, unknown>) => {
     const next = { ...props };
@@ -23,4 +23,4 @@ export const Control = frameworkHost((element, initial) => {
   };
   update(initial);
   return { update, dispose: () => root.unmount() };
-});
+};

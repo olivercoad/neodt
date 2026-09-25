@@ -1,7 +1,5 @@
-import { execFile } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { promisify } from "node:util";
 
 import type { Plugin } from "vite";
 
@@ -29,16 +27,10 @@ export function libraryPages(): Plugin {
       "<!-- library-entry -->",
       script(id),
     );
-  const generate = () =>
-    promisify(execFile)(process.execPath, ["scripts/generate.ts"], {
-      cwd: path.resolve(root, ".."),
-    });
   return {
     name: "library-pages",
     enforce: "pre",
-    async config() {
-      // Generate before Vite scans imports, including on a fresh checkout.
-      await generate();
+    config() {
       return {
         optimizeDeps: {
           entries: [
@@ -59,12 +51,6 @@ export function libraryPages(): Plugin {
         },
       };
     },
-    async handleHotUpdate(context) {
-      if (!context.file.includes("/src/components/") || !context.file.endsWith(".lite.tsx")) return;
-      await generate();
-      context.server.ws.send({ type: "full-reload" });
-      return [];
-    },
     resolveId(id) {
       if (id.startsWith("/@neodt/demo/")) return `\0${id}`;
       if (pages.has(id)) return id;
@@ -78,7 +64,15 @@ export function libraryPages(): Plugin {
       if (!framework) return this.error(`Unknown framework: ${frameworkId}`);
       const library = libraries.find((library) => library.id === name);
       if (!library) return this.error(`Unknown datetime library: ${name}`);
-      return `import { Control } from ${JSON.stringify(path.resolve(root, "..", "frameworks", framework.id, "demo.ts"))};
+      // The shell uses Solid directly; other frameworks only supply native mounting operations.
+      const directory = path.resolve(root, "..", "frameworks", framework.id);
+      const control =
+        framework.id === "solid"
+          ? `import { Neodt as Control } from ${JSON.stringify(path.join(directory, `generic.${framework.sourceExtension}`))};`
+          : `import { mount } from ${JSON.stringify(path.join(directory, "demo.ts"))};
+import { frameworkHost } from ${JSON.stringify(path.join(root, "framework-host.tsx"))};
+const Control = frameworkHost(mount);`;
+      return `${control}
 import { integration } from ${JSON.stringify(path.resolve(root, "..", library.source))};
 import { start, nativeUnavailable } from ${JSON.stringify(path.join(root, "start.tsx"))};
 ${name === "native-temporal" ? `if (typeof Temporal === "undefined") nativeUnavailable(${JSON.stringify(framework.id)}); else` : ""} {
@@ -93,7 +87,6 @@ ${name === "native-temporal" ? `if (typeof Temporal === "undefined") nativeUnava
       },
     },
     configureServer(server) {
-      server.watcher.add(path.resolve(root, "../src/components"));
       server.middlewares.use(async (request, response, next) => {
         const url = new URL(request.url ?? "/", "http://localhost");
         const segments = url.pathname.split("/").filter(Boolean);

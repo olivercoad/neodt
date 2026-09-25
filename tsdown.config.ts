@@ -1,13 +1,14 @@
 import { defineConfig } from "tsdown";
 
 import { frameworks, frameworkPackages } from "./frameworks.ts";
+import { loadFrameworkTooling } from "./frameworks/tooling.ts";
 import { libraries, datetimePackages } from "./libraries.ts";
 import { libraryEntries } from "./scripts/library-entries.ts";
 
 export default defineConfig(
   await Promise.all(
     frameworks.map(async (framework) => {
-      const { default: integration } = await import(`./frameworks/${framework.id}/build.ts`);
+      const { build: integration } = await loadFrameworkTooling(framework.id);
       return {
         ...integration,
         entry: Object.fromEntries([
@@ -19,7 +20,7 @@ export default defineConfig(
         ]),
         outDir: `dist/${framework.id}`,
         tsconfig: "tsconfig.build.json",
-        plugins: [libraryEntries(), ...(integration.plugins ?? [])],
+        plugins: [libraryEntries(), integration.plugins],
         platform: "neutral" as const,
         deps: { neverBundle: [...datetimePackages, ...frameworkPackages] },
         css: { inject: true },

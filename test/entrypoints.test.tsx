@@ -3,6 +3,7 @@ import { render } from "solid-js/web";
 import { Temporal as Ponyfill } from "temporal-polyfill";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { frameworks, frameworkPackages } from "../frameworks";
 import { libraries, datetimePackages } from "../libraries";
 import packageJson from "../package.json";
 import * as native from "../src/libraries/native-temporal";
@@ -73,9 +74,13 @@ it("resolves global Temporal lazily and never installs a polyfill", () => {
 
 it("covers every configured library export in the unit and browser matrices", () => {
   const exports = Object.keys(packageJson.exports)
-    .filter((path) => ![".", "./generic", "./package.json", "./style.css"].includes(path))
-    .map((path) => path.slice(2))
+    .filter((path) => path.startsWith("./solid/") && path !== "./solid/generic")
+    .map((path) => path.slice("./solid/".length))
     .sort();
+  for (const framework of frameworks) {
+    for (const library of libraries)
+      expect(packageJson.exports).toHaveProperty(`./${framework.id}${library.entry}`);
+  }
   expect(builtInAdapters.map(({ name }) => name).sort()).toEqual(exports);
   expect(libraries.map(({ id }) => id).sort()).toEqual([...exports, "native-temporal"].sort());
   const configured: string[] = [];
@@ -89,7 +94,7 @@ it("keeps dependency declarations and unique registrations consistent", () => {
   expect(new Set(libraries.map(({ id }) => id)).size).toBe(libraries.length);
   expect(new Set(libraries.map(({ entry }) => entry)).size).toBe(libraries.length);
   expect(Object.keys(packageJson.peerDependenciesMeta).sort()).toEqual(
-    [...datetimePackages].sort(),
+    [...datetimePackages, ...frameworkPackages].sort(),
   );
   for (const library of libraries) {
     for (const name of [

@@ -1,2 +1,7 @@
 allowBuilds:
   esbuild: true
+  svelte-preprocess: false
+
+# vue-tsc requires the TypeScript JavaScript compiler API (not provided by TS 7).
+overrides:
+  "vue-tsc>typescript": 6.0.3

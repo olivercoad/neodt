@@ -1,9 +1,10 @@
 import { createContext, useContext, type Component } from "solid-js";
 
+import type { NeodtProps } from "../frameworks/solid/generic";
 import type { DateAdapter } from "../src/adapter";
 import { calendarDate, type CalendarDate } from "../src/calendar";
-import type { ConfiguredNeodtProps } from "../src/configured";
-import GenericNeodt from "../src/generic";
+type ConfiguredNeodtProps<T, TZone = string> = Omit<NeodtProps<T, TZone>, "adapter">;
+import type { DemoControl } from "./framework-host";
 import { libraries, type LibraryId } from "./libraries";
 
 // The demo keeps library-independent presentation and persistence around native values.
@@ -20,6 +21,7 @@ export function createDemoLibrary<T, TZone>(
   id: LibraryId,
   adapter: DateAdapter<T, TZone>,
   zone: (id: string) => TZone,
+  GenericNeodt: DemoControl,
 ) {
   const nativeValues = new WeakMap<DemoValue, T>();
   const wrap = (native: T, zoneId: string): DemoValue => {

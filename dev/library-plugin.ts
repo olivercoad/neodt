@@ -1,15 +1,26 @@
+import { execFile } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { promisify } from "node:util";
 
 import type { Plugin } from "vite";
 
+import { frameworks } from "../frameworks";
 import { libraries } from "../libraries";
 
 /** One HTML template and a virtual startup module for each registered library. */
 export function libraryPages(): Plugin {
   const root = import.meta.dirname;
   const pages = new Map(
-    libraries.map((library) => [path.join(root, library.id, "index.html"), library]),
+    frameworks.flatMap((framework) =>
+      libraries.map(
+        (library) =>
+          [
+            path.join(root, framework.id, library.id, "index.html"),
+            { library, framework },
+          ] as const,
+      ),
+    ),
   );
   const defaultLibrary = libraries.find(({ id }) => id === "temporal-polyfill")!;
   const script = (id: string) => `<script type="module" src="/@neodt/demo/${id}.ts"></script>`;
@@ -21,44 +32,60 @@ export function libraryPages(): Plugin {
   return {
     name: "library-pages",
     enforce: "pre",
+    async handleHotUpdate(context) {
+      if (!context.file.includes("/src/components/") || !context.file.endsWith(".lite.tsx")) return;
+      await promisify(execFile)(process.execPath, ["scripts/generate.ts"], {
+        cwd: path.resolve(root, ".."),
+      });
+      context.server.ws.send({ type: "full-reload" });
+      return [];
+    },
     resolveId(id) {
       if (id.startsWith("/@neodt/demo/")) return `\0${id}`;
       if (pages.has(id)) return id;
     },
     async load(id) {
       const page = pages.get(id);
-      if (page) return html(page.id);
+      if (page) return html(`${page.framework.id}/${page.library.id}`);
       if (!id.startsWith("\0/@neodt/demo/")) return;
-      const name = id.slice("\0/@neodt/demo/".length, -3);
+      const [frameworkId, name] = id.slice("\0/@neodt/demo/".length, -3).split("/");
+      const framework = frameworks.find(({ id }) => id === frameworkId);
+      if (!framework) return this.error(`Unknown framework: ${frameworkId}`);
       const library = libraries.find((library) => library.id === name);
       if (!library) return this.error(`Unknown datetime library: ${name}`);
-      return `import { integration } from ${JSON.stringify(path.resolve(root, "..", library.source))};
+      return `import { Control } from ${JSON.stringify(path.resolve(root, "..", "frameworks", framework.id, "demo.ts"))};
+import { integration } from ${JSON.stringify(path.resolve(root, "..", library.source))};
 import { start, nativeUnavailable } from ${JSON.stringify(path.join(root, "start.tsx"))};
-${name === "native-temporal" ? 'if (typeof Temporal === "undefined") nativeUnavailable(); else' : ""} {
+${name === "native-temporal" ? `if (typeof Temporal === "undefined") nativeUnavailable(${JSON.stringify(framework.id)}); else` : ""} {
   await integration.setup();
-  integration.run(({ adapter, zone }) => start(${JSON.stringify(name)}, adapter, zone));
+  integration.run(({ adapter, zone }) => start(${JSON.stringify(name)}, adapter, zone, ${JSON.stringify(framework.id)}, Control));
 }`;
     },
     transformIndexHtml: {
       order: "pre",
       handler(html) {
-        return html.replace("<!-- library-entry -->", script(defaultLibrary.id));
+        return html.replace("<!-- library-entry -->", script(`solid/${defaultLibrary.id}`));
       },
     },
     configureServer(server) {
+      server.watcher.add(path.resolve(root, "../src/components"));
       server.middlewares.use(async (request, response, next) => {
         const url = new URL(request.url ?? "/", "http://localhost");
-        const library = libraries.find(({ id }) =>
-          [`/${id}`, `/${id}/`, `/${id}/index.html`].includes(url.pathname),
-        );
+        const segments = url.pathname.split("/").filter(Boolean);
+        const framework = frameworks.find(({ id }) => id === segments[0]);
+        const library = libraries.find(({ id }) => id === (framework ? segments[1] : segments[0]));
         if (!library) return next();
-        if (url.pathname === `/${library.id}`) {
-          response.writeHead(302, { Location: `/${library.id}/${url.search}` });
+        const pagePath = `/${framework?.id ?? "solid"}/${library.id}/`;
+        if (url.pathname !== pagePath && url.pathname !== pagePath + "index.html") {
+          response.writeHead(302, { Location: pagePath + url.search });
           response.end();
           return;
         }
         try {
-          const transformed = await server.transformIndexHtml(url.pathname, await html(library.id));
+          const transformed = await server.transformIndexHtml(
+            url.pathname,
+            await html(`${framework?.id ?? "solid"}/${library.id}`),
+          );
           response.setHeader("Content-Type", "text/html");
           response.end(transformed);
         } catch (error) {

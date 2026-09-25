@@ -61,9 +61,12 @@ export function createResizeScrollAnchor(cards: () => HTMLElement) {
     },
     finish() {
       if (frame !== undefined) cancelAnimationFrame(frame);
-      // The component's wrapping follows ResizeObserver; let the final width settle first.
+      // ResizeObserver schedules measurement in the next frame, then framework rendering
+      // applies the wrap. Keep the upstream cards frozen through that complete cycle.
       frame = requestAnimationFrame(() => {
-        frame = requestAnimationFrame(() => stop());
+        frame = requestAnimationFrame(() => {
+          frame = requestAnimationFrame(() => stop());
+        });
       });
     },
   };

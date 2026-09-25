@@ -1,15 +1,10 @@
 import { createTemporalAdapter } from "../adapters/temporal";
-import {
-  configureNeodt,
-  type ConfiguredNeodtProps,
-  type ConfiguredNaturalDateParseOptions,
-} from "../configured";
+import { configureDate, type ConfiguredNaturalDateParseOptions } from "../configured";
 import { defineIntegration } from "../integration";
 
-export type NeodtProps = ConfiguredNeodtProps<Temporal.ZonedDateTime>;
 export type NaturalDateParseOptions = ConfiguredNaturalDateParseOptions<Temporal.ZonedDateTime>;
 
-export const { Neodt, parseNaturalDate } = configureNeodt(
+export const { adapter, parseNaturalDate } = configureDate(
   createTemporalAdapter<Temporal.ZonedDateTime>({
     ZonedDateTime: {
       from(fields, options) {
@@ -20,7 +15,7 @@ export const { Neodt, parseNaturalDate } = configureNeodt(
       fromEpochMilliseconds(milliseconds) {
         if (typeof Temporal === "undefined") {
           throw new Error(
-            "Native Temporal is unavailable. Import @olicoad/neodt/temporal-polyfill or @olicoad/neodt/js-temporal-polyfill instead.",
+            "Native Temporal is unavailable. Import the temporal-polyfill or js-temporal-polyfill entry under your framework instead.",
           );
         }
         return Temporal.Instant.fromEpochMilliseconds(milliseconds);
@@ -28,7 +23,6 @@ export const { Neodt, parseNaturalDate } = configureNeodt(
     },
   }),
 );
-export default Neodt;
 export * from "../public";
 export { createTemporalAdapter } from "../adapters/temporal";
 export type { TemporalImplementation, TemporalZonedValue } from "../adapters/temporal";
@@ -37,6 +31,5 @@ export type { TemporalImplementation, TemporalZonedValue } from "../adapters/tem
 export const integration = /* @__PURE__ */ defineIntegration({
   create: () => createTemporalAdapter(globalThis.Temporal),
   zone: (id: string) => id,
-  entry: { default: Neodt, Neodt, parseNaturalDate },
   behavior: {},
 });

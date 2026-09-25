@@ -15,7 +15,7 @@ test("library panel works with keyboard, dismisses, and fits narrow screens", as
   for (const width of [320, 390, 760, 1280]) {
     await page.setViewportSize({ width, height: 844 });
     await trigger.click();
-    const panel = page.locator("details > div");
+    const panel = page.locator("details[open] > div");
     const bounds = (await panel.boundingBox())!;
     expect(bounds.x).toBeGreaterThanOrEqual(0);
     expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);

@@ -27,7 +27,9 @@ for (const library of libraries) {
     page,
   }) => {
     await page.goto(`/${library.id}?direct=1#/docs/libraries`);
-    await expect(page).toHaveURL(`http://127.0.0.1:3000/${library.id}/?direct=1#/docs/libraries`);
+    await expect(page).toHaveURL(
+      `http://127.0.0.1:3000/solid/${library.id}/?direct=1#/docs/libraries`,
+    );
     await expect(page.locator("html")).toHaveAttribute("data-adapter", library.id);
     await expectLibrary(page, library);
   });

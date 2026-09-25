@@ -1,6 +1,6 @@
 # neodt
 
-A locale-aware, keyboard-editable segmented date and time input for Solid.
+A locale-aware, keyboard-editable segmented date and time input for Solid, React, and Vue, generated from one Mitosis implementation.
 
 **Links**: [npm](https://www.npmjs.com/package/@olicoad/neodt) | [GitHub](https://github.com/olivercoad/neodt) | [Issues](https://github.com/olivercoad/neodt/issues) | [Demo](https://neodt.olisworld.com)
 
@@ -10,13 +10,29 @@ A locale-aware, keyboard-editable segmented date and time input for Solid.
 pnpm add @olicoad/neodt solid-js
 ```
 
-## Usage
+## Frameworks
 
-The default import uses native Temporal. Your runtime must provide Temporal; see [Datetime libraries](https://neodt.olisworld.com/#/docs/libraries) for polyfills and other libraries.
+Choose your frontend framework and datetime library independently:
+
+```ts
+import SolidNeodt from "@olicoad/neodt/solid/luxon";
+import ReactNeodt from "@olicoad/neodt/react/luxon";
+import VueNeodt from "@olicoad/neodt/vue/luxon";
+```
+
+Install only the framework and datetime packages you use. Each framework root (`/solid`, `/react`, `/vue`) uses native Temporal; each `/generic` entry accepts a custom adapter. Framework-less component imports are not exported.
+
+The demo's **Framework** and **Library** dropdowns select the live control implementation and preserve your documentation section. See [Frameworks](https://neodt.olisworld.com/#/docs/frameworks) for React and Vue examples, native attributes and custom icon slots.
+
+Solid accepts JSX icon props and `classList`. React accepts `ReactNode` icon props and `className`. Vue accepts `calendarIcon` and `magicIcon` slots; use `shallowRef` to retain datetime instances. All frameworks share editing behavior, CSS classes and theme variables. Use a stable reference time and an explicit locale for server rendering and hydration.
+
+## Solid usage
+
+Each framework root uses native Temporal. Your runtime must provide Temporal; see [Datetime libraries](https://neodt.olisworld.com/#/docs/libraries) for polyfills and other libraries.
 
 ```tsx
 import { createSignal } from "solid-js";
-import Neodt from "@olicoad/neodt";
+import Neodt from "@olicoad/neodt/solid";
 
 function Appointment() {
   const [value, setValue] = createSignal<Temporal.ZonedDateTime | null>(null);
@@ -41,9 +57,9 @@ See [Datetime libraries](https://neodt.olisworld.com/#/docs/libraries) for avail
 ### Custom adapters
 
 ```tsx
-import Neodt, { parseNaturalDate, type DateAdapter } from "@olicoad/neodt/generic";
+import Neodt, { parseNaturalDate, type DateAdapter } from "@olicoad/neodt/solid/generic";
 
-import { createDateFnsAdapter } from "@olicoad/neodt/date-fns";
+import { createDateFnsAdapter } from "@olicoad/neodt/solid/date-fns";
 import { toDate, constructNow } from "date-fns";
 
 const adapter: DateAdapter<Date> = createDateFnsAdapter(toDate, { zone: "UTC" });
@@ -102,7 +118,7 @@ neodt parses input syntax and checks field ranges using the library's month leng
 
 Controlled updates from the parent replace the displayed draft; setting `value` to `null` clears every segment. During editing, incomplete segments emit `null` while retaining the local draft. Echoing emitted values through `onValueChange` preserves ongoing numeric entry.
 
-All standard `span` attributes, including `class`, `classList`, and ARIA attributes, are forwarded to the root element. This is a JavaScript-managed SPA control and does not provide native form submission.
+Native `span` attributes and ARIA attributes are forwarded to the root element using the selected framework’s conventions. This is a JavaScript-managed SPA control and does not provide native form submission.
 
 The control supports mouse, touch, and keyboard editing: Arrow Left/Right move between segments, Arrow Up/Down change a segment, and numeric input replaces numeric segments. Space opens the native picker; `@` opens natural-language input. Natural-language input accepts a single point in time, such as `tomorrow 9:30am`, `in 2 hours`, or `5pm America/New_York`; date ranges are not supported.
 
@@ -112,7 +128,7 @@ Every component entry imports the component CSS, so Vite and standard Solid buil
 
 ```tsx
 import "@olicoad/neodt/style.css";
-import Neodt from "@olicoad/neodt";
+import Neodt from "@olicoad/neodt/solid";
 ```
 
 Set theme variables on a class applied to the component, after the default stylesheet. Defaults are declared on the root itself, so ancestor variables alone do not override them:
@@ -139,7 +155,7 @@ import {
   parseNaturalDate,
   type NaturalDateCompletion,
   type NaturalDateParseOptions,
-} from "@olicoad/neodt";
+} from "@olicoad/neodt/solid";
 ```
 
 `parseNaturalDate(value, { referenceTime, zone?, locale? })` returns the selected implementation’s value type or `undefined`. `zone` defaults to the reference’s zone and accepts the adapter’s native zone type. Import the parser and `NaturalDateParseOptions` from the same entry as your component. The `/generic` parser additionally requires `adapter` and exports `NaturalDateParseOptions<T, TZone>`. `getNaturalDateCompletions(value, maximum?)` returns completion labels and replacement text.
@@ -153,7 +169,9 @@ pnpm install
 pnpm dev
 ```
 
-To add a datetime library, see [adding integrations](docs/adding-a-library.md).
+To extend the project, see [adding datetime libraries](docs/adding-a-library.md) and [adding frameworks](docs/adding-a-framework.md).
+
+`pnpm generate` compiles the shared `.lite.tsx` components for every registered framework. Development and build commands run it automatically; generated files are not committed.
 
 The demo is served at `http://localhost:3000`. Validate changes with:
 
@@ -193,7 +211,3 @@ Support configurable precision and step size:
 - Milliseconds
 - Date-only values
 - Step size
-
-### Other Frameworks
-
-Not every project will want to install Solid. Zag or Mitosis may help make the component framework agnostic.

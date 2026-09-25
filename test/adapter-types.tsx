@@ -14,7 +14,7 @@ import { Temporal as Ponyfill } from "temporal-polyfill";
 // Compiled by lint:types. These assertions also protect JSX's generic inference.
 import { expectTypeOf } from "vitest";
 
-import Neodt, { parseNaturalDate, type NeodtProps } from "../src/generic";
+import Neodt, { parseNaturalDate, type NeodtProps } from "../frameworks/solid/generic";
 import { createDateFnsAdapter } from "../src/libraries/date-fns";
 import { createDayjsAdapter } from "../src/libraries/dayjs";
 import { createInternationalizedDateAdapter } from "../src/libraries/internationalized-date";

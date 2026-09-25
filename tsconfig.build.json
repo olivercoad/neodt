@@ -5,7 +5,8 @@
     "emitDeclarationOnly": true,
     "noEmit": false,
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "."
   },
-  "include": ["src"]
+  "include": ["src/**/*.ts", "frameworks/*/generic.*", "frameworks/*/env.d.ts", "generated/**/*"],
+  "exclude": ["src/components"]
 }

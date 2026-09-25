@@ -2,19 +2,13 @@ import { DateTime } from "luxon";
 import type { Zone } from "luxon";
 
 import type { DateAdapter } from "../adapter";
-import {
-  configureNeodt,
-  type ConfiguredNeodtProps,
-  type ConfiguredNaturalDateParseOptions,
-} from "../configured";
+import { configureDate, type ConfiguredNaturalDateParseOptions } from "../configured";
 import { fixedOffset } from "../format";
 import { defineIntegration } from "../integration";
 
-export type NeodtProps = ConfiguredNeodtProps<DateTime, LuxonZone>;
 export type NaturalDateParseOptions = ConfiguredNaturalDateParseOptions<DateTime, LuxonZone>;
 
-export const { Neodt, parseNaturalDate } = configureNeodt(createLuxonAdapter(DateTime));
-export default Neodt;
+export const { adapter, parseNaturalDate } = configureDate(createLuxonAdapter(DateTime));
 export * from "../public";
 
 export type LuxonZone = string | Zone;
@@ -69,7 +63,6 @@ export function createLuxonAdapter(
 export const integration = /* @__PURE__ */ defineIntegration({
   create: () => createLuxonAdapter(DateTime),
   zone: (id: string) => DateTime.now().setZone(/^[+-]/.test(id) ? `UTC${id}` : id).zone,
-  entry: { default: Neodt, Neodt, parseNaturalDate },
   behavior: {
     offsetLabel: "UTC+5:45",
   },

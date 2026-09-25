@@ -20,11 +20,15 @@ export default function Libraries() {
         browser loads only the selected datetime library. Switching preserves the current docs
         section. Native Temporal requires browser support; either polyfill entry works without it.
       </p>
+      <p>
+        The examples below use Solid syntax. See <a href="#/docs/frameworks">Frameworks</a> for the
+        selected framework’s example and replace /solid with your framework in utility imports.
+      </p>
       <h2 id="native-temporal">Native Temporal</h2>
       <pre>
         <Code
           language="tsx"
-          value={`import Neodt from "@olicoad/neodt";
+          value={`import Neodt from "@olicoad/neodt/solid";
 
 const referenceTime = Temporal.Now.zonedDateTimeISO("Australia/Sydney");
 <Neodt referenceTime={referenceTime} />;`}
@@ -32,10 +36,10 @@ const referenceTime = Temporal.Now.zonedDateTimeISO("Australia/Sydney");
       </pre>
       <p>
         Values and callbacks use <code>Temporal.ZonedDateTime</code>. Convert an Instant or
-        PlainDateTime to a ZonedDateTime before passing it to the control. The root entry requires a
-        global Temporal implementation and imports no datetime package. For TypeScript 6 or later,
-        include <code>"ESNext"</code> and <code>"DOM"</code> in your compiler’s <code>lib</code>{" "}
-        setting to enable the global types.
+        PlainDateTime to a ZonedDateTime before passing it to the control. Each framework’s root
+        entry requires a global Temporal implementation and imports no datetime package. For
+        TypeScript 6 or later, include <code>"ESNext"</code> and <code>"DOM"</code> in your
+        compiler’s <code>lib</code> setting to enable the global types.
       </p>
       <h2 id="temporal-polyfills">Temporal polyfills</h2>
       <p>
@@ -45,7 +49,7 @@ const referenceTime = Temporal.Now.zonedDateTimeISO("Australia/Sydney");
       <pre>
         <Code
           language="tsx"
-          value={`import Neodt from "@olicoad/neodt/temporal-polyfill";
+          value={`import Neodt from "@olicoad/neodt/solid/temporal-polyfill";
 import { Temporal } from "temporal-polyfill";
 
 <Neodt referenceTime={Temporal.Now.zonedDateTimeISO("Australia/Sydney")} />;`}
@@ -53,12 +57,12 @@ import { Temporal } from "temporal-polyfill";
       </pre>
       <p>
         If your application uses <code>@js-temporal/polyfill</code>, select{" "}
-        <code>@olicoad/neodt/js-temporal-polyfill</code> instead:
+        <code>@olicoad/neodt/solid/js-temporal-polyfill</code> instead:
       </p>
       <pre>
         <Code
           language="tsx"
-          value={`import Neodt from "@olicoad/neodt/js-temporal-polyfill";
+          value={`import Neodt from "@olicoad/neodt/solid/js-temporal-polyfill";
 import { Temporal } from "@js-temporal/polyfill";
 
 <Neodt referenceTime={Temporal.Now.zonedDateTimeISO("Australia/Sydney")} />;`}
@@ -66,10 +70,11 @@ import { Temporal } from "@js-temporal/polyfill";
       </pre>
       <p>
         Both entries use their package’s Temporal export. The temporal-polyfill package uses native
-        Temporal when available and supplies its implementation otherwise. You can also use the root
-        entry with a global polyfill installed by your application. The live demos on this site use
-        the temporal-polyfill entry for browser compatibility, while the getting-started examples
-        use native Temporal. Neither the site nor the library installs a global polyfill.
+        Temporal when available and supplies its implementation otherwise. You can also use your
+        framework’s root entry with a global polyfill installed by your application. The live demos
+        on this site use the temporal-polyfill entry for browser compatibility, while the
+        getting-started examples use native Temporal. Neither the site nor the library installs a
+        global polyfill.
       </p>
       <h2 id="other-libraries">Available library entries</h2>
       <div class={styles.tableScroll}>
@@ -107,7 +112,7 @@ import { Temporal } from "@js-temporal/polyfill";
                     {!library.dependencies.length && "Built into your runtime"}
                   </td>
                   <td>
-                    <code>{library.entry || "(root)"}</code>
+                    <code>{"/<framework>" + library.entry}</code>
                   </td>
                   <td>
                     <code>{library.type}</code>
@@ -123,7 +128,7 @@ import { Temporal } from "@js-temporal/polyfill";
           language="tsx"
           value={`import { createSignal } from "solid-js";
 import { DateTime } from "luxon";
-import Neodt from "@olicoad/neodt/luxon";
+import Neodt from "@olicoad/neodt/solid/luxon";
 
 const referenceTime = DateTime.now().setZone("Australia/Sydney");
 const [value, setValue] = createSignal<DateTime | null>(null);
@@ -147,8 +152,8 @@ const [value, setValue] = createSignal<DateTime | null>(null);
       </p>
       <p>
         For the libraries below, the default entry works in the system timezone. To choose another
-        zone explicitly, import <code>/generic</code> and create an adapter once with a{" "}
-        <code>zone</code> option, as shown below. Use an IANA name such as{" "}
+        zone explicitly, import <code>/generic</code> under your framework and create an adapter
+        once with a <code>zone</code> option, as shown below. Use an IANA name such as{" "}
         <code>Australia/Sydney</code> when daylight-saving changes should be taken into account.
       </p>
       <h3>Moment.js</h3>
@@ -160,8 +165,8 @@ const [value, setValue] = createSignal<DateTime | null>(null);
       <pre>
         <Code
           language="tsx"
-          value={`import Neodt from "@olicoad/neodt/generic";
-import { createMomentAdapter } from "@olicoad/neodt/moment";
+          value={`import Neodt from "@olicoad/neodt/solid/generic";
+import { createMomentAdapter } from "@olicoad/neodt/solid/moment";
 import moment from "moment-timezone";
 
 const adapter = createMomentAdapter(moment, { zone: "Australia/Sydney" });
@@ -182,8 +187,8 @@ const adapter = createMomentAdapter(moment, { zone: "Australia/Sydney" });
       <pre>
         <Code
           language="tsx"
-          value={`import Neodt from "@olicoad/neodt/generic";
-import { createDayjsAdapter } from "@olicoad/neodt/dayjs";
+          value={`import Neodt from "@olicoad/neodt/solid/generic";
+import { createDayjsAdapter } from "@olicoad/neodt/solid/dayjs";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
@@ -207,8 +212,8 @@ const adapter = createDayjsAdapter(dayjs, { zone: "Australia/Sydney" });
       <pre>
         <Code
           language="tsx"
-          value={`import Neodt from "@olicoad/neodt/generic";
-import { createDateFnsAdapter } from "@olicoad/neodt/date-fns";
+          value={`import Neodt from "@olicoad/neodt/solid/generic";
+import { createDateFnsAdapter } from "@olicoad/neodt/solid/date-fns";
 import { toDate, constructNow } from "date-fns";
 
 const adapter = createDateFnsAdapter(toDate, { zone: "Australia/Sydney" });
@@ -225,9 +230,9 @@ const adapter = createDateFnsAdapter(toDate, { zone: "Australia/Sydney" });
       <pre>
         <Code
           language="tsx"
-          value={`import Neodt, { type DateAdapter } from "@olicoad/neodt/generic";
+          value={`import Neodt, { type DateAdapter } from "@olicoad/neodt/solid/generic";
 
-import { createDateFnsAdapter } from "@olicoad/neodt/date-fns";
+import { createDateFnsAdapter } from "@olicoad/neodt/solid/date-fns";
 import { toDate, constructNow } from "date-fns";
 
 const adapter: DateAdapter<Date> = createDateFnsAdapter(toDate, { zone: "UTC" });

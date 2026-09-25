@@ -8,7 +8,7 @@ import spacetime from "spacetime";
 import { Temporal as OtherTemporal } from "temporal-polyfill";
 import { describe, expect, it, vi } from "vitest";
 
-import Neodt, { parseNaturalDate, type DateAdapter } from "../src/generic";
+import Neodt, { parseNaturalDate, type DateAdapter } from "../frameworks/solid/generic";
 import { createDateFnsAdapter } from "../src/libraries/date-fns";
 import { createInternationalizedDateAdapter } from "../src/libraries/internationalized-date";
 import { createLuxonAdapter } from "../src/libraries/luxon";

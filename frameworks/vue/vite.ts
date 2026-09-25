@@ -1,0 +1,3 @@
+import vue from "@vitejs/plugin-vue";
+import type { PluginOption } from "vite";
+export const plugins = (): PluginOption[] => [vue()];

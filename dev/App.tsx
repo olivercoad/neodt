@@ -3,6 +3,7 @@ import { createMemo, createSignal, For, onCleanup, onMount, type Component } fro
 
 import packageJson from "../package.json";
 import Code from "./code/Code";
+import { currentFramework } from "./framework";
 import { useLibrary, type DemoValue } from "./library";
 import { locales } from "./locales";
 import ResizablePreview from "./ResizablePreview";
@@ -90,21 +91,19 @@ const App: Component = () => {
     return {};
   });
 
-  const code = createMemo(() => {
-    const optionLines = [
-      `  referenceTime={referenceTime()}`,
-      locale() ? `  locale="${locale()}"` : undefined,
-      dayPeriod() === "locale"
-        ? undefined
-        : `  formatOptions={{ hour12: ${dayPeriod() === "12"} }}`,
-      showTimeOffset() ? "  showTimeOffset" : undefined,
-      readonly() ? "  readonly" : undefined,
-      disabled() ? "  disabled" : undefined,
-      "  value={value()}",
-      "  onValueChange={setValue}",
-    ].filter(Boolean);
-    return `import Neodt from '@olicoad/neodt${library.entry}'\n${library.imports}\nimport { createSignal } from 'solid-js'\n\nconst [referenceTime] = createSignal(${library.nowExpression})\nconst [value, setValue] = createSignal<${library.type} | null>(null)\n\n<Neodt\n${optionLines.join("\n")}\n/>`;
-  });
+  const framework = currentFramework();
+  const code = createMemo(() =>
+    framework.example(
+      { ...library, now: library.nowExpression },
+      {
+        locale: locale(),
+        hour12: dayPeriod() === "locale" ? undefined : dayPeriod() === "12",
+        showTimeOffset: showTimeOffset(),
+        readonly: readonly(),
+        disabled: disabled(),
+      },
+    ),
+  );
 
   const reset = () => {
     setReferenceTime(library.now());
@@ -142,7 +141,8 @@ const App: Component = () => {
           </p>
           <div class={styles.install}>
             <code>
-              pnpm add @olicoad/neodt solid-js{library.packages ? ` ${library.packages}` : ""}
+              pnpm add @olicoad/neodt {framework.packages.join(" ")}
+              {library.packages ? ` ${library.packages}` : ""}
             </code>
             <span>Solid 1.6+</span>
             <a href="https://www.npmjs.com/package/@olicoad/neodt" target="_blank" rel="noreferrer">
@@ -332,7 +332,7 @@ const App: Component = () => {
               <span>TSX</span>
             </div>
             <pre>
-              <Code value={code()} language="tsx" />
+              <Code value={code()} language={framework.codeLanguage} />
             </pre>
           </div>
         </div>

@@ -22,6 +22,8 @@
   /* Internal baselines differ by editing mode; keep the surrounding line box stable. */
   vertical-align: middle;
   position: relative;
+  /* Let grid/flex parents constrain the editor before its measured rows wrap. */
+  min-width: 0;
   width: 250px;
 }
 

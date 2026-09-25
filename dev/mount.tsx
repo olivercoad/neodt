@@ -1,6 +1,7 @@
 import { render } from "solid-js/web";
 
 import type { DateAdapter } from "../src/adapter";
+import type { DemoControl } from "./framework-host";
 import type { LibraryId } from "./libraries";
 import { createDemoLibrary, LibraryContext } from "./library";
 import Site from "./Site";
@@ -11,8 +12,9 @@ export function mount<T, TZone>(
   id: LibraryId,
   adapter: DateAdapter<T, TZone>,
   zone: (id: string) => TZone,
+  Control: DemoControl,
 ) {
-  const library = createDemoLibrary(id, adapter, zone);
+  const library = createDemoLibrary(id, adapter, zone, Control);
   document.documentElement.dataset.adapter = id;
   render(
     () => (

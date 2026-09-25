@@ -568,14 +568,15 @@ for (const library of libraries) {
       }
     });
 
-    test("library documentation is separate from the native Temporal getting-started example", async ({
+    test("getting-started examples follow the selected framework and datetime library", async ({
       page,
     }) => {
       await page.goto("./#/docs/getting-started");
       const example = page.locator("#docs-content pre").last();
-      await expect(example).toContainText('import Neodt from "@olicoad/neodt"');
-      await expect(example).toContainText("Temporal.Now.zonedDateTimeISO");
-      await expect(example).not.toContainText("luxon");
+      await expect(example).toContainText(
+        `import Neodt from "@olicoad/neodt/solid${library.entry}"`,
+      );
+      await expect(example).toContainText(library.now);
       await page
         .getByRole("navigation", { name: "Documentation" })
         .getByRole("link", { name: "Datetime libraries", exact: true })
@@ -585,8 +586,8 @@ for (const library of libraries) {
       await expect(
         page.getByRole("heading", { name: "Temporal polyfills", exact: true }),
       ).toBeVisible();
-      await expect(page.locator("#docs-content")).toContainText("@olicoad/neodt/generic");
-      await expect(page.locator("#docs-content")).toContainText("@olicoad/neodt/luxon");
+      await expect(page.locator("#docs-content")).toContainText("@olicoad/neodt/solid/generic");
+      await expect(page.locator("#docs-content")).toContainText("@olicoad/neodt/solid/luxon");
     });
 
     test("live demos preserve saved values and leave global Temporal unchanged", async ({

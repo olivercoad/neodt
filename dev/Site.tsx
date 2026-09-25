@@ -14,7 +14,7 @@ export default function Site() {
     const id = page();
     document.title = id
       ? `${pages.find(([slug]) => slug === id)?.[1] ?? "Documentation"} · neodt`
-      : "neodt — A datetime input for Solid";
+      : "neodt — A datetime input for your framework";
     const target = id ? section() : hash().slice(1);
     const frame = requestAnimationFrame(() => {
       const heading = target ? document.getElementById(target) : null;

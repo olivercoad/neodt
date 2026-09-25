@@ -3,19 +3,13 @@ import type { ConfigType, ManipulateType, UnitType } from "dayjs";
 
 import { systemZone, type AdapterOptions, type DateAdapter, type DateFields } from "../adapter";
 import { createIntlFormatter } from "../adapters/intl-format";
-import {
-  configureNeodt,
-  type ConfiguredNeodtProps,
-  type ConfiguredNaturalDateParseOptions,
-} from "../configured";
+import { configureDate, type ConfiguredNaturalDateParseOptions } from "../configured";
 import { fixedOffset, offsetZone } from "../format";
 import { defineIntegration } from "../integration";
 
-export type NeodtProps = ConfiguredNeodtProps<Dayjs>;
 export type NaturalDateParseOptions = ConfiguredNaturalDateParseOptions<Dayjs>;
 
-export const { Neodt, parseNaturalDate } = configureNeodt(createDayjsAdapter(dayjs));
-export default Neodt;
+export const { adapter, parseNaturalDate } = configureDate(createDayjsAdapter(dayjs));
 export * from "../public";
 
 type DayjsFactory = ((input?: ConfigType) => Dayjs) & {
@@ -147,7 +141,6 @@ export function createDayjsAdapter(
 export const integration = /* @__PURE__ */ defineIntegration({
   create: () => createDayjsAdapter(dayjs),
   zone: (id: string) => id,
-  entry: { default: Neodt, Neodt, parseNaturalDate },
   async setup() {
     const [{ default: utc }, { default: timezone }] = await Promise.all([
       import("dayjs/plugin/utc.js"),

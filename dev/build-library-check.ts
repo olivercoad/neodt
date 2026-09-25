@@ -1,5 +1,6 @@
 import type { Plugin } from "vite";
 
+import { frameworks } from "../frameworks";
 import { libraries } from "./libraries";
 
 const packages = Object.fromEntries(
@@ -20,7 +21,14 @@ export function checkLibraryEntries(): Plugin {
             ? libraries.find(({ id }) => id === "temporal-polyfill")
             : undefined);
         if (!library) continue;
-        checked.add(library.id);
+        const framework = chunk.facadeModuleId?.endsWith("/dev/index.html")
+          ? frameworks.find(({ id }) => id === "solid")
+          : frameworks.find(({ id }) =>
+              chunk.facadeModuleId?.endsWith(`/${id}/${library.id}/index.html`),
+            );
+        if (!framework) this.error(`Missing framework for ${chunk.facadeModuleId}`);
+        const entry = `${framework.id}/${library.id}`;
+        checked.add(entry);
         const visited = new Set<string>();
         const modules = new Set<string>();
         const visit = (file: string) => {
@@ -39,14 +47,28 @@ export function checkLibraryEntries(): Plugin {
           );
           if (names.length && loaded !== (id === library.id)) {
             this.error(
-              `${library.id} entry ${loaded ? "loads unselected" : "does not load selected"} library ${id}`,
+              `${entry} entry ${loaded ? "loads unselected" : "does not load selected"} library ${id}`,
+            );
+          }
+        }
+        for (const { id } of frameworks) {
+          // The documentation shell uses Solid; the control must use only the selected binding.
+          const loaded = [...modules].some(
+            (module) =>
+              module.includes(`/generated/${id}/`) || module.includes(`/frameworks/${id}/generic.`),
+          );
+          if (loaded !== (id === framework.id)) {
+            this.error(
+              `${entry} entry ${loaded ? "loads unselected" : "does not load selected"} framework ${id}`,
             );
           }
         }
       }
-      for (const { id } of libraries) {
-        if (!checked.has(id)) this.error(`Missing production entry for ${id}`);
-      }
+      for (const framework of frameworks)
+        for (const library of libraries) {
+          const entry = `${framework.id}/${library.id}`;
+          if (!checked.has(entry)) this.error(`Missing production entry for ${entry}`);
+        }
     },
   };
 }

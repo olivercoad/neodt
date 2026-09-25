@@ -2,7 +2,7 @@ import { isServer, renderToString } from "solid-js/web";
 import { Temporal } from "temporal-polyfill";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import Neodt from "../src/generic";
+import Neodt from "../frameworks/solid/generic";
 import { builtInAdapters } from "./helpers/adapters";
 import { forEachConfiguredEntry } from "./helpers/entries";
 

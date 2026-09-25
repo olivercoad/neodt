@@ -32,3 +32,6 @@ Thumbs.db
 # Browser test artifacts
 /playwright-report
 /test-results
+
+# Mitosis build output
+/generated

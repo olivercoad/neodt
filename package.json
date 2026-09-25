@@ -2,15 +2,18 @@
   "name": "@olicoad/neodt",
   "version": "0.3.1",
   "private": false,
-  "description": "A configurable, locale-aware datetime-local input for Solid.",
+  "description": "A framework- and datetime-library-independent, locale-aware datetime input.",
   "keywords": [
     "date",
     "date-time-picker",
     "datetime",
     "datetime-local",
+    "mitosis",
+    "react",
     "solid",
     "solidjs",
-    "time"
+    "time",
+    "vue"
   ],
   "homepage": "https://neodt.olisworld.com",
   "bugs": {
@@ -32,18 +35,127 @@
   "sideEffects": [
     "**/*.css"
   ],
-  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.jsx",
-    "./date-fns": "./dist/date-fns.jsx",
-    "./dayjs": "./dist/dayjs.jsx",
-    "./generic": "./dist/generic.jsx",
-    "./internationalized-date": "./dist/internationalized-date.jsx",
-    "./js-temporal-polyfill": "./dist/js-temporal-polyfill.jsx",
-    "./luxon": "./dist/luxon.jsx",
-    "./moment": "./dist/moment.jsx",
-    "./spacetime": "./dist/spacetime.jsx",
-    "./temporal-polyfill": "./dist/temporal-polyfill.jsx",
+    "./solid": {
+      "types": "./dist/solid/index.d.ts",
+      "default": "./dist/solid/index.jsx"
+    },
+    "./solid/generic": {
+      "types": "./dist/solid/generic.d.ts",
+      "default": "./dist/solid/generic.jsx"
+    },
+    "./solid/temporal-polyfill": {
+      "types": "./dist/solid/temporal-polyfill.d.ts",
+      "default": "./dist/solid/temporal-polyfill.jsx"
+    },
+    "./solid/js-temporal-polyfill": {
+      "types": "./dist/solid/js-temporal-polyfill.d.ts",
+      "default": "./dist/solid/js-temporal-polyfill.jsx"
+    },
+    "./solid/luxon": {
+      "types": "./dist/solid/luxon.d.ts",
+      "default": "./dist/solid/luxon.jsx"
+    },
+    "./solid/moment": {
+      "types": "./dist/solid/moment.d.ts",
+      "default": "./dist/solid/moment.jsx"
+    },
+    "./solid/dayjs": {
+      "types": "./dist/solid/dayjs.d.ts",
+      "default": "./dist/solid/dayjs.jsx"
+    },
+    "./solid/date-fns": {
+      "types": "./dist/solid/date-fns.d.ts",
+      "default": "./dist/solid/date-fns.jsx"
+    },
+    "./solid/spacetime": {
+      "types": "./dist/solid/spacetime.d.ts",
+      "default": "./dist/solid/spacetime.jsx"
+    },
+    "./solid/internationalized-date": {
+      "types": "./dist/solid/internationalized-date.d.ts",
+      "default": "./dist/solid/internationalized-date.jsx"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "default": "./dist/react/index.js"
+    },
+    "./react/generic": {
+      "types": "./dist/react/generic.d.ts",
+      "default": "./dist/react/generic.js"
+    },
+    "./react/temporal-polyfill": {
+      "types": "./dist/react/temporal-polyfill.d.ts",
+      "default": "./dist/react/temporal-polyfill.js"
+    },
+    "./react/js-temporal-polyfill": {
+      "types": "./dist/react/js-temporal-polyfill.d.ts",
+      "default": "./dist/react/js-temporal-polyfill.js"
+    },
+    "./react/luxon": {
+      "types": "./dist/react/luxon.d.ts",
+      "default": "./dist/react/luxon.js"
+    },
+    "./react/moment": {
+      "types": "./dist/react/moment.d.ts",
+      "default": "./dist/react/moment.js"
+    },
+    "./react/dayjs": {
+      "types": "./dist/react/dayjs.d.ts",
+      "default": "./dist/react/dayjs.js"
+    },
+    "./react/date-fns": {
+      "types": "./dist/react/date-fns.d.ts",
+      "default": "./dist/react/date-fns.js"
+    },
+    "./react/spacetime": {
+      "types": "./dist/react/spacetime.d.ts",
+      "default": "./dist/react/spacetime.js"
+    },
+    "./react/internationalized-date": {
+      "types": "./dist/react/internationalized-date.d.ts",
+      "default": "./dist/react/internationalized-date.js"
+    },
+    "./vue": {
+      "types": "./dist/vue/index.d.ts",
+      "default": "./dist/vue/index.js"
+    },
+    "./vue/generic": {
+      "types": "./dist/vue/generic.d.ts",
+      "default": "./dist/vue/generic.js"
+    },
+    "./vue/temporal-polyfill": {
+      "types": "./dist/vue/temporal-polyfill.d.ts",
+      "default": "./dist/vue/temporal-polyfill.js"
+    },
+    "./vue/js-temporal-polyfill": {
+      "types": "./dist/vue/js-temporal-polyfill.d.ts",
+      "default": "./dist/vue/js-temporal-polyfill.js"
+    },
+    "./vue/luxon": {
+      "types": "./dist/vue/luxon.d.ts",
+      "default": "./dist/vue/luxon.js"
+    },
+    "./vue/moment": {
+      "types": "./dist/vue/moment.d.ts",
+      "default": "./dist/vue/moment.js"
+    },
+    "./vue/dayjs": {
+      "types": "./dist/vue/dayjs.d.ts",
+      "default": "./dist/vue/dayjs.js"
+    },
+    "./vue/date-fns": {
+      "types": "./dist/vue/date-fns.d.ts",
+      "default": "./dist/vue/date-fns.js"
+    },
+    "./vue/spacetime": {
+      "types": "./dist/vue/spacetime.d.ts",
+      "default": "./dist/vue/spacetime.js"
+    },
+    "./vue/internationalized-date": {
+      "types": "./dist/vue/internationalized-date.d.ts",
+      "default": "./dist/vue/internationalized-date.js"
+    },
     "./package.json": "./package.json",
     "./style.css": "./dist/style.css"
   },
@@ -51,38 +163,40 @@
     "access": "public"
   },
   "scripts": {
-    "dev": "vite serve dev",
-    "dev:build": "vite build dev --config dev/vite.config.ts",
+    "dev": "pnpm generate && vite serve dev",
+    "dev:build": "pnpm generate && vite build dev --config dev/vite.config.ts",
     "dev:typecheck": "tsc --noEmit -p dev/tsconfig.json",
-    "build": "tsdown",
+    "build": "pnpm generate && node scripts/clean-build.ts && tsdown && node scripts/package-exports.ts",
     "test": "concurrently pnpm:test:client pnpm:test:ssr",
-    "test:client": "TZ=Australia/Melbourne LANG=C.UTF-8 LC_ALL=C.UTF-8 vitest",
+    "test:client": "pnpm generate && TZ=Australia/Melbourne LANG=C.UTF-8 LC_ALL=C.UTF-8 vitest",
     "test:ssr": "pnpm run test:client --mode ssr",
     "prepack": "pnpm build",
     "format": "oxfmt --write .",
     "lint": "concurrently pnpm:lint:*",
     "lint:code": "oxlint --deny-warnings",
-    "lint:types": "tsc --noEmit",
-    "check": "pnpm format:check && pnpm lint && pnpm test && pnpm dev:typecheck && pnpm dev:build && pnpm test:package",
+    "lint:types": "node scripts/typecheck.ts",
+    "check": "pnpm generate && pnpm format:check && pnpm lint && pnpm test && pnpm dev:typecheck && pnpm dev:build && pnpm test:package",
     "update-deps": "pnpm up -Li",
     "test:browser": "playwright test",
     "format:check": "oxfmt --check .",
     "check:release": "pnpm check && pnpm test:browser && pnpm build",
-    "test:package": "pnpm build && node scripts/check-package.mjs"
-  },
-  "dependencies": {
-    "@solid-primitives/resize-observer": "^2.2.0",
-    "@solid-primitives/storage": "^4.4.0"
+    "test:package": "pnpm build && node scripts/check-package.mjs",
+    "generate": "node scripts/generate.ts"
   },
   "devDependencies": {
+    "@builder.io/mitosis": "0.14.0",
     "@date-fns/tz": "^1.5.0",
     "@internationalized/date": "^3.12.4",
     "@js-temporal/polyfill": "^0.5.1",
     "@playwright/test": "^1.63.0",
+    "@solid-primitives/storage": "^4.4.0",
     "@tsdown/css": "^0.22.14",
     "@types/luxon": "^3.7.4",
     "@types/node": "^26.2.0",
     "@types/prismjs": "^1.26.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-vue": "6.0.9",
     "concurrently": "^8.2.2",
     "date-fns": "^4.4.0",
     "dayjs": "^1.11.23",
@@ -93,6 +207,8 @@
     "oxfmt": "^0.64.0",
     "oxlint": "^1.79.0",
     "prismjs": "^1.30.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
     "solid-js": "^1.8.17",
     "spacetime": "^7.15.0",
     "temporal-polyfill": "^1.0.5",
@@ -100,7 +216,9 @@
     "typescript": "^7.0.2",
     "vite": "^8.2.2",
     "vite-plugin-solid": "^2.11.14",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.11",
+    "vue": "3.5.43",
+    "vue-tsc": "3.3.11"
   },
   "peerDependencies": {
     "@date-fns/tz": "^1.5.0",
@@ -110,9 +228,12 @@
     "dayjs": "^1.11.23",
     "luxon": "^3.7.2",
     "moment": "^2.31.0",
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0",
     "solid-js": "^1.6.0",
     "spacetime": "^7.15.0",
-    "temporal-polyfill": "^1.0.5"
+    "temporal-polyfill": "^1.0.5",
+    "vue": "^3.5.0"
   },
   "peerDependenciesMeta": {
     "luxon": {
@@ -140,6 +261,18 @@
       "optional": true
     },
     "@date-fns/tz": {
+      "optional": true
+    },
+    "solid-js": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    },
+    "vue": {
       "optional": true
     }
   },

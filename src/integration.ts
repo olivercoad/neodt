@@ -1,16 +1,4 @@
-import type { JSX } from "solid-js";
-
 import type { DateAdapter } from "./adapter";
-import type { ConfiguredNeodtProps, ConfiguredNaturalDateParseOptions } from "./configured";
-
-export interface ConfiguredEntry<T, TZone> {
-  default: (props: ConfiguredNeodtProps<T, TZone>) => JSX.Element;
-  Neodt: (props: ConfiguredNeodtProps<T, TZone>) => JSX.Element;
-  parseNaturalDate: (
-    value: string,
-    options: ConfiguredNaturalDateParseOptions<T, TZone>,
-  ) => T | undefined;
-}
 
 /** Expected library semantics, independent of the adapter's calculated results. */
 export interface LibraryBehavior {
@@ -29,7 +17,6 @@ export interface LibraryBehavior {
 export interface IntegrationContext<T, TZone> {
   adapter: DateAdapter<T, TZone>;
   zone: (id: string) => TZone;
-  entry: ConfiguredEntry<T, TZone>;
   behavior: LibraryBehavior;
 }
 
@@ -37,7 +24,6 @@ export interface IntegrationContext<T, TZone> {
 export function defineIntegration<T, TZone>(options: {
   create: () => DateAdapter<T, TZone>;
   zone: (id: string) => TZone;
-  entry: ConfiguredEntry<T, TZone>;
   setup?: () => Promise<void>;
   behavior?: LibraryBehavior;
 }) {
@@ -47,7 +33,6 @@ export function defineIntegration<T, TZone>(options: {
       return use({
         adapter: options.create(),
         zone: options.zone,
-        entry: options.entry,
         behavior: options.behavior ?? {},
       });
     },

@@ -20,7 +20,8 @@
     "noUncheckedIndexedAccess": true,
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
-    "types": []
+    "types": [],
+    "allowJs": true
   },
-  "exclude": ["node_modules", "dist", "./dev"]
+  "exclude": ["node_modules", "dist", "./dev", "generated", "src/components", "frameworks"]
 }

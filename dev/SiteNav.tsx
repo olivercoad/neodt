@@ -1,5 +1,6 @@
 import { createSignal, For, onCleanup } from "solid-js";
 
+import { frameworks, currentFramework, demoPath } from "./framework";
 import { libraries, libraryPath } from "./libraries";
 import { useLibrary } from "./library";
 
@@ -8,16 +9,25 @@ import styles from "./SiteNav.module.css";
 export default function SiteNav() {
   const library = useLibrary();
   const [hash, setHash] = createSignal(location.hash);
+  const framework = currentFramework();
+  let frameworkPicker!: HTMLDetailsElement;
+  let frameworkTrigger!: HTMLElement;
   let picker!: HTMLDetailsElement;
   let trigger!: HTMLElement;
   const update = () => {
     setHash(location.hash);
     picker.open = false;
+    frameworkPicker.open = false;
   };
   const dismiss = (event: PointerEvent) => {
     if (!picker.contains(event.target as Node)) picker.open = false;
+    if (!frameworkPicker.contains(event.target as Node)) frameworkPicker.open = false;
   };
   const escape = (event: KeyboardEvent) => {
+    if (event.key === "Escape" && frameworkPicker.open) {
+      frameworkPicker.open = false;
+      frameworkTrigger.focus();
+    }
     if (event.key === "Escape" && picker.open) {
       picker.open = false;
       trigger.focus();
@@ -58,6 +68,53 @@ export default function SiteNav() {
         </a>
       </div>
       <div class={styles.tools}>
+        <details class={styles.picker} ref={frameworkPicker}>
+          <summary ref={frameworkTrigger} aria-label="Frontend framework" class={styles.trigger}>
+            <span class={styles.pickerLabel}>Framework</span>
+            <span class={styles.selected}>{framework.label}</span>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              aria-hidden="true"
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </summary>
+          <div class={styles.libraryPanel}>
+            <p>Choose your frontend framework</p>
+            <div class={styles.libraryList}>
+              <For each={frameworks}>
+                {(item) => (
+                  <a
+                    href={demoPath(item.id, library.id) + hash()}
+                    aria-current={item.id === framework.id ? "true" : undefined}
+                    onClick={(event) => {
+                      if (
+                        event.button !== 0 ||
+                        event.metaKey ||
+                        event.ctrlKey ||
+                        event.shiftKey ||
+                        event.altKey
+                      )
+                        return;
+                      frameworkPicker.open = false;
+                      if (item.id === framework.id) event.preventDefault();
+                    }}
+                  >
+                    <span>{item.label}</span>
+                    <span class={styles.check} aria-hidden="true">
+                      {item.id === framework.id ? "✓" : ""}
+                    </span>
+                  </a>
+                )}
+              </For>
+            </div>
+          </div>
+        </details>
         <details class={styles.picker} ref={picker}>
           <summary ref={trigger} aria-label="Datetime library" class={styles.trigger}>
             <span class={styles.pickerLabel}>Library</span>

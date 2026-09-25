@@ -2,7 +2,7 @@ import { createSignal } from "solid-js";
 import { render } from "solid-js/web";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import Neodt from "../src/generic";
+import Neodt from "../frameworks/solid/generic";
 import { builtInAdapters } from "./helpers/adapters";
 
 for (const implementation of builtInAdapters)

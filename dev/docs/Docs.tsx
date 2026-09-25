@@ -11,8 +11,11 @@ import {
 } from "solid-js";
 
 import Code from "../code/Code";
+import { currentFramework } from "../framework";
+import { useLibrary } from "../library";
 import { locales } from "../locales";
 import SiteNav from "../SiteNav";
+import Frameworks from "./Frameworks";
 import Libraries from "./Libraries";
 import Styling from "./Styling";
 
@@ -22,33 +25,14 @@ export const pages = [
   ["getting-started", "Getting started"],
   ["api", "API reference"],
   ["libraries", "Datetime libraries"],
+  ["frameworks", "Frameworks"],
   ["styling", "Styling gallery"],
   ["interaction", "Keyboard & natural language"],
 ] as const;
 
-const example = `import { createSignal } from "solid-js";
-import Neodt from "@olicoad/neodt";
-
-export function Appointment() {
-  const [value, setValue] = createSignal<Temporal.ZonedDateTime | null>(null);
-  const referenceTime = Temporal.Now.zonedDateTimeISO("Australia/Sydney");
-
-  return (
-    <>
-      <span id="appointment-label">Appointment time</span>
-      <Neodt
-        aria-labelledby="appointment-label"
-        referenceTime={referenceTime}
-        locale="en-AU"
-        value={value()}
-        onValueChange={setValue}
-      />
-      <input type="hidden" name="appointment" value={value()?.toString() ?? ""} />
-    </>
-  );
-}`;
-
 function GettingStarted() {
+  const framework = currentFramework();
+  const library = useLibrary();
   return (
     <>
       <p class={styles.eyebrow}>GETTING STARTED</p>
@@ -58,26 +42,32 @@ function GettingStarted() {
         without the guesswork.
       </h1>
       <p class={styles.intro}>
-        A segmented date and time input for Solid, with locale-aware formatting and your choice of
-        datetime library.
+        A segmented date and time input for Solid, React, and Vue, with locale-aware formatting and
+        your choice of datetime library.
       </p>
       <h2 id="install">Install</h2>
       <pre>
-        <code>pnpm add @olicoad/neodt solid-js</code>
+        <code>
+          pnpm add @olicoad/neodt {framework.packages.join(" ")} {library.packages}
+        </code>
       </pre>
       <p>
-        Use Solid 1.6 or later with a build setup that compiles JSX in dependencies, such as Vite
-        with vite-plugin-solid. The package ships preserved JSX and imports its own stylesheet.
+        Use the Framework and Library dropdowns to choose your integration. Each framework entry
+        imports its own stylesheet. See the <a href="#/docs/frameworks">Frameworks guide</a> for
+        build requirements and native prop conventions.
       </p>
       <p>
-        The default import uses native <code>Temporal.ZonedDateTime</code> values. Your browser must
-        provide Temporal. For a polyfill, another datetime library, or a custom adapter, see{" "}
-        <a href="#/docs/libraries">Datetime libraries</a>. TypeScript 6 or later projects can enable
-        Temporal types with <code>lib: ["ESNext", "DOM"]</code>.
+        Each framework’s root import uses native <code>Temporal.ZonedDateTime</code> values. Your
+        browser must provide Temporal. For a polyfill, another datetime library, or a custom
+        adapter, see <a href="#/docs/libraries">Datetime libraries</a>. TypeScript 6 or later
+        projects can enable Temporal types with <code>lib: ["ESNext", "DOM"]</code>.
       </p>
       <h2 id="a-controlled-field">A controlled field</h2>
       <pre>
-        <Code value={example} language="tsx" />
+        <Code
+          value={framework.example({ ...library, now: library.nowExpression })}
+          language={framework.codeLanguage}
+        />
       </pre>
       <p>
         <code>referenceTime</code> supplies the timezone, the defaults for empty segments, and the
@@ -94,7 +84,7 @@ function GettingStarted() {
       <p>
         The root is a span, so a native label’s <code>for</code> attribute cannot label it. Use{" "}
         <code>aria-label</code> or <code>aria-labelledby</code>. For form submission, mirror the
-        value into a hidden input as above and handle validation in your application.
+        value into a hidden input and handle validation in your application.
       </p>
       <h2 id="styles-and-rendering">Styles and rendering</h2>
       <p>
@@ -150,10 +140,10 @@ function Api() {
     ],
     [
       "calendarIcon / magicIcon",
-      "JSX.Element",
-      "Replace the native picker or natural-language trigger icon.",
+      "Framework element or slot",
+      "Use JSX props in Solid, ReactNode props in React, or named slots in Vue.",
     ],
-    ["style", "JSX.CSSProperties", "Inline styles use Solid’s object syntax."],
+    ["style", "Framework style type", "Inline styles use the selected framework’s native syntax."],
     [
       "class / classList / ARIA",
       "Span attributes",
@@ -211,7 +201,7 @@ function Api() {
       <pre>
         <Code
           language="tsx"
-          value={`import { parseNaturalDate, getNaturalDateCompletions } from "@olicoad/neodt";
+          value={`import { parseNaturalDate, getNaturalDateCompletions } from "@olicoad/neodt/solid";
 
 const result = parseNaturalDate("tomorrow 9am", {
   referenceTime,
@@ -464,6 +454,9 @@ export default function Docs(props: { page: string }) {
             </Match>
             <Match when={props.page === "api"}>
               <Api />
+            </Match>
+            <Match when={props.page === "frameworks"}>
+              <Frameworks />
             </Match>
             <Match when={props.page === "libraries"}>
               <Libraries />

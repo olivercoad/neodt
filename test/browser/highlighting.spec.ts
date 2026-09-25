@@ -19,6 +19,9 @@ for (const library of libraries) {
       const code = page.locator('#lab code[data-language="tsx"]');
       await expect(code.locator(".token.keyword").first()).toHaveText("import");
       await expect(code.locator(".token.tag").first()).toContainText("Neodt");
+      // Font loading and initial control measurements can move the checkbox while clicking.
+      await page.evaluate(() => document.fonts.ready);
+      await expect(page.locator("#lab .datetime-neo[data-layout-changing]")).toHaveCount(0);
       await page.getByLabel("Time offset", { exact: true }).check();
       await expect(
         code.locator(".token.attr-name").filter({ hasText: "showTimeOffset" }),

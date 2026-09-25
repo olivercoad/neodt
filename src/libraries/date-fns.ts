@@ -12,18 +12,12 @@ import { toDate } from "date-fns/toDate";
 
 import { systemZone, type AdapterOptions, type DateAdapter, type DateFields } from "../adapter";
 import { createIntlFormatter } from "../adapters/intl-format";
-import {
-  configureNeodt,
-  type ConfiguredNeodtProps,
-  type ConfiguredNaturalDateParseOptions,
-} from "../configured";
+import { configureDate, type ConfiguredNaturalDateParseOptions } from "../configured";
 import { defineIntegration } from "../integration";
 
-export type NeodtProps = ConfiguredNeodtProps<Date>;
 export type NaturalDateParseOptions = ConfiguredNaturalDateParseOptions<Date>;
 
-export const { Neodt, parseNaturalDate } = configureNeodt(createDateFnsAdapter(toDate));
-export default Neodt;
+export const { adapter, parseNaturalDate } = configureDate(createDateFnsAdapter(toDate));
 export * from "../public";
 
 /** date-fns owns calendar operations; @date-fns/tz supplies named-zone Date operations. */
@@ -88,7 +82,6 @@ export function createDateFnsAdapter<T extends Date = Date>(
 export const integration = /* @__PURE__ */ defineIntegration({
   create: () => createDateFnsAdapter(toDate),
   zone: (id: string) => id,
-  entry: { default: Neodt, Neodt, parseNaturalDate },
   behavior: {
     editFoldOffset: "-04:00",
     minuteFoldOffset: "-04:00",

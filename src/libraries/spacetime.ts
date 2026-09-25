@@ -3,19 +3,13 @@ import type { SpacetimeConstructor, TimeUnit } from "spacetime";
 
 import type { DateAdapter, DateFields } from "../adapter";
 import { createLibraryZoneFormatter } from "../adapters/intl-format";
-import {
-  configureNeodt,
-  type ConfiguredNeodtProps,
-  type ConfiguredNaturalDateParseOptions,
-} from "../configured";
+import { configureDate, type ConfiguredNaturalDateParseOptions } from "../configured";
 import { fixedOffset } from "../format";
 import { defineIntegration } from "../integration";
 
-export type NeodtProps = ConfiguredNeodtProps<Spacetime>;
 export type NaturalDateParseOptions = ConfiguredNaturalDateParseOptions<Spacetime>;
 
-export const { Neodt, parseNaturalDate } = configureNeodt(createSpacetimeAdapter(spacetime));
-export default Neodt;
+export const { adapter, parseNaturalDate } = configureDate(createSpacetimeAdapter(spacetime));
 export * from "../public";
 
 export function createSpacetimeAdapter(spacetime: SpacetimeConstructor): DateAdapter<Spacetime> {
@@ -107,7 +101,6 @@ export function createSpacetimeAdapter(spacetime: SpacetimeConstructor): DateAda
 export const integration = /* @__PURE__ */ defineIntegration({
   create: () => createSpacetimeAdapter(spacetime),
   zone: (id: string) => id,
-  entry: { default: Neodt, Neodt, parseNaturalDate },
   behavior: {
     gapInstant: "2026-03-08T06:30:00.000Z",
     halfHourGap: "2026-10-04T01:15+10:30",

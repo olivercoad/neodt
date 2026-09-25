@@ -6,21 +6,19 @@ for (const library of libraries) {
   test.describe(library.id, () => {
     test.use({ baseURL: `http://127.0.0.1:3000/${library.id}/` });
 
-    test("configuration TSX highlighting follows live options", async ({ page }) => {
+    test("configuration TypeScript highlighting follows live options", async ({ page }) => {
       // Let Playwright scroll to the controls without racing the #lab smooth scroll.
       await page.goto("./");
-      const code = page.locator('#lab code[data-language="tsx"]');
+      const code = page.locator('#lab code[data-language="typescript"]');
       await expect(code.locator(".token.keyword").first()).toHaveText("import");
-      await expect(code.locator(".token.tag").first()).toContainText("Neodt");
+      await expect(code).toContainText("createNeodt");
       // Font loading and initial control measurements can move the checkbox while clicking.
       await page.evaluate(() => document.fonts.ready);
       await expect(page.locator("#lab .datetime-neo[data-layout-changing]")).toHaveCount(0);
       await page.getByLabel("Time offset", { exact: true }).check();
-      await expect(
-        code.locator(".token.attr-name").filter({ hasText: "showTimeOffset" }),
-      ).toBeVisible();
+      await expect(code).toContainText("showTimeOffset: true");
       await page.getByRole("combobox", { name: "Clock", exact: true }).selectOption("12");
-      await expect(code.locator(".token.boolean")).toHaveText("true");
+      await expect(code).toContainText("hour12: true");
       await page.getByLabel("Time offset", { exact: true }).uncheck();
       await expect(code).not.toContainText("showTimeOffset");
     });
@@ -54,9 +52,7 @@ for (const library of libraries) {
       await paper.getByRole("button", { name: "Reset", exact: true }).click();
       await expect(input).toHaveValue(original);
       await expect(code).toHaveText(original);
-      await expect(paper.locator('[data-language="tsx"] .token.tag').first()).toContainText(
-        "Neodt",
-      );
+      await expect(paper.locator('[data-language="typescript"]')).toContainText("createNeodt");
     });
 
     test("highlighted CSS keeps text metrics and scrolling aligned, including trailing lines", async ({

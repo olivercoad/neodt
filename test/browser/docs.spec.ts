@@ -458,13 +458,11 @@ for (const library of libraries) {
     }) => {
       await page.goto("./#/docs/getting-started");
       const nav = page.getByRole("navigation", { name: "Documentation" });
-      await nav.getByRole("link", { name: "A controlled field", exact: true }).click();
+      await nav.getByRole("link", { name: "A datetime field", exact: true }).click();
       await expect(page).toHaveURL(/#\/docs\/getting-started\/a-controlled-field$/);
       await expect(page.locator("#a-controlled-field")).toBeInViewport();
       await nav.getByRole("link", { name: "Styling gallery", exact: true }).click();
-      await expect(nav.getByRole("link", { name: "A controlled field", exact: true })).toHaveCount(
-        0,
-      );
+      await expect(nav.getByRole("link", { name: "A datetime field", exact: true })).toHaveCount(0);
       for (const heading of await page.locator("main h2").all()) {
         await expect(
           nav.getByRole("link", { name: (await heading.textContent())!, exact: true }),
@@ -567,7 +565,7 @@ for (const library of libraries) {
       await page.goto("./#/docs/getting-started");
       const example = page.locator("#docs-content pre").last();
       await expect(example).toContainText(
-        `import Neodt from "@olicoad/neodt/solid${library.entry}"`,
+        `import createNeodt from "@olicoad/neodt${library.entry}"`,
       );
       await expect(example).toContainText(library.now);
       await page

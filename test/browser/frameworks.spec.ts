@@ -24,7 +24,7 @@ for (const framework of frameworks) {
       await expect(page).toHaveURL(`${demoPath(target.id, "luxon")}#/docs/frameworks`);
       await expect(page.locator("html")).toHaveAttribute("data-framework", target.id);
       await expect(page.getByLabel("Datetime library", { exact: true })).toContainText("Luxon");
-      await expect(page.locator("pre")).toContainText(packageEntry(target.id, "/luxon"));
+      await expect(page.locator("pre").first()).toContainText(packageEntry(target.id, "/luxon"));
     }
   });
   test(`${framework.id}: framework picker supports keyboard and fits narrow screens`, async ({

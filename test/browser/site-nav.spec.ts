@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
 
-test("the bare landing page defaults to Solid and None (Native Temporal)", async ({ page }) => {
+test("the bare landing page defaults to Vanilla and None (Native Temporal)", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByLabel("Frontend framework", { exact: true })).toContainText("Solid");
+  await expect(page.getByLabel("Frontend framework", { exact: true })).toContainText("Vanilla");
   await expect(page.getByLabel("Datetime library", { exact: true })).toContainText("None");
-  await expect(page.locator("html")).toHaveAttribute("data-framework", "solid");
+  await expect(page.locator("html")).toHaveAttribute("data-framework", "vanilla");
   await expect(page.locator("html")).toHaveAttribute("data-adapter", "native-temporal");
 });
 

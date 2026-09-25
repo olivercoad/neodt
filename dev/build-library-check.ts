@@ -22,7 +22,7 @@ export function checkLibraryEntries(): Plugin {
             : undefined);
         if (!library) continue;
         const framework = chunk.facadeModuleId?.endsWith("/dev/index.html")
-          ? frameworks.find(({ id }) => id === "solid")
+          ? frameworks.find(({ id }) => id === "vanilla")
           : frameworks.find(({ id }) =>
               chunk.facadeModuleId?.endsWith(`/${id}/${library.id}/index.html`),
             );

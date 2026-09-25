@@ -82,7 +82,7 @@ integration.run(({ adapter, zone }) => start(${JSON.stringify(name)}, adapter, z
     transformIndexHtml: {
       order: "pre",
       handler(html) {
-        return html.replace("<!-- library-entry -->", script(`solid/${defaultLibrary.id}`));
+        return html.replace("<!-- library-entry -->", script(`vanilla/${defaultLibrary.id}`));
       },
     },
     configureServer(server) {
@@ -92,7 +92,7 @@ integration.run(({ adapter, zone }) => start(${JSON.stringify(name)}, adapter, z
         const framework = frameworks.find(({ id }) => id === segments[0]);
         const library = libraries.find(({ id }) => id === (framework ? segments[1] : segments[0]));
         if (!library) return next();
-        const pagePath = `/${framework?.id ?? "solid"}/${library.id}/`;
+        const pagePath = `/${framework?.id ?? "vanilla"}/${library.id}/`;
         if (url.pathname !== pagePath && url.pathname !== pagePath + "index.html") {
           response.writeHead(302, { Location: pagePath + url.search });
           response.end();
@@ -101,7 +101,7 @@ integration.run(({ adapter, zone }) => start(${JSON.stringify(name)}, adapter, z
         try {
           const transformed = await server.transformIndexHtml(
             url.pathname,
-            await html(`${framework?.id ?? "solid"}/${library.id}`),
+            await html(`${framework?.id ?? "vanilla"}/${library.id}`),
           );
           response.setHeader("Content-Type", "text/html");
           response.end(transformed);

@@ -2,14 +2,10 @@ import { DateTime } from "luxon";
 import type { Zone } from "luxon";
 
 import type { DateAdapter } from "../adapter";
-import { configureDate, type ConfiguredNaturalDateParseOptions } from "../configured";
 import { fixedOffset } from "../format";
 import { defineIntegration } from "../integration";
 
-export type NaturalDateParseOptions = ConfiguredNaturalDateParseOptions<DateTime, LuxonZone>;
-
-export const { adapter, parseNaturalDate } = configureDate(createLuxonAdapter(DateTime));
-export * from "../public";
+export const adapter = createLuxonAdapter(DateTime);
 
 export type LuxonZone = string | Zone;
 

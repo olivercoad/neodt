@@ -163,8 +163,8 @@
     "access": "public"
   },
   "scripts": {
-    "dev": "pnpm generate && vite serve dev",
-    "dev:build": "pnpm generate && vite build dev --config dev/vite.config.ts",
+    "dev": "vite serve dev",
+    "dev:build": "vite build dev --config dev/vite.config.ts",
     "dev:typecheck": "tsc --noEmit -p dev/tsconfig.json",
     "build": "pnpm generate && node scripts/clean-build.ts && tsdown && node scripts/package-exports.ts",
     "test": "concurrently pnpm:test:client pnpm:test:ssr",

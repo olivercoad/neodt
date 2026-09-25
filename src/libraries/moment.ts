@@ -3,14 +3,10 @@ import type { MomentInput } from "moment";
 
 import { systemZone, type AdapterOptions, type DateAdapter, type DateFields } from "../adapter";
 import { createLibraryZoneFormatter } from "../adapters/intl-format";
-import { configureDate, type ConfiguredNaturalDateParseOptions } from "../configured";
 import { fixedOffset, offsetZone } from "../format";
 import { defineIntegration } from "../integration";
 
-export type NaturalDateParseOptions = ConfiguredNaturalDateParseOptions<Moment>;
-
-export const { adapter, parseNaturalDate } = configureDate(createMomentAdapter(moment));
-export * from "../public";
+export const adapter = createMomentAdapter(moment);
 
 type MomentFactory = ((input?: MomentInput) => Moment) & {
   tz?: ((input: MomentInput, zone: string) => Moment) & { zone?(zone: string): unknown };

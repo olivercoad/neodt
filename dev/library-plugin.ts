@@ -29,14 +29,39 @@ export function libraryPages(): Plugin {
       "<!-- library-entry -->",
       script(id),
     );
+  const generate = () =>
+    promisify(execFile)(process.execPath, ["scripts/generate.ts"], {
+      cwd: path.resolve(root, ".."),
+    });
   return {
     name: "library-pages",
     enforce: "pre",
+    async config() {
+      // Generate before Vite scans imports, including on a fresh checkout.
+      await generate();
+      return {
+        optimizeDeps: {
+          entries: [
+            path.join(root, "start.tsx"),
+            ...libraries.map(({ source }) => path.resolve(root, "..", source)),
+          ],
+        },
+        build: {
+          rollupOptions: {
+            input: Object.fromEntries([
+              ["index", path.join(root, "index.html")],
+              ...Array.from(pages, ([file, { framework, library }]) => [
+                `${framework.id}/${library.id}`,
+                file,
+              ]),
+            ]),
+          },
+        },
+      };
+    },
     async handleHotUpdate(context) {
       if (!context.file.includes("/src/components/") || !context.file.endsWith(".lite.tsx")) return;
-      await promisify(execFile)(process.execPath, ["scripts/generate.ts"], {
-        cwd: path.resolve(root, ".."),
-      });
+      await generate();
       context.server.ws.send({ type: "full-reload" });
       return [];
     },

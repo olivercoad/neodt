@@ -8,15 +8,9 @@ import {
 
 import type { DateAdapter } from "../adapter";
 import { createIntlFormatter } from "../adapters/intl-format";
-import { configureDate, type ConfiguredNaturalDateParseOptions } from "../configured";
 import { defineIntegration } from "../integration";
 
-export type NaturalDateParseOptions = ConfiguredNaturalDateParseOptions<ZonedDateTime>;
-
-export const { adapter, parseNaturalDate } = configureDate(
-  createInternationalizedDateAdapter(fromAbsolute),
-);
-export * from "../public";
+export const adapter = createInternationalizedDateAdapter(fromAbsolute);
 
 export function createInternationalizedDateAdapter(
   fromAbsolute: typeof import("@internationalized/date").fromAbsolute,

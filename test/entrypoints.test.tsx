@@ -4,10 +4,10 @@ import { Temporal as Ponyfill } from "temporal-polyfill";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { frameworks, frameworkPackages } from "../frameworks";
+import * as native from "../generated/solid/index";
+import * as temporal from "../generated/solid/temporal-polyfill";
 import { libraries, datetimePackages } from "../libraries";
 import packageJson from "../package.json";
-import * as native from "../src/libraries/native-temporal";
-import * as temporal from "../src/libraries/temporal-polyfill";
 import { builtInAdapters } from "./helpers/adapters";
 import { forEachConfiguredEntry, milliseconds } from "./helpers/entries";
 

@@ -12,13 +12,9 @@ import { toDate } from "date-fns/toDate";
 
 import { systemZone, type AdapterOptions, type DateAdapter, type DateFields } from "../adapter";
 import { createIntlFormatter } from "../adapters/intl-format";
-import { configureDate, type ConfiguredNaturalDateParseOptions } from "../configured";
 import { defineIntegration } from "../integration";
 
-export type NaturalDateParseOptions = ConfiguredNaturalDateParseOptions<Date>;
-
-export const { adapter, parseNaturalDate } = configureDate(createDateFnsAdapter(toDate));
-export * from "../public";
+export const adapter = createDateFnsAdapter(toDate);
 
 /** date-fns owns calendar operations; @date-fns/tz supplies named-zone Date operations. */
 export function createDateFnsAdapter<T extends Date = Date>(

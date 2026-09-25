@@ -15,6 +15,8 @@ import { Temporal as Ponyfill } from "temporal-polyfill";
 import { expectTypeOf } from "vitest";
 
 import Neodt, { parseNaturalDate, type NeodtProps } from "../frameworks/solid/generic";
+import type { NaturalDateParseOptions as LuxonParseOptions } from "../generated/solid/luxon";
+import type { NaturalDateParseOptions as TemporalParseOptions } from "../generated/solid/temporal-polyfill";
 import { createDateFnsAdapter } from "../src/libraries/date-fns";
 import { createDayjsAdapter } from "../src/libraries/dayjs";
 import { createInternationalizedDateAdapter } from "../src/libraries/internationalized-date";
@@ -24,6 +26,23 @@ import { createTemporalAdapter } from "../src/libraries/native-temporal";
 import { createSpacetimeAdapter } from "../src/libraries/spacetime";
 
 export function checkAdapterTypes() {
+  // Generated parser options retain native value/zone pairs without handwritten aliases.
+  expectTypeOf<LuxonParseOptions["referenceTime"]>().toEqualTypeOf<DateTime>();
+  const configuredLuxon: LuxonParseOptions = {
+    referenceTime: DateTime.now(),
+    zone: DateTime.now().zone,
+  };
+  configuredLuxon.zone = "UTC";
+  // @ts-expect-error Generated options must reject unsupported native zone values.
+  configuredLuxon.zone = { arbitrary: true };
+  expectTypeOf<TemporalParseOptions["referenceTime"]>().toEqualTypeOf<Ponyfill.ZonedDateTime>();
+  expectTypeOf<TemporalParseOptions["zone"]>().toEqualTypeOf<string | undefined>();
+  const configuredTemporal: TemporalParseOptions = {
+    referenceTime: Ponyfill.Now.zonedDateTimeISO(),
+    // @ts-expect-error Temporal options must reject Luxon Zone objects.
+    zone: DateTime.now().zone,
+  };
+  void configuredTemporal;
   const internationalized = createInternationalizedDateAdapter(fromAbsolute);
   const internationalizedReference = fromAbsolute(0, "UTC");
   const luxon = createLuxonAdapter(DateTime);

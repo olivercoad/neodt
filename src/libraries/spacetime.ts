@@ -3,14 +3,10 @@ import type { SpacetimeConstructor, TimeUnit } from "spacetime";
 
 import type { DateAdapter, DateFields } from "../adapter";
 import { createLibraryZoneFormatter } from "../adapters/intl-format";
-import { configureDate, type ConfiguredNaturalDateParseOptions } from "../configured";
 import { fixedOffset } from "../format";
 import { defineIntegration } from "../integration";
 
-export type NaturalDateParseOptions = ConfiguredNaturalDateParseOptions<Spacetime>;
-
-export const { adapter, parseNaturalDate } = configureDate(createSpacetimeAdapter(spacetime));
-export * from "../public";
+export const adapter = createSpacetimeAdapter(spacetime);
 
 export function createSpacetimeAdapter(spacetime: SpacetimeConstructor): DateAdapter<Spacetime> {
   const zones = new WeakMap<Spacetime, string>();

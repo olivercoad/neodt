@@ -3,14 +3,10 @@ import type { ConfigType, ManipulateType, UnitType } from "dayjs";
 
 import { systemZone, type AdapterOptions, type DateAdapter, type DateFields } from "../adapter";
 import { createIntlFormatter } from "../adapters/intl-format";
-import { configureDate, type ConfiguredNaturalDateParseOptions } from "../configured";
 import { fixedOffset, offsetZone } from "../format";
 import { defineIntegration } from "../integration";
 
-export type NaturalDateParseOptions = ConfiguredNaturalDateParseOptions<Dayjs>;
-
-export const { adapter, parseNaturalDate } = configureDate(createDayjsAdapter(dayjs));
-export * from "../public";
+export const adapter = createDayjsAdapter(dayjs);
 
 type DayjsFactory = ((input?: ConfigType) => Dayjs) & {
   utc?: (input?: ConfigType) => Dayjs;

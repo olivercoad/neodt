@@ -19,12 +19,9 @@ const registrations = [
     implementation: "Temporal",
     callback: "value?.toInstant()",
 
-    label: "temporal-polyfill",
-    entry: "/temporal-polyfill",
     imports: 'import { Temporal } from "temporal-polyfill";',
     now: "Temporal.Now.zonedDateTimeISO()",
     type: "Temporal.ZonedDateTime",
-    packages: "temporal-polyfill",
   },
   {
     id: "js-temporal-polyfill",
@@ -33,7 +30,6 @@ const registrations = [
     callback: "value?.toInstant()",
 
     label: "@js-temporal/polyfill",
-    entry: "/js-temporal-polyfill",
     imports: 'import { Temporal } from "@js-temporal/polyfill";',
     now: "Temporal.Now.zonedDateTimeISO()",
     type: "Temporal.ZonedDateTime",
@@ -48,11 +44,9 @@ const registrations = [
     homepage: "https://moment.github.io/luxon/",
 
     label: "Luxon",
-    entry: "/luxon",
     imports: 'import { DateTime } from "luxon";',
     now: "DateTime.now()",
     type: "DateTime",
-    packages: "luxon",
   },
   {
     id: "moment",
@@ -63,11 +57,9 @@ const registrations = [
     demoPackages: ["moment-timezone"],
 
     label: "Moment",
-    entry: "/moment",
     imports: 'import moment from "moment";',
     now: "moment()",
     type: "moment.Moment",
-    packages: "moment",
   },
   {
     id: "dayjs",
@@ -77,11 +69,9 @@ const registrations = [
     homepage: "https://day.js.org/",
 
     label: "Day.js",
-    entry: "/dayjs",
     imports: 'import dayjs from "dayjs";',
     now: "dayjs()",
     type: "dayjs.Dayjs",
-    packages: "dayjs",
   },
   {
     id: "date-fns",
@@ -90,8 +80,6 @@ const registrations = [
     callback: "value?.getTime()",
     homepage: "https://date-fns.org/",
 
-    label: "date-fns",
-    entry: "/date-fns",
     imports: 'import { toDate } from "date-fns/toDate";',
     now: "new Date()",
     type: "Date",
@@ -105,11 +93,9 @@ const registrations = [
     homepage: "https://spacetime.how/",
 
     label: "Spacetime",
-    entry: "/spacetime",
     imports: 'import spacetime from "spacetime";',
     now: "spacetime.now()",
     type: "ReturnType<typeof spacetime>",
-    packages: "spacetime",
   },
   {
     id: "internationalized-date",
@@ -119,7 +105,6 @@ const registrations = [
     homepage: "https://react-aria.adobe.com/internationalized/date/",
 
     label: "@internationalized/date",
-    entry: "/internationalized-date",
     imports:
       'import { fromAbsolute, now, getLocalTimeZone, type ZonedDateTime } from "@internationalized/date";',
     now: "now(getLocalTimeZone())",
@@ -127,14 +112,20 @@ const registrations = [
     packages: "@internationalized/date",
   },
 ] as const;
-export const libraries = registrations.map((library) => ({
-  typePackages: [] as readonly string[],
-  demoPackages: [] as readonly string[],
-  homepage: undefined as string | undefined,
-  ...library,
-  dependencies: library.packages ? library.packages.split(" ") : [],
-  source: `src/libraries/${library.id}.ts`,
-}));
+export const libraries = registrations.map((library) => {
+  const packages = "packages" in library ? library.packages : library.id;
+  return {
+    label: library.id,
+    entry: `/${library.id}`,
+    typePackages: [] as readonly string[],
+    demoPackages: [] as readonly string[],
+    homepage: undefined as string | undefined,
+    ...library,
+    packages,
+    dependencies: packages ? packages.split(" ") : [],
+    source: `src/libraries/${library.id}.ts`,
+  };
+});
 export type LibraryId = (typeof libraries)[number]["id"];
 export const libraryPath = (id: LibraryId) => `/${id}/`;
 export const datetimePackages = [...new Set(libraries.flatMap((library) => library.dependencies))];

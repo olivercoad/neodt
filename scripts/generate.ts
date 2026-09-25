@@ -32,7 +32,21 @@ for (const framework of frameworks) {
     const name = library.entry.slice(1) || "index";
     await writeGenerated(
       `${directory}/${name}.ts`,
-      `// Generated from the framework and datetime registries.\nimport { configureNeodt, type NeodtProps as GenericProps } from "../../frameworks/${framework.id}/generic";\nimport { adapter } from "../../${library.source.replace(/\.ts$/, "")}";\nimport type { DateAdapter } from "../../src/adapter";\ntype Value = typeof adapter extends DateAdapter<infer T, infer _Z> ? T : never;\ntype Zone = typeof adapter extends DateAdapter<infer _T, infer Z> ? Z : never;\nexport type NeodtProps = Omit<GenericProps<Value, Zone>, "adapter">;\nexport const Neodt = configureNeodt(adapter);\nexport default Neodt;\nexport * from "../../${library.source.replace(/\.ts$/, "")}";\n`,
+      `// Generated from the framework and datetime registries.
+import { configureNeodt, type NeodtProps as GenericProps } from "../../frameworks/${framework.id}/generic";
+import { adapter } from "../../${library.source.replace(/\.ts$/, "")}";
+import type { DateAdapter } from "../../src/adapter";
+import { configureDate, type ConfiguredNaturalDateParseOptions } from "../../src/configured";
+type Value = typeof adapter extends DateAdapter<infer T, infer _Z> ? T : never;
+type Zone = typeof adapter extends DateAdapter<infer _T, infer Z> ? Z : never;
+export type NeodtProps = Omit<GenericProps<Value, Zone>, "adapter">;
+export type NaturalDateParseOptions = ConfiguredNaturalDateParseOptions<Value, Zone>;
+export const { parseNaturalDate } = configureDate(adapter);
+export * from "../../src/public";
+export const Neodt = configureNeodt(adapter);
+export default Neodt;
+export * from "../../${library.source.replace(/\.ts$/, "")}";
+`,
     );
   }
 }

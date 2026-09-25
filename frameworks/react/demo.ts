@@ -1,17 +1,9 @@
-import { createElement, useLayoutEffect, useRef } from "react";
+import { createElement } from "react";
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 
 import { frameworkHost } from "../../dev/framework-host";
 import Neodt, { type NeodtProps } from "./generic";
-// Documentation icons are DOM nodes produced by the Solid shell.
-function DemoIcon({ node }: { node: Node }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  useLayoutEffect(() => {
-    ref.current?.replaceChildren(node.cloneNode(true));
-  }, [node]);
-  return createElement("span", { ref, style: { display: "contents" } });
-}
 export const Control = frameworkHost((element, initial) => {
   const root = createRoot(element);
   const update = (props: Record<string, unknown>) => {
@@ -25,8 +17,6 @@ export const Control = frameworkHost((element, initial) => {
           value,
         ]),
       );
-    for (const name of ["calendarIcon", "magicIcon"])
-      if (next[name] instanceof Node) next[name] = createElement(DemoIcon, { node: next[name] });
     flushSync(() =>
       root.render(createElement(Neodt, next as unknown as NeodtProps<unknown, unknown>)),
     );

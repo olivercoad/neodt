@@ -1,5 +1,4 @@
-import { Show, useStore } from "@builder.io/mitosis";
-import type { JSX } from "@builder.io/mitosis/jsx-runtime";
+import { Show } from "@builder.io/mitosis";
 
 import type { EditorView } from "../core/controller";
 import CalendarIcon from "./CalendarIcon.lite";
@@ -9,18 +8,8 @@ import MagicIcon from "./MagicIcon.lite";
 export interface TrailingProps {
   view: EditorView;
   measurement: boolean;
-  calendarIcon?: () => JSX.Element;
-  magicIcon?: () => JSX.Element;
 }
 export default function Trailing(props: TrailingProps) {
-  const state = useStore({
-    get calendarIcon() {
-      return props.calendarIcon ?? CalendarIcon;
-    },
-    get magicIcon() {
-      return props.magicIcon ?? MagicIcon;
-    },
-  });
   return (
     <Show when={props.view.showTimeOffset || (!props.view.readonly && !props.view.disabled)}>
       <span class="datetime-neo__trailing">
@@ -56,7 +45,7 @@ export default function Trailing(props: TrailingProps) {
                   : "Enter date and time naturally"
               }
             >
-              <Show when={props.view.natural} else={<state.magicIcon />}>
+              <Show when={props.view.natural} else={<MagicIcon />}>
                 <Show when={props.view.canConfirm} else={<CancelIcon />}>
                   <ConfirmIcon />
                 </Show>
@@ -75,7 +64,7 @@ export default function Trailing(props: TrailingProps) {
                 }
                 aria-label="Open date and time picker"
               >
-                <state.calendarIcon />
+                <CalendarIcon />
               </label>
             </Show>
           </span>

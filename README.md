@@ -22,9 +22,9 @@ import VueNeodt from "@olicoad/neodt/vue/luxon";
 
 Install only the framework and datetime packages you use. Each framework root (`/solid`, `/react`, `/vue`) uses native Temporal; each `/generic` entry accepts a custom adapter. Framework-less component imports are not exported.
 
-The demo's **Framework** and **Library** dropdowns select the live control implementation and preserve your documentation section. See [Frameworks](https://neodt.olisworld.com/#/docs/frameworks) for React and Vue examples, native attributes and custom icon slots.
+The demo's **Framework** and **Library** dropdowns select the live control implementation and preserve your documentation section. See [Frameworks](https://neodt.olisworld.com/#/docs/frameworks) for React and Vue examples and native attributes.
 
-Solid accepts JSX icon props and `classList`. React accepts `ReactNode` icon props and `className`. Vue accepts `calendarIcon` and `magicIcon` slots; use `shallowRef` to retain datetime instances. All frameworks share editing behavior, CSS classes and theme variables. Use a stable reference time and an explicit locale for server rendering and hydration.
+Solid accepts `classList`. React accepts `className`. Vue accepts native attributes; use `shallowRef` to retain datetime instances. All frameworks share editing behavior, built-in icons, CSS classes and theme variables. Use a stable reference time and an explicit locale for server rendering and hydration.
 
 ## Solid usage
 
@@ -113,8 +113,6 @@ neodt parses input syntax and checks field ranges using the library's month leng
 | `showTimeOffset?: boolean`                   | Shows the selected date's UTC offset.                                |
 | `readonly?: boolean`                         | Displays a value without allowing edits.                             |
 | `disabled?: boolean`                         | Prevents focus and editing.                                          |
-| `calendarIcon?: JSX.Element`                 | Replaces the native date-time picker button icon.                    |
-| `magicIcon?: JSX.Element`                    | Replaces the natural-language entry button icon.                     |
 
 Controlled updates from the parent replace the displayed draft; setting `value` to `null` clears every segment. During editing, incomplete segments emit `null` while retaining the local draft. Echoing emitted values through `onValueChange` preserves ongoing numeric entry.
 

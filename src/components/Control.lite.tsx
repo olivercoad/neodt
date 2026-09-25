@@ -1,5 +1,4 @@
 import { For, Show, useRef, onMount, onUpdate, onUnMount } from "@builder.io/mitosis";
-import type { JSX } from "@builder.io/mitosis/jsx-runtime";
 
 import type { EditorController, EditorView } from "../core/controller";
 import MagicIcon from "./MagicIcon.lite";
@@ -12,8 +11,6 @@ export interface ControlProps {
   attributes: Record<string, unknown>;
   onRootClick: (event: MouseEvent) => void;
   onRootMouseDown: (event: MouseEvent) => void;
-  calendarIcon?: () => JSX.Element;
-  magicIcon?: () => JSX.Element;
 }
 
 export default function Control(props: ControlProps) {
@@ -119,12 +116,7 @@ export default function Control(props: ControlProps) {
             <span class="datetime-neo__empty-area" aria-hidden="true" />
           </Show>
         </span>
-        <Trailing
-          view={props.view}
-          measurement={false}
-          calendarIcon={props.calendarIcon}
-          magicIcon={props.magicIcon}
-        />
+        <Trailing view={props.view} measurement={false} />
       </span>
       <input
         onChange={() => {}}
@@ -163,12 +155,7 @@ export default function Control(props: ControlProps) {
                   </For>
                 </span>
               </span>
-              <Trailing
-                view={props.view}
-                measurement={true}
-                calendarIcon={props.calendarIcon}
-                magicIcon={props.magicIcon}
-              />
+              <Trailing view={props.view} measurement={true} />
             </span>
           )}
         </For>

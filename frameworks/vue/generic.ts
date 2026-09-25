@@ -6,7 +6,6 @@ import {
   onUnmounted,
   type HTMLAttributes,
   type VNode,
-  type VNodeChild,
 } from "vue";
 
 import Control from "../../generated/vue/Control.vue";
@@ -18,20 +17,17 @@ import type { CoreProps } from "../../src/core/props";
 import "../../src/styles.css";
 export type NeodtProps<T, TZone = string> = CoreProps<T, TZone> &
   Omit<HTMLAttributes, keyof CoreProps<T, TZone>>;
-export type NeodtSlots = { calendarIcon?: () => VNodeChild; magicIcon?: () => VNodeChild };
 export type VueContext<T> = {
   attrs: Record<string, unknown>;
-  slots: NeodtSlots;
   emit: (event: "valueChange", value: T | null) => void;
 };
 export type ConfiguredComponent<T, TZone> = new () => {
   $props: Omit<NeodtProps<T, TZone>, "adapter">;
-  $slots: NeodtSlots;
 };
 const Component = defineComponent({
   name: "Neodt",
   inheritAttrs: false,
-  setup(_props, { attrs, slots }) {
+  setup(_props, { attrs }) {
     const id = useId();
     const input = () =>
       controllerProps(
@@ -47,25 +43,19 @@ const Component = defineComponent({
     );
     return () => {
       controller.update(input());
-      return h(
-        Control,
-        {
-          view: view.value,
-          controller,
-          calendarIcon: slots.calendarIcon,
-          magicIcon: slots.magicIcon,
-          attributes: rootAttributes(attrs),
-          onRootClick: (event: MouseEvent) => {
-            invokeHandler(attrs.onClick, event);
-            controller.click(event);
-          },
-          onRootMouseDown: (event: MouseEvent) => {
-            invokeHandler(attrs.onMouseDown, event);
-            controller.mouseDown(event);
-          },
+      return h(Control, {
+        view: view.value,
+        controller,
+        attributes: rootAttributes(attrs),
+        onRootClick: (event: MouseEvent) => {
+          invokeHandler(attrs.onClick, event);
+          controller.click(event);
         },
-        slots,
-      );
+        onRootMouseDown: (event: MouseEvent) => {
+          invokeHandler(attrs.onMouseDown, event);
+          controller.mouseDown(event);
+        },
+      });
     };
   },
 });
@@ -83,8 +73,8 @@ export function configureNeodt<T, TZone>(
   return defineComponent({
     name: "ConfiguredNeodt",
     inheritAttrs: false,
-    setup(_props, { attrs, slots }) {
-      return (): VNode => h(Component, { ...attrs, adapter }, slots);
+    setup(_props, { attrs }) {
+      return (): VNode => h(Component, { ...attrs, adapter });
     },
   }) as unknown as ConfiguredComponent<T, TZone>;
 }

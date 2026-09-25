@@ -382,22 +382,21 @@ for (const implementation of builtInAdapters)
             dispose();
           }));
 
-        it("uses a custom calendar icon and updates from native input changes", () =>
+        it("uses the built-in calendar icon and updates from native input changes", () =>
           createRoot((dispose) => {
             const onValueChange = vi.fn();
             const control = (
               <DateTimeLocal
                 adapter={adapter}
                 referenceTime={referenceTime}
-                calendarIcon={<span>Choose</span>}
                 onValueChange={onValueChange}
               />
             ) as HTMLSpanElement;
             const input = control.querySelector<HTMLInputElement>("input")!;
             document.body.append(control);
             expect(
-              control.querySelector('[aria-label="Open date and time picker"]')?.textContent,
-            ).toBe("Choose");
+              control.querySelector('[aria-label="Open date and time picker"] svg'),
+            ).not.toBeNull();
             input.value = "2026-09-01T08:45";
             input.dispatchEvent(new InputEvent("input", { bubbles: true }));
             expect(localValue(onValueChange.mock.calls[0]?.[0])).toBe("2026-09-01T08:45");
@@ -451,7 +450,6 @@ for (const implementation of builtInAdapters)
                 referenceTime={referenceTime}
                 locale="en-GB"
                 formatOptions={{ hour12: false }}
-                magicIcon={<span>Magic</span>}
                 onValueChange={onValueChange}
               />
             ) as HTMLSpanElement;
@@ -460,7 +458,7 @@ for (const implementation of builtInAdapters)
           const magicButton = control.querySelector<HTMLButtonElement>(
             ':scope > .datetime-neo__content > .datetime-neo__trailing [aria-label="Enter date and time naturally"]',
           )!;
-          expect(magicButton.textContent).toBe("Magic");
+          expect(magicButton.querySelector(".datetime-neo__magic-icon")).not.toBeNull();
           magicButton.click();
           await nextRender();
           const input = control.querySelector<HTMLInputElement>(".datetime-neo__natural-input")!;

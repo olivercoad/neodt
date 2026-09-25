@@ -70,10 +70,9 @@ export default function Frameworks() {
         value. Every library preserves its own datetime and timezone types.
       </p>
       <p>
-        Solid accepts class, classList, and JSX icon props. React accepts className, React styles,
-        and ReactNode icon props. Vue accepts native attributes and named calendarIcon and magicIcon
-        slots. Use shallowRef for datetime values so library instances and opaque timezone objects
-        remain intact.
+        Solid accepts class and classList. React accepts className and React styles. Vue accepts
+        native attributes. Use shallowRef for datetime values so library instances and opaque
+        timezone objects remain intact. All frameworks use the same built-in icons.
       </p>
       <p>
         Import /generic under your framework to supply a custom adapter. The framework root uses

@@ -10,8 +10,6 @@ import type { CoreProps } from "../../src/core/props";
 import "../../src/styles.css";
 export type NeodtProps<T, TZone = string> = CoreProps<T, TZone> &
   Omit<JSX.HTMLAttributes<HTMLSpanElement>, keyof CoreProps<T, TZone> | "style"> & {
-    calendarIcon?: JSX.Element;
-    magicIcon?: JSX.Element;
     style?: JSX.CSSProperties;
   };
 export default function Neodt<T, TZone>(props: NeodtProps<T, TZone>): JSX.Element {
@@ -22,15 +20,11 @@ export default function Neodt<T, TZone>(props: NeodtProps<T, TZone>): JSX.Elemen
   onCleanup(controller.unmount);
   onCleanup(controller.subscribe(() => setView(controller.getSnapshot())));
   createRenderEffect(() => controller.update(input()));
-  const Calendar = () => props.calendarIcon;
-  const Magic = () => props.magicIcon;
   const element = (
     <Control
       view={view()}
       controller={controller}
       attributes={rootAttributes({ ...props })}
-      calendarIcon={props.calendarIcon == null ? undefined : Calendar}
-      magicIcon={props.magicIcon == null ? undefined : Magic}
       onRootClick={(event: MouseEvent) => {
         invokeHandler(props.onClick, event);
         controller.click(event);

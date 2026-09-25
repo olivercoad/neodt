@@ -1,13 +1,11 @@
 import {
   createElement,
-  useMemo,
   useId,
   useRef,
   useSyncExternalStore,
   useEffect,
   useLayoutEffect,
   type HTMLAttributes,
-  type ReactNode,
   type MouseEvent as ReactMouseEvent,
 } from "react";
 
@@ -19,10 +17,7 @@ import type { CoreProps } from "../../src/core/props";
 
 import "../../src/styles.css";
 export type NeodtProps<T, TZone = string> = CoreProps<T, TZone> &
-  Omit<HTMLAttributes<HTMLSpanElement>, keyof CoreProps<T, TZone>> & {
-    calendarIcon?: ReactNode;
-    magicIcon?: ReactNode;
-  };
+  Omit<HTMLAttributes<HTMLSpanElement>, keyof CoreProps<T, TZone>>;
 const useClientLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 export default function Neodt<T, TZone>(props: NeodtProps<T, TZone>) {
   const id = useId();
@@ -40,20 +35,10 @@ export default function Neodt<T, TZone>(props: NeodtProps<T, TZone>) {
   const attributes = rootAttributes({ ...props });
   attributes.className = attributes.class;
   delete attributes.class;
-  const Calendar = useMemo(
-    () => (props.calendarIcon == null ? undefined : () => props.calendarIcon),
-    [props.calendarIcon],
-  );
-  const Magic = useMemo(
-    () => (props.magicIcon == null ? undefined : () => props.magicIcon),
-    [props.magicIcon],
-  );
   return createElement(Control, {
     view,
     controller,
     attributes,
-    calendarIcon: Calendar,
-    magicIcon: Magic,
     onRootClick: (event: ReactMouseEvent<HTMLSpanElement>) => {
       props.onClick?.(event);
       controller.click(event.nativeEvent);

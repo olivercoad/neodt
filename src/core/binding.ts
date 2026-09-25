@@ -10,8 +10,6 @@ const internal = new Set([
   "locale",
   "formatOptions",
   "showTimeOffset",
-  "calendarIcon",
-  "magicIcon",
   "readonly",
   "disabled",
   "class",

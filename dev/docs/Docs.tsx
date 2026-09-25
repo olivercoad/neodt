@@ -138,11 +138,6 @@ function Api() {
       "boolean",
       "Both prevent editing and remove actions. Disabled also dims the control. Segments in either state are outside the tab order.",
     ],
-    [
-      "calendarIcon / magicIcon",
-      "Framework element or slot",
-      "Use JSX props in Solid, ReactNode props in React, or named slots in Vue.",
-    ],
     ["style", "Framework style type", "Inline styles use the selected framework’s native syntax."],
     [
       "class / classList / ARIA",

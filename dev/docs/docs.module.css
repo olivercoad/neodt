@@ -57,7 +57,7 @@
 .eyebrow {
   color: var(--blue);
   font:
-    700 0.7rem ui-monospace,
+    700 0.7rem "Courier Prime",
     monospace;
   letter-spacing: 0.1em;
   display: block;
@@ -93,7 +93,7 @@
 }
 .content code,
 .content kbd {
-  font-family: ui-monospace, monospace;
+  font-family: "Courier Prime", monospace;
   font-size: 0.85em;
 }
 .justWorks {

@@ -31,6 +31,18 @@ importers:
       '@date-fns/tz':
         specifier: ^1.5.0
         version: 1.5.0
+      '@fontsource/courier-prime':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/dm-sans':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/roboto-flex':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/tinos':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@internationalized/date':
         specifier: ^3.12.4
         version: 3.12.4
@@ -670,6 +682,18 @@ packages:
     peerDependenciesMeta:
       '@noble/hashes':
         optional: true
+
+  '@fontsource/courier-prime@5.3.0':
+    resolution: {integrity: sha512-KIi1k4VG1Wv+/CGpb1AUpLkUuOAQA6zmvthqxOZGN0AV8BEgQgbK7qAtquv14zsBJAY1bb5BHIEbWVFLgENh0w==}
+
+  '@fontsource/dm-sans@5.3.0':
+    resolution: {integrity: sha512-lYJtMXXO28q1z+yz+z8XKd0s4hXaa9QdkETzkyD760sidCv5heI86weYA0sx0Nc4pAMAQTUuyf4gO44cYKKS9g==}
+
+  '@fontsource/roboto-flex@5.3.0':
+    resolution: {integrity: sha512-FzmARYZm9kZJ5OilGxlT8okfzn/skrXMLwkXSKqYmrL9TVZkgeX339nbK1M/fzNcqWCJ0NOv6g3Pp7bAjfiG+A==}
+
+  '@fontsource/tinos@5.3.0':
+    resolution: {integrity: sha512-VVDyyZdbcsLKxo/W7rClAvacD/7DsGc7J5xzzp51Tndib8kDkEe/0bqbb3Xb3iH6+IUjt07aRsvtQ9MGeGGi4w==}
 
   '@internationalized/date@3.12.4':
     resolution: {integrity: sha512-M1dEn4c1U1HsSlaVR8upZtSqvXrTkHDfv18H01uCSJyjVLDxnBR38v/fMxecmlwXKR4i9HeZcmgQAPE6A+aGJQ==}
@@ -3407,6 +3431,14 @@ snapshots:
     optional: true
 
   '@exodus/bytes@1.15.1': {}
+
+  '@fontsource/courier-prime@5.3.0': {}
+
+  '@fontsource/dm-sans@5.3.0': {}
+
+  '@fontsource/roboto-flex@5.3.0': {}
+
+  '@fontsource/tinos@5.3.0': {}
 
   '@internationalized/date@3.12.4':
     dependencies:

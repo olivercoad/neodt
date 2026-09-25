@@ -21,7 +21,7 @@ function Fixture({ library }: { library: DemoLibrary }) {
         body { margin: 24px; font: 16px Arial, sans-serif; }
         #host { width: fit-content; margin: 40px 0; }
         .fixture { &.datetime-neo, &::part(root) { width: 100%; } }
-        .metrics { &.datetime-neo, &::part(root) { font: 20px Georgia, serif; --datetime-neo-segment-line-height: 1; --datetime-neo-segment-padding: 0.3rem 0.25rem; } }
+        .metrics { &.datetime-neo, &::part(root) { font: 20px Tinos, serif; --datetime-neo-segment-line-height: 1; --datetime-neo-segment-padding: 0.3rem 0.25rem; } }
       `}
       />
       <label>

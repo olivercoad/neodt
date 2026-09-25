@@ -162,7 +162,6 @@
   outline: 0;
   padding: var(--datetime-neo-segment-padding);
   field-sizing: content;
-  text-box: trim-both cap alphabetic;
 }
 
 .datetime-neo__natural-field {
@@ -189,7 +188,6 @@
   padding: var(--datetime-neo-segment-padding);
   pointer-events: none;
   white-space: pre;
-  text-box: trim-both cap alphabetic;
 }
 
 .datetime-neo__natural-ghost-typed {
@@ -204,7 +202,6 @@
   margin-left: 0.45em;
   opacity: 0.5;
   padding: 0 0.25em;
-  text-box: text; /* Better padding for top/bottom */
 }
 
 .datetime-neo__natural-input::placeholder {
@@ -236,20 +233,6 @@
 /* Reserve a text line even while the phrase is incomplete or invalid. */
 .datetime-neo__natural-preview::before {
   content: "\200b";
-}
-
-@supports (text-box: trim-both cap alphabetic) and (height: 1cap) {
-  .datetime-neo__segment,
-  .datetime-neo__separator,
-  .datetime-neo__natural-preview {
-    /* Trim the actual text box; distribute the remaining leading outside it.
-       Together these still occupy 1lh, without depending on align-content's
-       interaction with trimming inside a fixed-height block. */
-    align-content: normal;
-    height: 1cap;
-    margin-block: calc((1lh - 1cap) / 2);
-    text-box: trim-both cap alphabetic;
-  }
 }
 
 .datetime-neo__natural-prefix {
@@ -285,7 +268,6 @@
   font-variant-numeric: tabular-nums;
   padding: 0.16rem 0.18rem;
   text-align: right;
-  text-box: trim-both cap alphabetic;
   margin-right: 0;
   transition:
     margin-right 220ms ease,
@@ -527,12 +509,6 @@
   padding-bottom: 0;
   margin: 0;
   transition-delay: 0ms;
-}
-
-/* The wrapped offset occupies a flexible area above the actions. Retain its
-   natural font leading here instead of trimming text against the top border. */
-.datetime-neo__content[data-wrapped] .datetime-neo__timezone {
-  text-box: normal;
 }
 
 .datetime-neo:not(:hover):not(:focus-within)

@@ -64,7 +64,7 @@
   border-radius: 0;
   padding: 1rem 1rem var(--report-clearance, 1rem);
   font:
-    0.75rem/1.7 ui-monospace,
+    0.75rem/1.7 "Courier Prime",
     monospace;
   font-variant-ligatures: none;
   letter-spacing: normal;
@@ -124,7 +124,7 @@
   padding: 1rem 1rem var(--report-clearance, 1rem);
   overflow: auto;
   font:
-    0.75rem/1.7 ui-monospace,
+    0.75rem/1.7 "Courier Prime",
     monospace;
   white-space: pre;
   tab-size: 2;

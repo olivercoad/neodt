@@ -21,7 +21,7 @@ footer {
 }
 footer a {
   color: var(--muted);
-  font-family: ui-monospace, monospace;
+  font-family: "Courier Prime", monospace;
   font-size: 0.72rem;
   text-decoration: none;
 }
@@ -39,7 +39,7 @@ footer a {
 }
 .kicker {
   color: var(--blue);
-  font-family: ui-monospace, monospace;
+  font-family: "Courier Prime", monospace;
   font-size: 0.69rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -60,7 +60,7 @@ p {
 }
 .hero h1 i {
   color: var(--blue);
-  font-family: Georgia, serif;
+  font-family: Tinos, serif;
   font-weight: 400;
 }
 .lede {
@@ -98,7 +98,7 @@ p {
 }
 .install a {
   color: var(--blue);
-  font-family: ui-monospace, monospace;
+  font-family: "Courier Prime", monospace;
   font-size: 0.72rem;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
@@ -129,7 +129,7 @@ p {
   align-items: center;
   border-bottom: 1px solid var(--line);
   display: flex;
-  font-family: ui-monospace, monospace;
+  font-family: "Courier Prime", monospace;
   font-size: 0.7rem;
   gap: 0.45rem;
   padding-bottom: 0.9rem;
@@ -261,21 +261,18 @@ p {
   line-height: 1;
   width: 4.25rem;
 }
-.gallerySamples > span > span {
-  text-box: trim-both cap alphabetic;
-}
 .gallerySamples > span:nth-child(2) {
   background: #172633;
   border-color: #172633;
   color: #91e9b6;
-  font-family: ui-monospace, monospace;
+  font-family: "Courier Prime", monospace;
 }
 .gallerySamples > span:nth-child(3) {
   background: #eeedff;
   border-color: #d6d0f5;
   border-radius: 99px;
   color: #6250a5;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: Tinos, serif;
   font-size: 0.9rem;
 }
 .galleryTitle {
@@ -325,7 +322,7 @@ p {
 }
 .field {
   display: block;
-  font-family: ui-monospace, monospace;
+  font-family: "Courier Prime", monospace;
   font-size: 0.7rem;
   font-weight: 500;
   margin-top: 1.5rem;
@@ -435,7 +432,7 @@ p {
 }
 .notes span {
   color: var(--blue);
-  font-family: ui-monospace, monospace;
+  font-family: "Courier Prime", monospace;
   font-size: 0.7rem;
 }
 .notes h3 {
@@ -453,7 +450,7 @@ footer {
   border-top: 1px solid var(--line);
   color: var(--muted);
   display: flex;
-  font-family: ui-monospace, monospace;
+  font-family: "Courier Prime", monospace;
   font-size: 0.7rem;
   justify-content: space-between;
   padding-bottom: 1.5rem;

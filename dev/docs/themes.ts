@@ -17,7 +17,7 @@ export const createThemes = (shadowDom = false) => [
   --datetime-neo-foreground: #332b23;
   --datetime-neo-border: #b9aa92;
   --datetime-neo-focus: #916128;
-  font-family: Georgia, serif;
+  font-family: Tinos, serif;
   font-size: 18px;
   border-radius: 0.2rem;
   width: 100%;
@@ -75,7 +75,7 @@ ${rootStyles(
   --datetime-neo-focus: #235bc4;
   --datetime-neo-segment-padding: 0.4rem 0.1rem;
   --datetime-neo-segment-line-height: 1.2;
-  font-family: ui-monospace, monospace;
+  font-family: "Courier Prime", monospace;
   font-size: 13px;
   border-radius: 0;
   width: 100%;

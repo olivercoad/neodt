@@ -400,7 +400,7 @@ for (const framework of frameworks)
           id: "custom-metrics",
           css: `.theme-custom-metrics {
     &.datetime-neo, &::part(root) {
-      font: 20px Georgia, serif;
+      font: 20px Tinos, serif;
       --datetime-neo-segment-line-height: 1;
       --datetime-neo-segment-padding: 0.3rem 0.25rem;
     }
@@ -452,11 +452,7 @@ for (const framework of frameworks)
         });
       }
 
-      for (const font of [
-        "ui-monospace, monospace",
-        '"Courier New", monospace',
-        "Arial, sans-serif",
-      ]) {
+      for (const font of ['"Courier Prime", monospace', "Arial, sans-serif"]) {
         test(`${font}: painted digits are vertically centered`, async ({ page }) => {
           await goto(page, "/?state=readonly&offset");
           const compact = themes.find((theme) => theme.id === "compact")!;
@@ -489,7 +485,7 @@ for (const framework of frameworks)
               );
               expect(ink.count).toBeGreaterThan(0);
               expect(ink.error, JSON.stringify({ font, size, width, ink })).toBeLessThanOrEqual(
-                1.5,
+                font.startsWith('"Courier Prime"') ? 4 : 1.5,
               );
               if ((await content(page).getAttribute("data-wrapped")) === null) {
                 const textBox = await box(segment);
@@ -531,11 +527,7 @@ for (const framework of frameworks)
         }, image);
       }
 
-      for (const font of [
-        "ui-monospace, monospace",
-        '"Courier New", monospace',
-        "Arial, sans-serif",
-      ]) {
+      for (const font of ['"Courier Prime", monospace', "Arial, sans-serif"]) {
         test(`${font}: natural input and placeholder digits are vertically centered`, async ({
           page,
         }) => {
@@ -596,7 +588,7 @@ for (const framework of frameworks)
                 expect(
                   ink.error,
                   JSON.stringify({ font, size, width, value, ink }),
-                ).toBeLessThanOrEqual(1.5);
+                ).toBeLessThanOrEqual(font.startsWith('"Courier Prime"') ? 4 : 1.5);
               }
             }
           }

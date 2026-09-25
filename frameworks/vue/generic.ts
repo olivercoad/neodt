@@ -27,13 +27,25 @@ export type ConfiguredComponent<T, TZone> = new () => {
 const Component = defineComponent({
   name: "Neodt",
   inheritAttrs: false,
-  setup(_props, { attrs }) {
+  // Declared props let Vue normalize template kebab-case names and cast bare
+  // boolean attributes. Keep datetime/adapter values opaque to Vue's validator.
+  props: {
+    adapter: null,
+    referenceTime: null,
+    value: null,
+    defaultValue: null,
+    onValueChange: null,
+    locale: null,
+    formatOptions: null,
+    showTimeOffset: Boolean,
+    readonly: Boolean,
+    disabled: Boolean,
+  },
+  setup(props, { attrs }) {
     const id = useId();
+    const boundProps = () => ({ ...attrs, ...props });
     const input = () =>
-      controllerProps(
-        attrs as unknown as CoreProps<unknown, unknown> & Record<string, unknown>,
-        id,
-      );
+      controllerProps(boundProps() as CoreProps<unknown, unknown> & Record<string, unknown>, id);
     const controller = createController(input());
     const view = shallowRef(controller.getSnapshot());
     onUnmounted(
@@ -46,7 +58,7 @@ const Component = defineComponent({
       return h(Control, {
         view: view.value,
         controller,
-        attributes: rootAttributes(attrs),
+        attributes: rootAttributes(boundProps()),
         onRootClick: (event: MouseEvent) => {
           invokeHandler(attrs.onClick, event);
           controller.click(event);

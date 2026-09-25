@@ -179,7 +179,10 @@ for (const implementation of builtInAdapters)
                 },
               )
               .formatToParts(value)
-              .map((part) => part.value)
+              // Display separators are stable across server/browser ICU versions.
+              .map((part) =>
+                part.type === "literal" ? part.value.replace(/[\u00a0\u202f]/g, " ") : part.value,
+              )
               .join("");
 
             expect(control.querySelector(".datetime-neo__value")?.textContent).toBe(expected);

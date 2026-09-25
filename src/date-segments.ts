@@ -43,7 +43,14 @@ export function partsFor(
             value: part.type === "year" ? part.value.padStart(4, "0") : part.value,
             editable: true,
           }
-        : { type: part.type, value: part.value, editable: false },
+        : {
+            type: part.type,
+            // ICU versions differ on ordinary/nonbreaking spaces, notably before
+            // AM/PM. Keep SSR and browser text identical; layout owns wrapping.
+            value:
+              part.type === "literal" ? part.value.replace(/[\u00a0\u202f]/g, " ") : part.value,
+            editable: false,
+          },
     );
 }
 

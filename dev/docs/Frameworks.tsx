@@ -41,9 +41,7 @@ export default function Frameworks() {
                     </a>
                   </td>
                   <td>
-                    <code>
-                      pnpm add @olicoad/neodt {framework.packages.join(" ")} {library.packages}
-                    </code>
+                    <code>pnpm add @olicoad/neodt</code>
                   </td>
                   <td>
                     <code>{packageEntry(framework.id, library.entry)}</code>

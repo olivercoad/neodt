@@ -140,10 +140,7 @@ const App: Component = () => {
             <code>{library.type}</code> instead of a string to untangle.
           </p>
           <div class={styles.install}>
-            <code>
-              pnpm add @olicoad/neodt {framework.packages.join(" ")}
-              {library.packages ? ` ${library.packages}` : ""}
-            </code>
+            <code>pnpm add @olicoad/neodt</code>
             <span>{framework.label}</span>
             <a href="https://www.npmjs.com/package/@olicoad/neodt" target="_blank" rel="noreferrer">
               v{packageJson.version} on npm ↗

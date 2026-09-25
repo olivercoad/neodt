@@ -175,7 +175,7 @@ Lit themes use native CSS nesting and exposed parts. Put the class on the custom
 }
 ```
 
-Use `::part(readonly)` for the readonly root or `::part(readonly wrapped)` when it is also wrapped. The documentation themes include light-DOM selectors so the same CSS works with every framework. Lit SSR uses `@lit-labs/ssr`; load `@lit-labs/ssr-client/lit-element-hydrate-support.js` before defining elements on the client, and defer hydration until `.props` is set.
+Use `:state(readonly)::part(root)` for the readonly root or `:state(readonly):state(wrapped)::part(root)` when it is also wrapped. Lit exposes `readonly`, `disabled`, `wrapped`, `empty`, `natural`, `overflowing`, `time-offset`, and `layout-changing` as custom states; parts identify internal elements. The styling gallery shows Shadow DOM parts for Lit and light DOM selectors for other frameworks. Lit SSR uses `@lit-labs/ssr`; load `@lit-labs/ssr-client/lit-element-hydrate-support.js` before defining elements on the client, and defer hydration until `.props` is set.
 
 ## Utilities
 

@@ -27,9 +27,7 @@ export default function Control(props: ControlProps) {
   return (
     <span
       {...props.attributes}
-      part={
-        "root" + (props.view.readonly ? " readonly" : "") + (props.view.wrapped ? " wrapped" : "")
-      }
+      part="root"
       ref={element}
       onClick={(event) => props.onRootClick(event)}
       onMouseDown={(event) => props.onRootMouseDown(event)}

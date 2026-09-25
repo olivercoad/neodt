@@ -31,6 +31,7 @@ export class Neodt<T, TZone = string, P = NeodtProps<T, TZone>> extends LitEleme
     unsafeCSS(styles),
   ];
   declare props: P;
+  private internals = this.attachInternals?.();
   private controller?: ReturnType<typeof createController<T, TZone>>;
   private unsubscribe?: () => void;
   private hostAttributes = new Map<string, unknown>();
@@ -86,8 +87,25 @@ export class Neodt<T, TZone = string, P = NeodtProps<T, TZone>> extends LitEleme
   protected render() {
     if (!this.controller) return nothing;
     const props = this.boundProps;
+    const view = this.controller.getSnapshot();
+    const states = this.internals?.states;
+    if (states) {
+      for (const [name, active] of Object.entries({
+        readonly: view.readonly,
+        disabled: view.disabled,
+        wrapped: view.wrapped,
+        empty: view.empty,
+        natural: view.natural,
+        overflowing: view.overflowing,
+        "time-offset": view.showTimeOffset,
+        "layout-changing": view.layoutChanging,
+      })) {
+        if (active) states.add(name);
+        else states.delete(name);
+      }
+    }
     return Control({
-      view: this.controller.getSnapshot(),
+      view,
       attributes: { class: "datetime-neo", style: props.style },
       onRootClick: (event: MouseEvent) => {
         invokeHandler(props.onClick, event);

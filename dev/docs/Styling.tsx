@@ -3,10 +3,11 @@ import { render } from "solid-js/web";
 
 import Code from "../code/Code";
 import CodeEditor from "../code/CodeEditor";
+import { currentFramework } from "../framework";
 import { useLibrary } from "../library";
 import ResizablePreview from "../ResizablePreview";
 import { createResizeScrollAnchor } from "./createResizeScrollAnchor";
-import { themes } from "./themes";
+import { createThemes } from "./themes";
 
 import componentCss from "../../src/styles.css?raw";
 import styles from "./docs.module.css";
@@ -18,7 +19,7 @@ export interface StylingOptions {
 }
 
 function Preview(props: {
-  theme: (typeof themes)[number];
+  theme: ReturnType<typeof createThemes>[number];
   css: string;
   children?: JSX.Element;
   state: "Editable" | "Readonly" | "Disabled";
@@ -65,7 +66,7 @@ function Preview(props: {
 }
 
 function ThemeExample(props: {
-  theme: (typeof themes)[number];
+  theme: ReturnType<typeof createThemes>[number];
   options: StylingOptions;
   width: number;
   onWidthChange: (width: number) => void;
@@ -168,6 +169,8 @@ function ThemeExample(props: {
 }
 
 export default function Styling(props: { options: StylingOptions }) {
+  const shadowDom = currentFramework().id === "lit";
+  const themes = createThemes(shadowDom);
   const [width, setWidth] = createSignal(320);
   let cards!: HTMLDivElement;
   const resizeAnchor = createResizeScrollAnchor(() => cards);
@@ -185,9 +188,18 @@ export default function Styling(props: { options: StylingOptions }) {
         in the documentation nav apply to every preview.
       </p>
       <p>
-        Load your theme after the component stylesheet. Set variables on the component class itself:
-        the default variables are declared on <code>.datetime-neo</code>, so an ancestor’s variables
-        alone will not override them.
+        {shadowDom ? (
+          <>
+            Put the theme class on the custom element. Set variables and root styles with{" "}
+            <code>::part(root)</code>, and style internal elements through their named CSS parts.
+          </>
+        ) : (
+          <>
+            Load your theme after the component stylesheet. Set variables on the component class
+            itself: the default variables are declared on <code>.datetime-neo</code>, so an
+            ancestor’s variables alone will not override them.
+          </>
+        )}
       </p>
       <div ref={cards}>
         <For each={themes}>
@@ -240,12 +252,12 @@ export default function Styling(props: { options: StylingOptions }) {
       <p>
         Prefix each name with <code>--datetime-neo-</code>. Focus ring, highlight, and hover colours
         derive from the focus colour unless overridden. Readonly mode supplies its own muted
-        background and border; use a class such as <code>.theme-paper[data-readonly]</code> to
-        customise those. For Lit, put the theme class on the custom element and use native CSS
-        nesting: <code>{".theme-paper { &::part(root) { /* root styles */ } }"}</code>. Use{" "}
-        <code>::part(readonly)</code> for readonly root styles and named parts such as
-        <code>::part(editor)</code> or <code>::part(actions)</code> for internal elements. The
-        examples below support both light DOM and Shadow DOM.
+        background and border; use{" "}
+        <code>
+          {shadowDom ? ".theme-paper:state(readonly)::part(root)" : ".theme-paper[data-readonly]"}
+        </code>{" "}
+        to customise those. The examples above use{" "}
+        {shadowDom ? "Shadow DOM parts" : "light DOM selectors"} for {currentFramework().label}.
       </p>
       <h2 id="keep-layout-predictable">Keep layout predictable</h2>
       <p>

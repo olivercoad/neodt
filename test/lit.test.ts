@@ -50,7 +50,8 @@ it("Lit configured elements retain their adapter and reconnect without duplicate
     await control.updateComplete;
     expect(control.hasAttribute("title")).toBe(false);
     expect(control.hasAttribute("data-test")).toBe(false);
-    expect(root.getAttribute("part")!.split(" ").includes("readonly")).toBe(true);
+    expect(root.getAttribute("part")).toBe("root");
+    expect(root.hasAttribute("data-readonly")).toBe(true);
     root.click();
     expect(clicked).toHaveBeenCalledTimes(1);
   } finally {

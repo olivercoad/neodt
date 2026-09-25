@@ -1,20 +1,26 @@
-export const themes = [
+function rootStyles(shadowDom: boolean, declarations: string) {
+  const body = declarations
+    .trim()
+    .split("\n")
+    .map((line) => `${shadowDom ? "    " : "  "}${line.trim()}`)
+    .join("\n");
+  return shadowDom ? `  &::part(root) {\n${body}\n  }` : body;
+}
+
+export const createThemes = (shadowDom = false) => [
   {
     id: "paper",
     name: "Paper & ink",
     description: "A warm surface, serif type, and a soft focus ring for editorial interfaces.",
-    css: `.theme-paper {
-  &.datetime-neo,
-  &::part(root) {
-    --datetime-neo-background: #fffcf5;
-    --datetime-neo-foreground: #332b23;
-    --datetime-neo-border: #b9aa92;
-    --datetime-neo-focus: #916128;
-    font-family: Georgia, serif;
-    font-size: 18px;
-    border-radius: 0.2rem;
-    width: 100%;
-  }
+    css: `.theme-paper${shadowDom ? "::part(root)" : ""} {
+  --datetime-neo-background: #fffcf5;
+  --datetime-neo-foreground: #332b23;
+  --datetime-neo-border: #b9aa92;
+  --datetime-neo-focus: #916128;
+  font-family: Georgia, serif;
+  font-size: 18px;
+  border-radius: 0.2rem;
+  width: 100%;
 }`,
   },
   {
@@ -22,8 +28,9 @@ export const themes = [
     name: "Midnight",
     description: "A dark theme with a violet accent. Selection colours stay explicit and readable.",
     css: `.theme-midnight {
-  &.datetime-neo,
-  &::part(root) {
+${rootStyles(
+  shadowDom,
+  `
     --datetime-neo-background: #191b2a;
     --datetime-neo-foreground: #f0edf9;
     --datetime-neo-border: #62627d;
@@ -32,10 +39,10 @@ export const themes = [
     --datetime-neo-hover: #33314a;
     border-radius: 0.75rem;
     width: 100%;
-  }
+`,
+)}
 
-  &[data-readonly],
-  &::part(readonly) {
+  ${shadowDom ? "&:state(readonly)::part(root)" : "&[data-readonly]"} {
     --datetime-neo-background: #252738;
     --datetime-neo-border: #62627d;
   }
@@ -45,39 +52,33 @@ export const themes = [
     id: "mint",
     name: "Room to breathe",
     description: "Larger type and shared segment padding keep both editing modes comfortable.",
-    css: `.theme-mint {
-  &.datetime-neo,
-  &::part(root) {
-    --datetime-neo-background: #eefaf3;
-    --datetime-neo-foreground: #173c2c;
-    --datetime-neo-border: #75a98b;
-    --datetime-neo-focus: #22764b;
-    --datetime-neo-segment-padding: 0.35rem 0.25rem;
-    --datetime-neo-segment-line-height: 1.5;
-    font-size: 18px;
-    border-radius: 0.65rem;
-    width: 100%;
-  }
+    css: `.theme-mint${shadowDom ? "::part(root)" : ""} {
+  --datetime-neo-background: #eefaf3;
+  --datetime-neo-foreground: #173c2c;
+  --datetime-neo-border: #75a98b;
+  --datetime-neo-focus: #22764b;
+  --datetime-neo-segment-padding: 0.35rem 0.25rem;
+  --datetime-neo-segment-line-height: 1.5;
+  font-size: 18px;
+  border-radius: 0.65rem;
+  width: 100%;
 }`,
   },
   {
     id: "compact",
     name: "Compact console",
     description: "Monospaced digits and tighter spacing for dense tables and tools.",
-    css: `.theme-compact {
-  &.datetime-neo,
-  &::part(root) {
-    --datetime-neo-background: #f2f5f9;
-    --datetime-neo-foreground: #243649;
-    --datetime-neo-border: #91a2b5;
-    --datetime-neo-focus: #235bc4;
-    --datetime-neo-segment-padding: 0.4rem 0.1rem;
-    --datetime-neo-segment-line-height: 1.2;
-    font-family: ui-monospace, monospace;
-    font-size: 13px;
-    border-radius: 0;
-    width: 100%;
-  }
+    css: `.theme-compact${shadowDom ? "::part(root)" : ""} {
+  --datetime-neo-background: #f2f5f9;
+  --datetime-neo-foreground: #243649;
+  --datetime-neo-border: #91a2b5;
+  --datetime-neo-focus: #235bc4;
+  --datetime-neo-segment-padding: 0.4rem 0.1rem;
+  --datetime-neo-segment-line-height: 1.2;
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+  border-radius: 0;
+  width: 100%;
 }`,
   },
   {
@@ -86,8 +87,9 @@ export const themes = [
     description:
       "Adapted from a real-world times grid: minimal spacing, a transparent surface, and a width of 110-240px.",
     css: `.theme-seamless {
-  &.datetime-neo,
-  &::part(root) {
+${rootStyles(
+  shadowDom,
+  `
     font-family: "Roboto Flex", sans-serif;
     font-size: 16px;
     line-height: normal;
@@ -106,27 +108,24 @@ export const themes = [
     --datetime-neo-segment-line-height: 1;
     --datetime-neo-segment-padding: 2px 0;
     border-radius: 4px;
-  }
+`,
+)}
 
-  &[data-readonly]:has(.datetime-neo__content[data-wrapped]),
-  &::part(readonly wrapped) {
+  ${shadowDom ? "&:state(readonly):state(wrapped)::part(root)" : "&[data-readonly]:has(.datetime-neo__content[data-wrapped])"} {
     /* Allow readonly fields to shrink to the size of their wrapped content. */
     min-width: max-content;
   }
 
-  &[data-readonly],
-  &::part(readonly) {
+  ${shadowDom ? "&:state(readonly)::part(root)" : "&[data-readonly]"} {
     --datetime-neo-border: transparent;
     --datetime-neo-background: transparent;
   }
 
-  .datetime-neo__editor,
-  &::part(editor) {
+  ${shadowDom ? "&::part(editor)" : ".datetime-neo__editor"} {
     padding: 0 3px;
   }
 
-  .datetime-neo__actions,
-  &::part(actions) {
+  ${shadowDom ? "&::part(actions)" : ".datetime-neo__actions"} {
     margin-top: 0;
     margin-bottom: 0;
     padding: 0;
@@ -134,21 +133,20 @@ export const themes = [
     gap: 0;
   }
 
-  .datetime-neo__natural-prefix,
-  &::part(natural-prefix) {
+  ${shadowDom ? "&::part(natural-prefix)" : ".datetime-neo__natural-prefix"} {
     padding: 0;
     padding-right: 2px;
   }
 
-  .datetime-neo__trigger,
-  &::part(trigger) {
+  ${shadowDom ? "&::part(trigger)" : ".datetime-neo__trigger"} {
     padding: 2px;
   }
 
-  .datetime-neo__natural-result,
-  &::part(natural-result) {
+  ${shadowDom ? "&::part(natural-result)" : ".datetime-neo__natural-result"} {
     display: none;
   }
 }`,
   },
 ];
+
+export const themes = createThemes();

@@ -48,9 +48,7 @@ function GettingStarted() {
       </p>
       <h2 id="install">Install</h2>
       <pre>
-        <code>
-          pnpm add @olicoad/neodt {framework.packages.join(" ")} {library.packages}
-        </code>
+        <code>pnpm add @olicoad/neodt</code>
       </pre>
       <p>
         Use the Framework and Library dropdowns to choose your integration. Styles are included
@@ -64,7 +62,9 @@ function GettingStarted() {
         <a href="#/docs/libraries">Datetime libraries</a>. TypeScript 6 or later projects can enable
         Temporal types with <code>lib: ["ESNext", "DOM"]</code>.
       </p>
-      <h2 id="a-controlled-field">A controlled field</h2>
+      <h2 id="a-controlled-field">
+        {framework.id === "vanilla" ? "A datetime field" : "A controlled field"}
+      </h2>
       <pre>
         <Code
           value={framework.example({ ...library, now: library.nowExpression })}

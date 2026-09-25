@@ -1,4 +1,4 @@
-import { For } from "solid-js";
+import { For, Show } from "solid-js";
 
 import { packageEntry } from "../../frameworks";
 import CodeExample from "../code/CodeExample";
@@ -53,12 +53,45 @@ export default function Frameworks() {
         language={currentFramework().codeLanguage}
         value={currentFramework().example({ ...library, now: library.nowExpression })}
       />
+      <Show when={currentFramework().id === "vanilla"}>
+        <h3>Updating and cleaning up</h3>
+        <CodeExample
+          language="typescript"
+          value={`// Change options later without creating another control.
+// Options you omit keep their current values.
+neodt.update({ locale: "en-AU", formatOptions: { hour12: false } });
+
+// Call this from your app when removing this form, dialog, or page.
+// Removing HTML alone does not stop observers or pending animation work.
+function removeDateField() {
+  neodt.destroy(); // Remove the control and release its listeners and observers.
+  container.remove(); // Remove the surrounding container if no longer needed.
+}`}
+        />
+      </Show>
       <h2 id="shared-api">Shared behavior and native framework APIs</h2>
       <p>
         Vanilla mounts into an ordinary DOM container: call the default export with the container
-        and options. It returns an element, update(partialOptions), and destroy(). Updates merge
-        options; pass undefined to remove an optional option. Call destroy() when removing the
-        owning UI. The renderer is bundled, so no framework installation or compiler is needed.
+        and options. The returned handle exposes <code>element</code>,{" "}
+        <code>update(partialOptions)</code>, and <code>destroy()</code>. Updates merge options:
+        omitted options keep their current values, and passing <code>undefined</code> removes an
+        optional option. The merge is shallow, so passing <code>formatOptions</code> replaces the
+        whole formatting object. The renderer is bundled, so no framework installation or compiler
+        is needed.
+      </p>
+      <p>
+        Call <code>neodt.destroy()</code> in your app's cleanup code when removing or replacing the
+        form, dialog, or page containing the control. Removing its container from the DOM does not
+        call this automatically. The control also owns event listeners, a resize observer,
+        subscriptions, and scheduled animation work. Removing HTML alone does not dispose of these
+        resources. <code>destroy()</code> removes the listeners, disconnects the observer,
+        unsubscribes from updates, and cancels pending animation work. This prevents unnecessary
+        background work and retained resources as UI is repeatedly created and removed. Destroy the
+        control before removing its container. This removes only the control's nodes; the container
+        and any other content remain. Remove the container separately if needed, as in the Vanilla
+        example. If you only hide a dialog to reuse it later, keep the instance. After destroying
+        it, create a new instance to show the control again; calling <code>update()</code> on a
+        destroyed instance throws.
       </p>
       <p>
         Every framework exposes referenceTime, value, defaultValue, onValueChange, locale,

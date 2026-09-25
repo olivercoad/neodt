@@ -1,8 +1,7 @@
 import type { ExampleLibrary, ExampleOptions } from "../examples.ts";
 export function example(library: ExampleLibrary, options: ExampleOptions = {}) {
   return `<script lang="ts">
-import Neodt from "@olicoad/neodt/svelte${library.entry}";
-${library.imports}
+import Neodt from "@olicoad/neodt/svelte${library.entry}";${library.imports ? `\n${library.imports}` : ""}
 const referenceTime = ${library.now};
 let value = $state.raw<${library.type} | null>(null);
 </script>

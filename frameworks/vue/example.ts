@@ -9,8 +9,7 @@ export function example(library: ExampleLibrary, options: ExampleOptions = {}) {
   ].filter(Boolean);
   return `<script setup lang="ts">
 import { shallowRef } from "vue";
-import Neodt from "@olicoad/neodt/vue${library.entry}";
-${library.imports}
+import Neodt from "@olicoad/neodt/vue${library.entry}";${library.imports ? `\n${library.imports}` : ""}
 
 const referenceTime = ${library.now};
 const value = shallowRef<${library.type} | null>(null);
@@ -20,8 +19,7 @@ const value = shallowRef<${library.type} | null>(null);
   <Neodt
     :reference-time="referenceTime"
     :value="value"
-    @value-change="value = $event"
-${attributes.join("\n")}
+    @value-change="value = $event"${attributes.map((line) => "\n" + line).join("")}
   />
 </template>`;
 }

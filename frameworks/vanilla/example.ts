@@ -16,9 +16,7 @@ export function example(library: ExampleLibrary, options: ExampleOptions = {}) {
   return `${imports.join("\n")}
 
 const container = document.querySelector<HTMLElement>("#date")!;
-const picker = createNeodt(container, {
+const neodt = createNeodt(container, {
   ${props.join("\n  ")}
-});
-
-// When removing the owning UI, call picker.destroy().`;
+});`;
 }

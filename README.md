@@ -23,19 +23,29 @@ The package root provides a plain DOM API with a bundled renderer. No framework 
 ```ts
 import createNeodt from "@olicoad/neodt";
 
-const picker = createNeodt(document.querySelector<HTMLElement>("#date")!, {
+const container = document.querySelector<HTMLElement>("#date")!;
+const neodt = createNeodt(container, {
   referenceTime: Temporal.Now.zonedDateTimeISO("Australia/Sydney"),
   onValueChange: (value) => console.log(value), // Temporal.ZonedDateTime | null
 });
 
-picker.update({ disabled: true });
-// When removing the owning UI:
-picker.destroy();
+// Change options later without creating another control.
+// Options you omit keep their current values.
+neodt.update({ locale: "en-AU", formatOptions: { hour12: false } });
+
+// Call this from your app when removing this form, dialog, or page.
+// Removing HTML alone does not stop observers or pending animation work.
+function removeDateField() {
+  neodt.destroy(); // Remove the control and release its listeners and observers.
+  container.remove(); // Remove the surrounding container if no longer needed.
+}
 ```
 
 Every registered datetime library is available directly under the package: `@olicoad/neodt/luxon`, `@olicoad/neodt/spacetime`, `@olicoad/neodt/temporal-polyfill`, and the other library entries. Install only your chosen datetime package. Use `@olicoad/neodt/generic` for a custom adapter. Values and callbacks retain the selected library's types.
 
-The returned handle exposes `element`, `update(partialOptions)`, and `destroy()`. Updates merge options; pass `undefined` to remove an optional option. Omit `value` for uncontrolled editing, or pass `value` and call `picker.update({ value })` from `onValueChange` for controlled editing. A container can hold multiple controls and other content; destroying one control removes only its own nodes and releases its listeners and observers. Calling `destroy()` again is harmless; updating a destroyed control throws.
+The returned handle exposes `element`, `update(partialOptions)`, and `destroy()`. Updates merge options; omitted options keep their current values, and passing `undefined` removes an optional option. The merge is shallow: passing `formatOptions` replaces the whole formatting object. Omit `value` for uncontrolled editing, or pass `value` and call `neodt.update({ value })` from `onValueChange` for controlled editing.
+
+Call `neodt.destroy()` in your app's cleanup code when the form, dialog, or page containing the control is removed or replaced. Removing the container from the DOM does not call `destroy()` automatically. The control also owns event listeners, a resize observer, subscriptions, and scheduled animation work. Removing HTML alone does not dispose of these resources. `destroy()` removes the listeners, disconnects the observer, unsubscribes from updates, and cancels pending animation work, preventing unnecessary background work and retained resources as UI is repeatedly created and removed. Destroy the control before removing its container. It removes only that control's nodes, leaving the container and any other content intact; remove the container separately if needed, as shown above. Hiding a dialog that you intend to reuse does not require destroying its control. Calling `destroy()` again is harmless; updating a destroyed control throws, so create a new instance if you need it again.
 
 Vanilla uses ordinary DOM and the shared stylesheet. It mounts in the browser; imports and parser utilities are safe on the server. The framework components provide server rendering and hydration. The demo landing page defaults to Solid with None (Native Temporal), loading temporal-polyfill globally for browser compatibility; select Vanilla to try the DOM API.
 

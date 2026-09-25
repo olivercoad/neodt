@@ -1,11 +1,13 @@
 import { For } from "solid-js";
 
 import CodeExample from "../code/CodeExample";
+import { currentFramework } from "../framework";
 import { libraries } from "../libraries";
 
 import styles from "./docs.module.css";
 
 export default function Libraries() {
+  const framework = currentFramework();
   return (
     <>
       <p class={styles.eyebrow}>DATETIME LIBRARIES</p>
@@ -114,7 +116,7 @@ import { Temporal } from "@js-temporal/polyfill";
                     {!library.dependencies.length && "Built into your runtime"}
                   </td>
                   <td>
-                    <code>{"/<framework>" + library.entry}</code>
+                    <code>{framework.entry + library.entry || "(root)"}</code>
                   </td>
                   <td>
                     <code>{library.type}</code>

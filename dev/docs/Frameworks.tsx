@@ -27,7 +27,6 @@ export default function Frameworks() {
           <thead>
             <tr>
               <th>Framework</th>
-              <th>Install</th>
               <th>Selected library entry</th>
             </tr>
           </thead>
@@ -39,9 +38,6 @@ export default function Frameworks() {
                     <a href={demoPath(framework.id, library.id) + "#/docs/frameworks"}>
                       {framework.label}
                     </a>
-                  </td>
-                  <td>
-                    <code>pnpm add @olicoad/neodt</code>
                   </td>
                   <td>
                     <code>{packageEntry(framework.id, library.entry)}</code>

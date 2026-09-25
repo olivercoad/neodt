@@ -60,13 +60,6 @@ async function contained(inner: Locator, outer: Locator) {
 for (const framework of frameworks)
   for (const adapterName of libraries.map(({ id }) => id)) {
     test.describe(`${framework.id}/${adapterName}`, () => {
-      test.beforeEach(async ({ page }) => {
-        test.skip(
-          adapterName === "native-temporal" &&
-            !(await page.evaluate(() => typeof Temporal !== "undefined")),
-          "This browser does not provide native Temporal",
-        );
-      });
       const goto = async (page: Page, path: string) => {
         const url = new URL(path, "http://fixture");
         url.pathname = `/${framework.id}/${adapterName}/`;

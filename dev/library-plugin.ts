@@ -20,7 +20,7 @@ export function libraryPages(): Plugin {
       ),
     ),
   );
-  const defaultLibrary = libraries.find(({ id }) => id === "temporal-polyfill")!;
+  const defaultLibrary = libraries.find(({ id }) => id === "native-temporal")!;
   const script = (id: string) => `<script type="module" src="/@neodt/demo/${id}.ts"></script>`;
   const html = async (id: string) =>
     (await readFile(path.join(root, "index.html"), "utf8")).replace(
@@ -72,13 +72,12 @@ export function libraryPages(): Plugin {
           : `import { mount } from ${JSON.stringify(path.join(directory, "demo.ts"))};
 import { frameworkHost } from ${JSON.stringify(path.join(root, "framework-host.tsx"))};
 const Control = frameworkHost(mount);`;
-      return `${control}
+      return `${name === "native-temporal" ? 'import "temporal-polyfill/global";' : ""}
+${control}
 import { integration } from ${JSON.stringify(path.resolve(root, "..", library.source))};
-import { start, nativeUnavailable } from ${JSON.stringify(path.join(root, "start.tsx"))};
-${name === "native-temporal" ? `if (typeof Temporal === "undefined") nativeUnavailable(${JSON.stringify(framework.id)}); else` : ""} {
-  await integration.setup();
-  integration.run(({ adapter, zone }) => start(${JSON.stringify(name)}, adapter, zone, ${JSON.stringify(framework.id)}, Control));
-}`;
+import { start } from ${JSON.stringify(path.join(root, "start.tsx"))};
+await integration.setup();
+integration.run(({ adapter, zone }) => start(${JSON.stringify(name)}, adapter, zone, ${JSON.stringify(framework.id)}, Control));`;
     },
     transformIndexHtml: {
       order: "pre",

@@ -201,7 +201,7 @@ it("retains Spacetime's own historical offsets when formatting", () => {
 describe.each([
   ["js-temporal-polyfill", Temporal],
   ["temporal-polyfill", OtherTemporal],
-] as const)("%s native Temporal contract", (_name, Temporal) => {
+] as const)("%s Native Temporal contract", (_name, Temporal) => {
   it("uses the supplied Temporal implementation for construction and arithmetic", () => {
     const from = vi.fn(Temporal.ZonedDateTime.from);
     const fromEpochMilliseconds = vi.fn(Temporal.Instant.fromEpochMilliseconds);

@@ -18,7 +18,7 @@ export function checkLibraryEntries(): Plugin {
         const library =
           libraries.find(({ id }) => chunk.facadeModuleId?.endsWith(`/${id}/index.html`)) ??
           (chunk.facadeModuleId?.endsWith("/dev/index.html")
-            ? libraries.find(({ id }) => id === "temporal-polyfill")
+            ? libraries.find(({ id }) => id === "native-temporal")
             : undefined);
         if (!library) continue;
         const framework = chunk.facadeModuleId?.endsWith("/dev/index.html")
@@ -45,7 +45,10 @@ export function checkLibraryEntries(): Plugin {
           const loaded = [...modules].some((module) =>
             names.some((name) => module.includes(`/node_modules/${name}/`)),
           );
-          if (names.length && loaded !== (id === library.id)) {
+          // None uses global Temporal, polyfilled by the site when the browser needs it.
+          const expected =
+            id === library.id || (library.id === "native-temporal" && id === "temporal-polyfill");
+          if (names.length && loaded !== expected) {
             this.error(
               `${entry} entry ${loaded ? "loads unselected" : "does not load selected"} library ${id}`,
             );

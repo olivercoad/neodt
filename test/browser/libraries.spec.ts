@@ -39,29 +39,22 @@ for (const library of libraries) {
     page.on("request", (request) => {
       if (request.resourceType() === "script") modules.push(decodeURIComponent(request.url()));
     });
-    const supported =
-      library.id !== "native-temporal" ||
-      (await page.evaluate(() => typeof Temporal !== "undefined"));
     await page.goto(`${libraryPath(library.id)}#/docs/styling`);
     await expectLibrary(page, library);
-    if (supported) {
-      await expect(
-        page
-          .getByRole("article", { name: "Paper & ink" })
-          .getByRole("spinbutton", { name: "hour", exact: true })
-          .first(),
-      ).toBeVisible();
-    } else {
-      await expect(
-        page.getByRole("heading", { name: "Native Temporal is unavailable in this browser" }),
-      ).toBeVisible();
-    }
+    await expect(
+      page
+        .getByRole("article", { name: "Paper & ink" })
+        .getByRole("spinbutton", { name: "hour", exact: true })
+        .first(),
+    ).toBeVisible();
     const dependencies = modules.filter((url) => url.includes("/node_modules/"));
     for (const [name, pattern] of Object.entries(dependencyPatterns)) {
       expect(
         dependencies.some((url) => pattern.test(url)),
         `${name} in ${library.id}: ${dependencies.join("\n")}`,
-      ).toBe(name === library.id);
+      ).toBe(
+        name === library.id || (library.id === "native-temporal" && name === "temporal-polyfill"),
+      );
     }
     expect(modules.some((url) => url.includes("/test/helpers/"))).toBe(false);
   });

@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 
 import { expect, test } from "@playwright/test";
 
-test("uses native Temporal without installing a polyfill on the page", async ({ page }) => {
+test("uses Native Temporal without installing a polyfill on the page", async ({ page }) => {
   await page.addInitScript(() => {
     (window as unknown as { originalTemporal: unknown }).originalTemporal = globalThis.Temporal;
   });
@@ -10,7 +10,7 @@ test("uses native Temporal without installing a polyfill on the page", async ({ 
   const available = await page.evaluate(() =>
     Boolean((window as unknown as { originalTemporal: unknown }).originalTemporal),
   );
-  test.skip(!available, "This browser does not provide native Temporal");
+  test.skip(!available, "This browser does not provide Native Temporal");
   const result = await page.evaluate(
     async (entryPath) => {
       const { parseNaturalDate } = (await import(

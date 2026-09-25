@@ -18,7 +18,7 @@ See [Frameworks](https://neodt.olisworld.com/#/docs/frameworks) for supported fr
 
 ## Vanilla TypeScript usage
 
-The package root provides a plain DOM API with a bundled renderer. No framework or JSX setup is required. The Library choice **None** means **native Temporal**; your runtime must provide it.
+The package root provides a plain DOM API with a bundled renderer. No framework or JSX setup is required. The Library choice **None** means **Native Temporal**; your runtime must provide it.
 
 ```ts
 import createNeodt from "@olicoad/neodt";
@@ -37,13 +37,13 @@ Every registered datetime library is available directly under the package: `@oli
 
 The returned handle exposes `element`, `update(partialOptions)`, and `destroy()`. Updates merge options; pass `undefined` to remove an optional option. Omit `value` for uncontrolled editing, or pass `value` and call `picker.update({ value })` from `onValueChange` for controlled editing. A container can hold multiple controls and other content; destroying one control removes only its own nodes and releases its listeners and observers. Calling `destroy()` again is harmless; updating a destroyed control throws.
 
-Vanilla uses ordinary DOM and the shared stylesheet. It mounts in the browser; imports and parser utilities are safe on the server. The framework components provide server rendering and hydration. The demo landing page defaults to Solid with temporal-polyfill for browser compatibility; select Vanilla to try the DOM API.
+Vanilla uses ordinary DOM and the shared stylesheet. It mounts in the browser; imports and parser utilities are safe on the server. The framework components provide server rendering and hydration. The demo landing page defaults to Solid with None (Native Temporal), loading temporal-polyfill globally for browser compatibility; select Vanilla to try the DOM API.
 
 ## Solid usage
 
 Install `solid-js` alongside neodt for the Solid component.
 
-Each framework root uses native Temporal. Your runtime must provide Temporal; see [Datetime libraries](https://neodt.olisworld.com/#/docs/libraries) for polyfills and other libraries.
+Each framework root uses Native Temporal. Your runtime must provide Temporal; see [Datetime libraries](https://neodt.olisworld.com/#/docs/libraries) for polyfills and other libraries.
 
 ```tsx
 import { createSignal } from "solid-js";

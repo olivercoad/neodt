@@ -13,14 +13,14 @@ export default function Libraries() {
       <p class={styles.eyebrow}>DATETIME LIBRARIES</p>
       <h1>Choose your datetime library.</h1>
       <p class={styles.intro}>
-        The import path selects the adapter for the component. None (native Temporal) is the default
+        The import path selects the adapter for the component. None (Native Temporal) is the default
         for root imports; install another library only when you choose its entry.
       </p>
       <p>
         Use the <strong>Library</strong> dropdown in the top navigation to try the lab and styling
         gallery with any built-in adapter. Each library has its own URL and entry point, so your
-        browser loads only the selected datetime library. Switching preserves the current docs
-        section. Native Temporal requires browser support; either polyfill entry works without it.
+        browser loads only the selected datetime library. None loads a global Temporal polyfill for
+        browsers without support. Switching preserves the current docs section.
       </p>
       <p>
         The examples below use Solid syntax. See <a href="#/docs/frameworks">Frameworks</a> for the
@@ -28,7 +28,7 @@ export default function Libraries() {
         Vanilla, omit the framework segment entirely: use @olicoad/neodt, @olicoad/neodt/luxon, or
         any other library entry directly.
       </p>
-      <h2 id="native-temporal">None (native Temporal)</h2>
+      <h2 id="native-temporal">None (Native Temporal)</h2>
       <CodeExample
         framework="solid"
         library="native-temporal"
@@ -73,12 +73,11 @@ import { Temporal } from "@js-temporal/polyfill";
 <Neodt referenceTime={Temporal.Now.zonedDateTimeISO("Australia/Sydney")} />;`}
       />
       <p>
-        Both entries use their package’s Temporal export. The temporal-polyfill package uses native
+        Both entries use their package’s Temporal export. The temporal-polyfill package uses Native
         Temporal when available and supplies its implementation otherwise. You can also use your
-        framework’s root entry with a global polyfill installed by your application. The live demos
-        on this site use the temporal-polyfill entry for browser compatibility, while the
-        getting-started examples use native Temporal. Neither the site nor the library installs a
-        global polyfill.
+        framework’s root entry with a global polyfill installed by your application. This site
+        defaults to None (Native Temporal) and imports <code>temporal-polyfill/global</code> only
+        when None is selected. The library itself does not install a global polyfill.
       </p>
       <h2 id="other-libraries">Available library entries</h2>
       <div class={styles.tableScroll}>

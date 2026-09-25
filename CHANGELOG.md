@@ -13,6 +13,7 @@ Another, even bigger change to Neodt! It is now fully framework agnostic, too, u
 
 - **Breaking:** The calendarIcon and magicIcon props are removed to simplify things
 - **Breaking:** Solidjs users should adjust your import from `@olicoad/neodt/luxon` to `@olicoad/neodt/solid/luxon`
+- Docs site library now defaults to None (Native Temporal) using a global polyfill
 
 ## [0.3.1] - 2026-09-24
 

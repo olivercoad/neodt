@@ -5,13 +5,6 @@ import { libraries } from "../../dev/libraries";
 for (const library of libraries) {
   test.describe(library.id, () => {
     test.use({ baseURL: `http://127.0.0.1:3000/${library.id}/` });
-    test.beforeEach(async ({ page }) => {
-      test.skip(
-        library.id === "native-temporal" &&
-          !(await page.evaluate(() => typeof Temporal !== "undefined")),
-        "This browser does not provide native Temporal",
-      );
-    });
 
     test("documentation routes survive reload and browser navigation", async ({ page }) => {
       await page.goto("./#/docs/getting-started");
@@ -590,19 +583,18 @@ for (const library of libraries) {
       await expect(page.locator("#docs-content")).toContainText("@olicoad/neodt/solid/luxon");
     });
 
-    test("live demos preserve saved values and leave global Temporal unchanged", async ({
+    test("live demos preserve saved values and polyfill global Temporal only for None", async ({
       page,
     }) => {
-      await page.addInitScript((native) => {
-        if (!native)
-          Object.defineProperty(globalThis, "Temporal", { value: undefined, configurable: true });
+      await page.addInitScript(() => {
+        Object.defineProperty(globalThis, "Temporal", { value: undefined, configurable: true });
         // Older demo versions persisted Luxon ISO strings, without a bracketed zone.
         localStorage.setItem(
           "neodt-configuration-lab-timezone",
           JSON.stringify("Australia/Sydney"),
         );
         localStorage.setItem("neodt-configuration-lab-value", "2026-08-24T14:30:00.000+10:00");
-      }, library.id === "native-temporal");
+      });
       await page.goto("./");
       const lab = page.locator("#lab");
       await expect(lab).toContainText("2026-08-24T14:30+10:00[Australia/Sydney]");

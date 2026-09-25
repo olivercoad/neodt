@@ -54,7 +54,7 @@ function GettingStarted() {
         requirements and native prop conventions.
       </p>
       <p>
-        The Library choice None uses native <code>Temporal.ZonedDateTime</code> values. Vanilla uses
+        The Library choice None uses Native <code>Temporal.ZonedDateTime</code> values. Vanilla uses
         the package root; framework components use their framework’s root import. Your browser must
         provide Temporal. For a polyfill, another datetime library, or a custom adapter, see{" "}
         <a href="#/docs/libraries">Datetime libraries</a>. TypeScript 6 or later projects can enable
@@ -156,7 +156,7 @@ function Api() {
       </h1>
       <p class={styles.intro}>
         Import Neodt as the default or a named export. The public prop type is{" "}
-        <code>NeodtProps</code>. The default entry uses native Temporal; see{" "}
+        <code>NeodtProps</code>. The default entry uses Native Temporal; see{" "}
         <a href="#/docs/libraries">Datetime libraries</a> for other value types and custom adapters.
       </p>
       <div class={styles.tableScroll}>

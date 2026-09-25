@@ -7,7 +7,7 @@ const registrations = [
     callback: "value?.toInstant()",
 
     label: "None",
-    description: "native Temporal",
+    description: "Native Temporal",
     entry: "",
     imports: "",
     now: "Temporal.Now.zonedDateTimeISO()",

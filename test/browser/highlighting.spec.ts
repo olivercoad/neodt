@@ -5,13 +5,6 @@ import { libraries } from "../../dev/libraries";
 for (const library of libraries) {
   test.describe(library.id, () => {
     test.use({ baseURL: `http://127.0.0.1:3000/${library.id}/` });
-    test.beforeEach(async ({ page }) => {
-      test.skip(
-        library.id === "native-temporal" &&
-          !(await page.evaluate(() => typeof Temporal !== "undefined")),
-        "This browser does not provide native Temporal",
-      );
-    });
 
     test("configuration TSX highlighting follows live options", async ({ page }) => {
       // Let Playwright scroll to the controls without racing the #lab smooth scroll.

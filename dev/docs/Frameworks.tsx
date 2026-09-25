@@ -76,7 +76,7 @@ export default function Frameworks() {
       </p>
       <p>
         Import /generic under your framework to supply a custom adapter. Vanilla uses the package
-        root and /generic directly. The Library choice None uses native Temporal.
+        root and /generic directly. The Library choice None uses Native Temporal.
       </p>
       <p>
         Angular entries use runtime template compilation and require @angular/compiler. Use

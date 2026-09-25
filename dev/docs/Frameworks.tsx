@@ -1,7 +1,7 @@
 import { For } from "solid-js";
 
 import { packageEntry } from "../../frameworks";
-import Code from "../code/Code";
+import CodeExample from "../code/CodeExample";
 import { frameworks, currentFramework, demoPath } from "../framework";
 import { useLibrary } from "../library";
 
@@ -53,12 +53,10 @@ export default function Frameworks() {
         </table>
       </div>
       <h2 id="usage">{currentFramework().label} usage</h2>
-      <pre>
-        <Code
-          language={currentFramework().codeLanguage}
-          value={currentFramework().example({ ...library, now: library.nowExpression })}
-        />
-      </pre>
+      <CodeExample
+        language={currentFramework().codeLanguage}
+        value={currentFramework().example({ ...library, now: library.nowExpression })}
+      />
       <h2 id="shared-api">Shared behavior and native framework APIs</h2>
       <p>
         Vanilla mounts into an ordinary DOM container: call the default export with the container

@@ -47,6 +47,7 @@
 
 .editor {
   position: relative;
+  overflow: hidden;
   display: grid;
   min-width: 0;
   min-height: 20rem;
@@ -61,7 +62,7 @@
   margin: 0;
   border: 0;
   border-radius: 0;
-  padding: 1rem;
+  padding: 1rem 1rem var(--report-clearance, 1rem);
   font:
     0.75rem/1.7 ui-monospace,
     monospace;
@@ -107,4 +108,52 @@
     -webkit-text-fill-color: CanvasText;
     caret-color: CanvasText;
   }
+}
+
+.example {
+  position: relative;
+  min-width: 0;
+  margin: 1rem 0 1.5rem;
+  overflow: hidden;
+  border-radius: 0.45rem;
+  background: #172633;
+  color: #e2edf5;
+}
+.example pre {
+  margin: 0;
+  padding: 1rem 1rem var(--report-clearance, 1rem);
+  overflow: auto;
+  font:
+    0.75rem/1.7 ui-monospace,
+    monospace;
+  white-space: pre;
+  tab-size: 2;
+}
+.example pre code {
+  font: inherit;
+}
+/* Outrank the documentation's general link colour, including visited links. */
+:is(.example, .editor) a.reportIssue {
+  position: absolute;
+  z-index: 1;
+  bottom: var(--report-bottom, 8px);
+  right: var(--report-right, 8px);
+  display: inline-block;
+  border: 1px solid #91a8ba;
+  border-radius: 0.35rem;
+  padding: 0.4rem 0.7rem;
+  background: #294153;
+  color: #ffffff;
+  font:
+    600 0.75rem/1.4 system-ui,
+    sans-serif;
+  text-decoration: none;
+  white-space: nowrap;
+}
+:is(.example, .editor) a.reportIssue:hover {
+  background: #3a566c;
+}
+:is(.example, .editor) a.reportIssue:focus-visible {
+  outline: 2px solid #92d8ff;
+  outline-offset: 3px;
 }

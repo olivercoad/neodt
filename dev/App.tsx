@@ -3,6 +3,7 @@ import { createMemo, createSignal, For, onCleanup, onMount, type Component } fro
 
 import packageJson from "../package.json";
 import Code from "./code/Code";
+import CodeExample from "./code/CodeExample";
 import { currentFramework } from "./framework";
 import { useLibrary, type DemoValue } from "./library";
 import { locales } from "./locales";
@@ -140,7 +141,7 @@ const App: Component = () => {
             <code>{library.type}</code> instead of a string to untangle.
           </p>
           <div class={styles.install}>
-            <code>pnpm add @olicoad/neodt</code>
+            <Code value="pnpm add @olicoad/neodt" language="bash" />
             <span>{framework.label}</span>
             <a href="https://www.npmjs.com/package/@olicoad/neodt" target="_blank" rel="noreferrer">
               v{packageJson.version} on npm ↗
@@ -328,9 +329,18 @@ const App: Component = () => {
               <span>Appointment.tsx</span>
               <span>TSX</span>
             </div>
-            <pre>
-              <Code value={code()} language={framework.codeLanguage} />
-            </pre>
+            <CodeExample
+              title="Configuration lab"
+              details={{
+                locale: locale(),
+                timezone: timezone(),
+                referenceTime: iso(referenceTime()),
+                value: iso(value()),
+                previewWidth: previewWidth(),
+              }}
+              value={code()}
+              language={framework.codeLanguage}
+            />
           </div>
         </div>
       </section>

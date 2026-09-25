@@ -11,7 +11,7 @@ import {
 } from "solid-js";
 
 import { packageEntry } from "../../frameworks";
-import Code from "../code/Code";
+import CodeExample from "../code/CodeExample";
 import { currentFramework } from "../framework";
 import { useLibrary } from "../library";
 import { locales } from "../locales";
@@ -47,9 +47,7 @@ function GettingStarted() {
         locale-aware formatting and your choice of datetime library.
       </p>
       <h2 id="install">Install</h2>
-      <pre>
-        <code>pnpm add @olicoad/neodt</code>
-      </pre>
+      <CodeExample title="Install" value="pnpm add @olicoad/neodt" language="bash" />
       <p>
         Use the Framework and Library dropdowns to choose your integration. Styles are included
         automatically. See the <a href="#/docs/frameworks">Frameworks guide</a> for build
@@ -65,12 +63,10 @@ function GettingStarted() {
       <h2 id="a-controlled-field">
         {framework.id === "vanilla" ? "A datetime field" : "A controlled field"}
       </h2>
-      <pre>
-        <Code
-          value={framework.example({ ...library, now: library.nowExpression })}
-          language={framework.codeLanguage}
-        />
-      </pre>
+      <CodeExample
+        value={framework.example({ ...library, now: library.nowExpression })}
+        language={framework.codeLanguage}
+      />
       <p>
         <code>referenceTime</code> supplies the timezone, the defaults for empty segments, and the
         anchor for relative phrases and two-digit years. Keep it stable for a predictable editing
@@ -198,10 +194,9 @@ function Api() {
         library's arithmetic and timezone rules. Intl is used only for presentation.
       </p>
       <h2 id="natural-language-parser">Natural-language parser</h2>
-      <pre>
-        <Code
-          language="typescript"
-          value={`import { parseNaturalDate, getNaturalDateCompletions } from "${packageEntry(framework.id, library.entry)}";
+      <CodeExample
+        language="typescript"
+        value={`import { parseNaturalDate, getNaturalDateCompletions } from "${packageEntry(framework.id, library.entry)}";
 ${library.imports}
 
 const referenceTime = ${library.nowExpression};
@@ -210,8 +205,7 @@ const result = parseNaturalDate("tomorrow 9am", {
   locale: "en-AU",
 });
 const suggestions = getNaturalDateCompletions("tom", 5);`}
-        />
-      </pre>
+      />
       <p>
         <code>parseNaturalDate</code> returns a <code>{library.type}</code> or undefined when the
         text cannot be parsed. The optional zone uses the selected adapter’s timezone type and

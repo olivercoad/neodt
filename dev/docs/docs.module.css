@@ -96,15 +96,6 @@
   font-family: ui-monospace, monospace;
   font-size: 0.85em;
 }
-.content pre {
-  background: #172633;
-  color: #e2edf5;
-  border-radius: 0.45rem;
-  padding: 1.3rem;
-  overflow: auto;
-  white-space: pre;
-  margin: 1rem 0 1.5rem;
-}
 .justWorks {
   display: inline-block;
   padding: 0.1rem 0.55rem;
@@ -229,12 +220,16 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.9rem 1rem;
+  padding: 0.5rem 1rem;
   font-size: 0.75rem;
   border-bottom: 1px solid #3a4d5c;
 }
 .editorToolbar label {
   margin-right: auto;
+}
+.editorButtons {
+  display: flex;
+  gap: 0.5rem;
 }
 .editorToolbar button {
   cursor: pointer;
@@ -244,15 +239,6 @@
   border-radius: 0.3rem;
   padding: 0.35rem 0.5rem;
   white-space: nowrap;
-}
-.usageCode {
-  display: block;
-  margin-top: 1rem;
-  background: #172633;
-  border-radius: 0.3rem;
-  padding: 0.65rem;
-  overflow-x: auto;
-  white-space: pre-wrap;
 }
 .copyStatus {
   flex-basis: 100%;

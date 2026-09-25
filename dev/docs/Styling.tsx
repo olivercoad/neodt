@@ -1,8 +1,9 @@
 import { createSignal, For, onCleanup, onMount, type JSX } from "solid-js";
 import { render } from "solid-js/web";
 
-import Code from "../code/Code";
 import CodeEditor from "../code/CodeEditor";
+import CodeExample from "../code/CodeExample";
+import ReportIssue from "../code/ReportIssue";
 import { currentFramework } from "../framework";
 import { useLibrary } from "../library";
 import ResizablePreview from "../ResizablePreview";
@@ -73,6 +74,24 @@ function ThemeExample(props: {
   onResizeStart: (grip: HTMLElement) => void;
   onResizeEnd: () => void;
 }) {
+  const framework = currentFramework();
+  const usageLanguage =
+    framework.id === "angular" || framework.id === "lit" ? "html" : framework.codeLanguage;
+  const usageCode = () => {
+    const className = `theme-${props.theme.id}`;
+    switch (framework.id) {
+      case "vanilla":
+        return `createNeodt(container, { class: "${className}", ... });`;
+      case "react":
+        return `<Neodt className="${className}" ... />`;
+      case "angular":
+        return `<neodt-input [props]="{ class: '${className}', ... }" />`;
+      case "lit":
+        return `<my-neodt class="${className}" ...></my-neodt>`;
+      default:
+        return `<Neodt class="${className}" ... />`;
+    }
+  };
   const [css, setCss] = createSignal(props.theme.css);
   const [copied, setCopied] = createSignal(false);
   const [copyError, setCopyError] = createSignal("");
@@ -122,31 +141,25 @@ function ThemeExample(props: {
               </For>
             )}
           </ResizablePreview>
-          <span class={styles.usageCode}>
-            <Code
-              value={`<Neodt
-  class="theme-${props.theme.id}"
-  referenceTime={referenceTime}
-/>`}
-              language="tsx"
-            />
-          </span>
+          <CodeExample reportIssue={false} value={usageCode()} language={usageLanguage} />
         </div>
         <div class={styles.cssEditor}>
           <div class={styles.editorToolbar}>
             <label for={`css-${props.theme.id}`}>Editable CSS</label>
-            <button
-              type="button"
-              onClick={() => {
-                setCss(props.theme.css);
-                clearCopyStatus();
-              }}
-            >
-              Reset
-            </button>
-            <button type="button" onClick={copy} aria-live="polite">
-              {copied() ? "✓ Copied" : "Copy CSS"}
-            </button>
+            <div class={styles.editorButtons}>
+              <button
+                type="button"
+                onClick={() => {
+                  setCss(props.theme.css);
+                  clearCopyStatus();
+                }}
+              >
+                Reset
+              </button>
+              <button type="button" onClick={copy} aria-live="polite">
+                {copied() ? "✓ Copied" : "Copy CSS"}
+              </button>
+            </div>
             <span class={styles.copyStatus} role="status" aria-label="Copy status">
               {copyError()}
             </span>
@@ -161,7 +174,14 @@ function ThemeExample(props: {
               setCss(value);
               clearCopyStatus();
             }}
-          />
+          >
+            <ReportIssue
+              title={`${props.theme.name} CSS`}
+              value={css()}
+              language="css"
+              details={{ "Preview options": props.options, "Preview width": props.width }}
+            />
+          </CodeEditor>
         </div>
       </div>
     </article>

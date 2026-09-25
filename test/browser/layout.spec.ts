@@ -111,7 +111,14 @@ for (const framework of frameworks)
         }) => {
           await goto(page, "/?width=110");
           await page.addStyleTag({ content: theme.css });
-          await control(page).evaluate((el, id) => el.classList.add(`theme-${id}`), theme.id);
+          await control(page).evaluate(
+            (el, id) =>
+              (el.getRootNode() instanceof ShadowRoot
+                ? (el.getRootNode() as ShadowRoot).host
+                : el
+              ).classList.add(`theme-${id}`),
+            theme.id,
+          );
           for (const offset of [false, true]) {
             await page.getByLabel("Offset", { exact: true }).setChecked(offset);
             await rows(page, true);
@@ -399,9 +406,11 @@ for (const framework of frameworks)
         {
           id: "custom-metrics",
           css: `.theme-custom-metrics {
+    &.datetime-neo, &::part(root) {
       font: 20px Georgia, serif;
       --datetime-neo-segment-line-height: 1;
       --datetime-neo-segment-padding: 0.3rem 0.25rem;
+    }
     }`,
         },
       ]) {
@@ -413,7 +422,14 @@ for (const framework of frameworks)
           await page.addStyleTag({ content: "* { box-sizing: border-box; }" });
           if (theme) {
             await page.addStyleTag({ content: theme.css });
-            await control(page).evaluate((el, id) => el.classList.add(`theme-${id}`), theme.id);
+            await control(page).evaluate(
+              (el, id) =>
+                (el.getRootNode() instanceof ShadowRoot
+                  ? (el.getRootNode() as ShadowRoot).host
+                  : el
+                ).classList.add(`theme-${id}`),
+              theme.id,
+            );
           }
           for (const offset of [false, true]) {
             await page.getByLabel("Offset", { exact: true }).setChecked(offset);
@@ -452,7 +468,12 @@ for (const framework of frameworks)
           await goto(page, "/?state=readonly&offset");
           const compact = themes.find((theme) => theme.id === "compact")!;
           await page.addStyleTag({ content: compact.css });
-          await control(page).evaluate((el) => el.classList.add("theme-compact"));
+          await control(page).evaluate((el) =>
+            (el.getRootNode() instanceof ShadowRoot
+              ? (el.getRootNode() as ShadowRoot).host
+              : el
+            ).classList.add("theme-compact"),
+          );
           for (const size of [11, 13, 20]) {
             await control(page).evaluate(
               (el, style) => {
@@ -525,11 +546,18 @@ for (const framework of frameworks)
         test(`${font}: natural input and placeholder digits are vertically centered`, async ({
           page,
         }) => {
+          const errors: string[] = [];
+          page.on("pageerror", (error) => errors.push(error.message));
           await goto(page, "/?offset");
           await page.emulateMedia({ reducedMotion: "reduce" });
           const compact = themes.find((theme) => theme.id === "compact")!;
           await page.addStyleTag({ content: compact.css });
-          await control(page).evaluate((el) => el.classList.add("theme-compact"));
+          await control(page).evaluate((el) =>
+            (el.getRootNode() instanceof ShadowRoot
+              ? (el.getRootNode() as ShadowRoot).host
+              : el
+            ).classList.add("theme-compact"),
+          );
           await content(page).getByRole("spinbutton").first().focus();
           await page.keyboard.press("@");
           const input = content(page).getByRole("textbox", {
@@ -556,7 +584,11 @@ for (const framework of frameworks)
                   // Use the same lining digits in both rendering paths to compare ink,
                   // independent of the animated example's mixture of letter shapes.
                   await placeholder.evaluate((el) => {
-                    el.textContent = "11:11";
+                    // Preserve framework marker nodes while changing the measured text.
+                    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+                    let text = walker.nextNode();
+                    while (text && !text.nodeValue) text = walker.nextNode();
+                    text!.nodeValue = "11:11";
                   });
                   await input.evaluate((el) => {
                     (el as HTMLInputElement).placeholder = "11:11";
@@ -575,6 +607,7 @@ for (const framework of frameworks)
               }
             }
           }
+          expect(errors).toEqual([]);
         });
       }
     });

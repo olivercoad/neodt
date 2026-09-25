@@ -106,13 +106,15 @@ neodt parses input syntax and checks field ranges using the library's month leng
 
 Controlled updates from the parent replace the displayed draft; setting `value` to `null` clears every segment. During editing, incomplete segments emit `null` while retaining the local draft. Echoing emitted values through `onValueChange` preserves ongoing numeric entry.
 
-Native `span` attributes and ARIA attributes are forwarded to the root element using the selected framework’s conventions. This is a JavaScript-managed SPA control and does not provide native form submission.
+Lit exports a `LitElement` class from `@olicoad/neodt/lit` and each datetime entry. Register it with `customElements.define("my-neodt", Neodt)` and pass a typed object using Lit’s `.props=${props}` binding. Replace the props object to update it. Native attributes belong to the custom-element host; its shadow root contains the editor and its styles.
+
+For other frameworks, native `span` attributes and ARIA attributes are forwarded to the root element using the selected framework’s conventions. This is a JavaScript-managed SPA control and does not provide native form submission.
 
 The control supports mouse, touch, and keyboard editing: Arrow Left/Right move between segments, Arrow Up/Down change a segment, and numeric input replaces numeric segments. Space opens the native picker; `@` opens natural-language input. Natural-language input accepts a single point in time, such as `tomorrow 9:30am`, `in 2 hours`, or `5pm America/New_York`; date ranges are not supported.
 
 ## Styles
 
-Every component entry imports the component CSS, so Vite and standard Solid build setups need no extra configuration. For applications that exclude dependency side effects, or that centralize stylesheet imports, import the public stylesheet explicitly:
+Lit includes its styles inside its shadow root. Other component entries import the component CSS, so Vite and standard Solid build setups need no extra configuration. For applications that exclude dependency side effects, or that centralize stylesheet imports, import the public stylesheet explicitly:
 
 ```tsx
 import "@olicoad/neodt/style.css";
@@ -132,6 +134,23 @@ Set theme variables on a class applied to the component, after the default style
 ```
 
 The root has the `datetime-neo` class. Useful internal hooks include `datetime-neo__segment`, `datetime-neo__separator`, and `datetime-neo__trigger`.
+
+Lit themes use native CSS nesting and exposed parts. Put the class on the custom element:
+
+```css
+.theme-paper {
+  &::part(root) {
+    --datetime-neo-background: #fffcf5;
+    border-radius: 0.2rem;
+    width: 100%;
+  }
+  &::part(editor) {
+    padding: 0 3px;
+  }
+}
+```
+
+Use `::part(readonly)` for the readonly root or `::part(readonly wrapped)` when it is also wrapped. The documentation themes include light-DOM selectors so the same CSS works with every framework. Lit SSR uses `@lit-labs/ssr`; load `@lit-labs/ssr-client/lit-element-hydrate-support.js` before defining elements on the client, and defer hydration until `.props` is set.
 
 ## Utilities
 

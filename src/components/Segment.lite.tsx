@@ -10,12 +10,13 @@ export default function Segment(props: SegmentProps) {
     <Show
       when={props.part.editable}
       else={
-        <span class="datetime-neo__separator" aria-hidden="true">
+        <span class="datetime-neo__separator" part="separator" aria-hidden="true">
           {props.part.text}
         </span>
       }
     >
       <span
+        part="segment"
         class={
           "datetime-neo__segment" +
           (props.part.selected ? " datetime-neo__segment--selected" : "") +
@@ -38,7 +39,9 @@ export default function Segment(props: SegmentProps) {
         suppressContentEditableWarning={true}
       >
         <Show when={props.part.empty} else={props.part.text}>
-          <span class="datetime-neo__placeholder">{props.part.text}</span>
+          <span class="datetime-neo__placeholder" part="placeholder">
+            {props.part.text}
+          </span>
         </Show>
       </span>
     </Show>

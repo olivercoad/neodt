@@ -9,8 +9,12 @@ type Host = {
     element: HTMLElement,
     props: CoreProps<T, TZone>,
   ) =>
-    | { update(props: CoreProps<T, TZone>): unknown; dispose(): unknown }
-    | Promise<{ update(props: CoreProps<T, TZone>): unknown; dispose(): unknown }>;
+    | { root?: ParentNode; update(props: CoreProps<T, TZone>): unknown; dispose(): unknown }
+    | Promise<{
+        root?: ParentNode;
+        update(props: CoreProps<T, TZone>): unknown;
+        dispose(): unknown;
+      }>;
 };
 const hosts = import.meta.glob<Host>("../frameworks/*/test.{ts,tsx}", { eager: true });
 // React's test scheduler verifies StrictMode subscriptions and cleanup as well as editing.
@@ -36,8 +40,9 @@ for (const framework of frameworks) {
             onValueChange: changed,
           });
           const instance = await host.mount(element, props());
+          const root = instance.root ?? element;
           const segment = (name: string) =>
-            element.querySelector<HTMLElement>(`[role="spinbutton"][aria-label="${name}"]`)!;
+            root.querySelector<HTMLElement>(`[role="spinbutton"][aria-label="${name}"]`)!;
           const send = async (key: string) => {
             await act(async () => {
               segment("year").dispatchEvent(
@@ -62,7 +67,7 @@ for (const framework of frameworks) {
             await act(async () => {
               await instance.update(props());
             });
-            expect(element.querySelectorAll(".datetime-neo__placeholder")).toHaveLength(5);
+            expect(root.querySelectorAll(".datetime-neo__placeholder")).toHaveLength(5);
             value = referenceTime;
             await act(async () => {
               await instance.update(props());

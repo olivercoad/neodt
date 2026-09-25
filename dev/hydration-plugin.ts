@@ -32,11 +32,13 @@ export function hydrationFixture(): Plugin {
 import { mount } from "/@fs${server.config.root}/..${source}";
 import { adapter } from "/@fs${server.config.root}/../src/libraries/temporal-polyfill.ts";
 const referenceTime = adapter.fromEpochMilliseconds(1786980600000, "UTC");
-const original = document.querySelector('[role="spinbutton"]');
+const fixtureRoot = document.getElementById("root");
+const queryRoot = fixtureRoot.firstElementChild?.shadowRoot ?? fixtureRoot;
+const original = queryRoot.querySelector('[role="spinbutton"]');
 window.IS_REACT_ACT_ENVIRONMENT = true;
 window.changes = 0;
 const instance = await mount(document.getElementById("root"), { adapter, referenceTime, value: referenceTime, locale: "en-GB", onValueChange: () => { window.changes++; } }, true);
-window.hydrationPreservedNode = original === document.querySelector('[role="spinbutton"]');
+window.hydrationPreservedNode = !!original && original === queryRoot.querySelector('[role="spinbutton"]');
 window.fixtureDispose = instance.dispose;
 document.documentElement.dataset.hydrated = "true";
 </script></body></html>`;

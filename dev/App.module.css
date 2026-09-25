@@ -164,11 +164,14 @@ p {
   margin: 3rem 0 0.55rem;
 }
 .compareInput {
-  --datetime-neo-background: white;
-  --datetime-neo-border: #aeb8c0;
-  --datetime-neo-focus: var(--blue);
-  min-width: 0;
-  width: 100%;
+  &,
+  &::part(root) {
+    --datetime-neo-background: white;
+    --datetime-neo-border: #aeb8c0;
+    --datetime-neo-focus: var(--blue);
+    min-width: 0;
+    width: 100%;
+  }
 }
 .nativeCard input {
   background: white;
@@ -344,10 +347,13 @@ p {
   width: 100%;
 }
 .previewInput {
-  --datetime-neo-background: white;
-  --datetime-neo-border: #9db5ce;
-  --datetime-neo-focus: var(--blue);
-  width: 100%;
+  &,
+  &::part(root) {
+    --datetime-neo-background: white;
+    --datetime-neo-border: #9db5ce;
+    --datetime-neo-focus: var(--blue);
+    width: 100%;
+  }
 }
 .twoFields {
   display: grid;

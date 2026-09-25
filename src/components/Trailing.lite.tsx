@@ -12,12 +12,17 @@ export interface TrailingProps {
 export default function Trailing(props: TrailingProps) {
   return (
     <Show when={props.view.showTimeOffset || (!props.view.readonly && !props.view.disabled)}>
-      <span class="datetime-neo__trailing">
+      <span class="datetime-neo__trailing" part="trailing">
         <Show when={props.view.showTimeOffset}>
-          <span class="datetime-neo__timezone" aria-hidden={!props.measurement || undefined}>
+          <span
+            class="datetime-neo__timezone"
+            part="timezone"
+            aria-hidden={!props.measurement || undefined}
+          >
             <span>{(props.measurement ? props.view.measuredOffset : props.view.offset).hours}</span>
             <span
               class="datetime-neo__timezone-minutes"
+              part="timezone-minutes"
               data-zero={
                 (props.measurement ? props.view.measuredOffset : props.view.offset).hasZeroMinutes
                   ? ""
@@ -29,9 +34,10 @@ export default function Trailing(props: TrailingProps) {
           </span>
         </Show>
         <Show when={!props.view.readonly && !props.view.disabled}>
-          <span class="datetime-neo__actions">
+          <span class="datetime-neo__actions" part="actions">
             <button
               class="datetime-neo__trigger"
+              part="trigger"
               type="button"
               tabIndex={
                 props.measurement ? -1 : props.view.activeItem === props.view.segmentCount ? 0 : -1
@@ -54,6 +60,7 @@ export default function Trailing(props: TrailingProps) {
             <Show when={!props.view.natural}>
               <label
                 class="datetime-neo__trigger"
+                part="trigger"
                 for={props.view.id}
                 tabIndex={
                   props.measurement

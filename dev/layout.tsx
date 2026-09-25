@@ -16,12 +16,14 @@ function Fixture({ library }: { library: DemoLibrary }) {
   const [offset, setOffset] = createSignal(query.has("offset"));
   return (
     <>
-      <style>{`
+      <style
+        textContent={`
         body { margin: 24px; font: 16px Arial, sans-serif; }
         #host { width: fit-content; margin: 40px 0; }
-        .fixture { width: 100%; }
-        .metrics { font: 20px Georgia, serif; --datetime-neo-segment-line-height: 1; --datetime-neo-segment-padding: 0.3rem 0.25rem; }
-      `}</style>
+        .fixture { &.datetime-neo, &::part(root) { width: 100%; } }
+        .metrics { &.datetime-neo, &::part(root) { font: 20px Georgia, serif; --datetime-neo-segment-line-height: 1; --datetime-neo-segment-padding: 0.3rem 0.25rem; } }
+      `}
+      />
       <label>
         Width{" "}
         <input

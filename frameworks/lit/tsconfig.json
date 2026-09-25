@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "lit",
+    "outDir": "../../dist/lit",
+    "rootDir": "../.."
+  },
+  "include": ["./**/*", "../../generated/lit/**/*", "../../src/**/*.ts", "./env.d.ts"],
+  "exclude": ["../../src/components"]
+}

@@ -1,4 +1,5 @@
 import { example as angularExample } from "./frameworks/angular/example.ts";
+import { example as litExample } from "./frameworks/lit/example.ts";
 import { example as reactExample } from "./frameworks/react/example.ts";
 import { example as solidExample } from "./frameworks/solid/example.ts";
 import { example as svelteExample } from "./frameworks/svelte/example.ts";
@@ -90,6 +91,22 @@ export const frameworks = [
     jsxImportSource: "angular",
     jsx: "preserve",
     options: { standalone: true, typescript: true },
+  },
+  {
+    id: "lit",
+    example: litExample,
+    codeLanguage: "typescript",
+    sourceExtension: "ts",
+    outputExtension: "js",
+    label: "Lit",
+    target: "lit",
+    generator: "componentToLit",
+    extension: "ts",
+    packages: ["lit"],
+    typePackages: [],
+    jsxImportSource: "lit",
+    jsx: "preserve",
+    options: {},
   },
 ] as const;
 export type FrameworkId = (typeof frameworks)[number]["id"];

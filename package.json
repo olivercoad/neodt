@@ -9,6 +9,7 @@
     "date-time-picker",
     "datetime",
     "datetime-local",
+    "lit",
     "mitosis",
     "react",
     "solid",
@@ -238,6 +239,46 @@
       "types": "./dist/angular/internationalized-date.d.ts",
       "default": "./dist/angular/internationalized-date.js"
     },
+    "./lit": {
+      "types": "./dist/lit/index.d.ts",
+      "default": "./dist/lit/index.js"
+    },
+    "./lit/generic": {
+      "types": "./dist/lit/generic.d.ts",
+      "default": "./dist/lit/generic.js"
+    },
+    "./lit/temporal-polyfill": {
+      "types": "./dist/lit/temporal-polyfill.d.ts",
+      "default": "./dist/lit/temporal-polyfill.js"
+    },
+    "./lit/js-temporal-polyfill": {
+      "types": "./dist/lit/js-temporal-polyfill.d.ts",
+      "default": "./dist/lit/js-temporal-polyfill.js"
+    },
+    "./lit/luxon": {
+      "types": "./dist/lit/luxon.d.ts",
+      "default": "./dist/lit/luxon.js"
+    },
+    "./lit/moment": {
+      "types": "./dist/lit/moment.d.ts",
+      "default": "./dist/lit/moment.js"
+    },
+    "./lit/dayjs": {
+      "types": "./dist/lit/dayjs.d.ts",
+      "default": "./dist/lit/dayjs.js"
+    },
+    "./lit/date-fns": {
+      "types": "./dist/lit/date-fns.d.ts",
+      "default": "./dist/lit/date-fns.js"
+    },
+    "./lit/spacetime": {
+      "types": "./dist/lit/spacetime.d.ts",
+      "default": "./dist/lit/spacetime.js"
+    },
+    "./lit/internationalized-date": {
+      "types": "./dist/lit/internationalized-date.d.ts",
+      "default": "./dist/lit/internationalized-date.js"
+    },
     "./package.json": "./package.json",
     "./style.css": "./dist/style.css"
   },
@@ -275,6 +316,8 @@
     "@date-fns/tz": "^1.5.0",
     "@internationalized/date": "^3.12.4",
     "@js-temporal/polyfill": "^0.5.1",
+    "@lit-labs/ssr": "^4.1.0",
+    "@lit-labs/ssr-client": "^1.1.8",
     "@playwright/test": "^1.63.0",
     "@solid-primitives/storage": "^4.4.0",
     "@sveltejs/vite-plugin-svelte": "^7.3.0",
@@ -289,6 +332,7 @@
     "date-fns": "^4.4.0",
     "dayjs": "^1.11.23",
     "jsdom": "^30.0.1",
+    "lit": "^3.3.3",
     "luxon": "^3.7.2",
     "moment": "^2.31.0",
     "moment-timezone": "^0.6.4",
@@ -322,6 +366,7 @@
     "@js-temporal/polyfill": "^0.5.1",
     "date-fns": "^4.4.0",
     "dayjs": "^1.11.23",
+    "lit": "^3.3.3",
     "luxon": "^3.7.2",
     "moment": "^2.31.0",
     "react": "^18.0.0 || ^19.0.0",
@@ -389,6 +434,9 @@
       "optional": true
     },
     "rxjs": {
+      "optional": true
+    },
+    "lit": {
       "optional": true
     }
   },

@@ -745,7 +745,9 @@ function createEditor(initial: InternalProps) {
   const measure = () => {
     if (!root) return;
     const beforeOverflow = editorHasHiddenEnd();
-    const focusedIndex = segmentButtons().indexOf(root.ownerDocument.activeElement as HTMLElement);
+    const focusedIndex = segmentButtons().indexOf(
+      (root.getRootNode() as Document | ShadowRoot).activeElement as HTMLElement,
+    );
     if (focusedIndex >= 0) revealSegment(focusedIndex);
     else updateEditorOverflow();
     const width = root.clientWidth;
@@ -781,18 +783,30 @@ function createEditor(initial: InternalProps) {
     if (layoutChanged || beforeOverflow !== editorHasHiddenEnd()) publish();
   };
   const afterRender = () => {
+    rememberSegmentContent();
     if (!root || frame !== undefined) return;
     frame = requestAnimationFrame(() => {
       frame = undefined;
       measure();
     });
   };
-  const placeholders = new WeakMap<HTMLElement, HTMLSpanElement>();
-  const rememberPlaceholders = () => {
-    for (const segment of segmentButtons()) {
-      const placeholder = segment.querySelector<HTMLSpanElement>(".datetime-neo__placeholder");
-      if (placeholder) placeholders.set(segment, placeholder);
-    }
+  const renderedSegments = new WeakMap<HTMLElement, () => void>();
+  const captureContent = (element: Element): (() => void) => {
+    const nodes = [...element.childNodes];
+    const restoreChildren = nodes.map((node) => {
+      if (node.nodeType === 1) return captureContent(node as Element);
+      const value = node.nodeValue;
+      return () => {
+        node.nodeValue = value;
+      };
+    });
+    return () => {
+      element.replaceChildren(...nodes);
+      for (const restore of restoreChildren) restore();
+    };
+  };
+  const rememberSegmentContent = () => {
+    for (const segment of segmentButtons()) renderedSegments.set(segment, captureContent(segment));
   };
   let actionDepth = 0;
   const run = (action: () => void) => {
@@ -804,7 +818,6 @@ function createEditor(initial: InternalProps) {
       // Focusing a segment dispatches focusout/focusin synchronously inside keydown.
       if (actionDepth === 0) {
         publish();
-        rememberPlaceholders();
         afterRender();
       }
     }
@@ -816,13 +829,11 @@ function createEditor(initial: InternalProps) {
       segment.type === "dayPeriod" && enteredCharacter
         ? dayPeriodForInput(enteredCharacter)
         : undefined;
-    // Restore the existing rendered nodes before the framework reconciles the next snapshot.
-    const placeholder =
-      input.querySelector<HTMLSpanElement>(".datetime-neo__placeholder") ?? placeholders.get(input);
-    if (isCleared(segment.type) && placeholder) {
-      placeholder.textContent = placeholderFor(segment.type);
-      input.replaceChildren(placeholder);
-    } else input.textContent = displaySegmentValue(index, segment);
+    // Preserve the framework's exact nodes, including Lit's expression markers,
+    // after the browser mutates contenteditable text (e.g. mobile/IME input).
+    const restore = renderedSegments.get(input);
+    if (restore) restore();
+    else input.textContent = displaySegmentValue(index, segment);
     if (dayPeriod !== undefined) setDayPeriod(dayPeriod);
     else if (segment.type !== "dayPeriod" && enteredCharacter === ".")
       selectSegment(index + 1, true);
@@ -927,7 +938,7 @@ function createEditor(initial: InternalProps) {
     mount(element: HTMLSpanElement) {
       if (root === element) return;
       root = element;
-      rememberPlaceholders();
+      rememberSegmentContent();
       disposed = false;
       const listener = (event: Event) => run(() => dispatch(event));
       for (const type of [

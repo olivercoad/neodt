@@ -16,7 +16,7 @@ async function writeGenerated(file: string, content: string) {
 }
 const files = (await readdir("src/components")).filter((file) => file.endsWith(".lite.tsx"));
 for (const framework of frameworks) {
-  const { transformGenerated } = await loadFrameworkTooling(framework.id);
+  const { transformGenerated, generateComponent } = await loadFrameworkTooling(framework.id);
   const directory = `generated/${framework.id}`;
   await mkdir(directory, { recursive: true });
   for (const file of files) {
@@ -24,9 +24,11 @@ for (const framework of frameworks) {
     const generate = mitosis[framework.generator] as (
       options: object,
     ) => (input: { component: typeof component }) => string;
-    let output = generate({ typescript: false, ...framework.options })({
-      component,
-    });
+    let output = generateComponent
+      ? generateComponent(component)
+      : generate({ typescript: false, ...framework.options })({
+          component,
+        });
     output = output.replaceAll(/(["'])\.\/([\w-]+)\.lite\1/g, `$1./$2.${framework.extension}$1`);
     if (framework.extension === "jsx")
       output = `/** @jsxImportSource ${framework.jsxImportSource} */\n` + output;

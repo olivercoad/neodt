@@ -1,5 +1,6 @@
 import path from "node:path";
 
+import type { MitosisComponent } from "@builder.io/mitosis";
 import type { UserConfig } from "tsdown";
 import type { PluginOption } from "vite";
 
@@ -9,6 +10,7 @@ export type ToolingMode = "development" | "client-test" | "server-test" | "consu
 export type FrameworkTooling = {
   plugins?: (context: { mode: ToolingMode; include: string[] }) => PluginOption[];
   build?: UserConfig;
+  generateComponent?: (component: MitosisComponent) => string;
   transformGenerated?: (source: string) => string;
   consumer?: {
     compiler?: string;
@@ -23,6 +25,7 @@ export type FrameworkTooling = {
 export async function loadFrameworkTooling(id: FrameworkId): Promise<{
   plugins: (mode: ToolingMode) => PluginOption[];
   build: UserConfig;
+  generateComponent: FrameworkTooling["generateComponent"];
   transformGenerated: (source: string) => string;
   consumer: Required<NonNullable<FrameworkTooling["consumer"]>>;
 }> {
@@ -31,6 +34,7 @@ export async function loadFrameworkTooling(id: FrameworkId): Promise<{
     path.resolve(import.meta.dirname, id, "tooling.ts")
   );
   return {
+    generateComponent: tooling.generateComponent,
     transformGenerated: tooling.transformGenerated ?? ((source) => source),
     plugins: (mode: ToolingMode) =>
       tooling.plugins?.({

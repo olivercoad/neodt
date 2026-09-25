@@ -241,7 +241,11 @@ export default function Styling(props: { options: StylingOptions }) {
         Prefix each name with <code>--datetime-neo-</code>. Focus ring, highlight, and hover colours
         derive from the focus colour unless overridden. Readonly mode supplies its own muted
         background and border; use a class such as <code>.theme-paper[data-readonly]</code> to
-        customise those.
+        customise those. For Lit, put the theme class on the custom element and use native CSS
+        nesting: <code>{".theme-paper { &::part(root) { /* root styles */ } }"}</code>. Use{" "}
+        <code>::part(readonly)</code> for readonly root styles and named parts such as
+        <code>::part(editor)</code> or <code>::part(actions)</code> for internal elements. The
+        examples below support both light DOM and Shadow DOM.
       </p>
       <h2 id="keep-layout-predictable">Keep layout predictable</h2>
       <p>

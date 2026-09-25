@@ -13,8 +13,8 @@ export default function Frameworks() {
       <p class={styles.eyebrow}>FRAMEWORKS</p>
       <h1>Choose your frontend framework.</h1>
       <p class={styles.intro}>
-        The same editor, generated from Mitosis for Solid, React, Vue, Svelte, and Angular. Choose
-        the framework and datetime library independently.
+        The same editor, generated from Mitosis for Solid, React, Vue, Svelte, Angular, and Lit.
+        Choose the framework and datetime library independently.
       </p>
       <p>
         The Framework dropdown beside Library switches the live controls throughout the lab and
@@ -74,7 +74,9 @@ export default function Frameworks() {
         native attributes. Use shallowRef for datetime values so library instances and opaque
         timezone objects remain intact. Svelte accepts native attributes and lowercase event
         handlers; use $state.raw for datetime values. Angular accepts a typed props input: replace
-        that object to update the control. All frameworks use the same built-in icons.
+        that object to update the control. Lit exports a custom-element class: register it with
+        customElements.define and bind a new .props object to update it. Lit renders into Shadow DOM
+        and exposes CSS parts for theming. All frameworks use the same built-in icons.
       </p>
       <p>
         Import /generic under your framework to supply a custom adapter. The framework root uses

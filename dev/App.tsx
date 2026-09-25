@@ -326,8 +326,8 @@ const App: Component = () => {
           </div>
           <div class={styles.codePanel}>
             <div class={styles.codeTop}>
-              <span>Appointment.tsx</span>
-              <span>TSX</span>
+              <span>{framework.exampleFilename}</span>
+              <span>{framework.codeLanguage.toUpperCase()}</span>
             </div>
             <CodeExample
               title="Configuration lab"

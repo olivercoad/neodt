@@ -21,6 +21,21 @@ const optionCases: { name: string; options: ExampleOptions }[] = [
   },
 ];
 
+it.each([
+  ["vanilla", "Appointment.ts", "typescript"],
+  ["solid", "Appointment.tsx", "tsx"],
+  ["react", "Appointment.tsx", "tsx"],
+  ["vue", "Appointment.vue", "html"],
+  ["svelte", "Appointment.svelte", "svelte"],
+  ["angular", "Appointment.ts", "typescript"],
+  ["lit", "Appointment.ts", "typescript"],
+])("%s uses the correct example filename and highlighting language", (id, filename, language) => {
+  expect(frameworks.find((framework) => framework.id === id)).toMatchObject({
+    exampleFilename: filename,
+    codeLanguage: language,
+  });
+});
+
 describe.each(frameworks)("$label example formatting", (framework) => {
   const blankLineCount = (source: string) =>
     source.split("\n").filter((line) => !line.trim()).length;

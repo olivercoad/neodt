@@ -9,6 +9,7 @@ import { example as vueExample } from "./frameworks/vue/example.ts";
 const registrations = [
   {
     id: "vanilla",
+    exampleFilename: "Appointment.ts",
     entry: "",
     description: "Plain JavaScript / TypeScript",
     serverRendering: false,
@@ -28,6 +29,7 @@ const registrations = [
   },
   {
     id: "solid",
+    exampleFilename: "Appointment.tsx",
     example: solidExample,
     codeLanguage: "tsx",
     sourceExtension: "tsx",
@@ -44,6 +46,7 @@ const registrations = [
   },
   {
     id: "react",
+    exampleFilename: "Appointment.tsx",
     example: reactExample,
     codeLanguage: "tsx",
     sourceExtension: "tsx",
@@ -60,6 +63,7 @@ const registrations = [
   },
   {
     id: "vue",
+    exampleFilename: "Appointment.vue",
     example: vueExample,
     codeLanguage: "html",
     sourceExtension: "ts",
@@ -76,8 +80,9 @@ const registrations = [
   },
   {
     id: "svelte",
+    exampleFilename: "Appointment.svelte",
     example: svelteExample,
-    codeLanguage: "html",
+    codeLanguage: "svelte",
     sourceExtension: "ts",
     outputExtension: "js",
     label: "Svelte",
@@ -92,6 +97,7 @@ const registrations = [
   },
   {
     id: "angular",
+    exampleFilename: "Appointment.ts",
     example: angularExample,
     codeLanguage: "typescript",
     sourceExtension: "ts",
@@ -114,6 +120,7 @@ const registrations = [
   },
   {
     id: "lit",
+    exampleFilename: "Appointment.ts",
     example: litExample,
     codeLanguage: "typescript",
     sourceExtension: "ts",

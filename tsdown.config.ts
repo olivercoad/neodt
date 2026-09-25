@@ -12,6 +12,7 @@ export default defineConfig(
       return {
         ...integration,
         entry: Object.fromEntries([
+          ...Object.entries(integration.entry ?? {}),
           ["generic", `frameworks/${framework.id}/generic.${framework.sourceExtension}`],
           ...libraries.map((library) => [
             library.entry.slice(1) || "index",

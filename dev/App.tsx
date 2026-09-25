@@ -135,8 +135,8 @@ const App: Component = () => {
             Works <i>your way.</i>
           </h1>
           <p class={styles.lede}>
-            neodt is a familiar, timezone-aware datetime input for Solid. It speaks your users'
-            language, works naturally with a keyboard, and gives your app a robust{" "}
+            neodt is a familiar, timezone-aware datetime input for {framework.label}. It speaks your
+            users' language, works naturally with a keyboard, and gives your app a robust{" "}
             <code>{library.type}</code> instead of a string to untangle.
           </p>
           <div class={styles.install}>
@@ -144,7 +144,7 @@ const App: Component = () => {
               pnpm add @olicoad/neodt {framework.packages.join(" ")}
               {library.packages ? ` ${library.packages}` : ""}
             </code>
-            <span>Solid 1.6+</span>
+            <span>{framework.label}</span>
             <a href="https://www.npmjs.com/package/@olicoad/neodt" target="_blank" rel="noreferrer">
               v{packageJson.version} on npm ↗
             </a>

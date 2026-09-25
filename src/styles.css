@@ -337,19 +337,19 @@
   width: 100%;
 }
 
-.datetime-neo__content[data-wrapped][data-time-offset] > .datetime-neo__trailing {
+.datetime-neo__content[data-wrapped][data-time-offset] .datetime-neo__trailing {
   align-items: stretch;
   flex-direction: column;
 }
 
 .datetime-neo__content[data-wrapped][data-time-offset]
-  > .datetime-neo__trailing
+  .datetime-neo__trailing
   > .datetime-neo__timezone {
   /* Balance space around the actions, retaining only the offset's minimum height. */
   flex: 1 0 0;
 }
 
-.datetime-neo__content[data-wrapped][data-time-offset] > .datetime-neo__trailing::after {
+.datetime-neo__content[data-wrapped][data-time-offset] .datetime-neo__trailing::after {
   content: "";
   flex: 1 0 0;
 }

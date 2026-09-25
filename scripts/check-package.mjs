@@ -74,6 +74,7 @@ ${host.render(true, library.callback)}
         JSON.stringify({
           compilerOptions: {
             strict: true,
+            experimentalDecorators: true,
             skipLibCheck: false,
             target: "ESNext",
             lib: [library.id === "native-temporal" ? "ESNext" : "ES2022", "DOM"],
@@ -87,7 +88,7 @@ ${host.render(true, library.callback)}
           include: [`*.${host.extension}`],
         }),
       );
-      execFileSync(path.join(root, "node_modules/.bin", host.compiler), ["-p", cwd], {
+      execFileSync(path.join(root, "node_modules/.bin", host.compiler), host.compilerArgs(cwd), {
         cwd,
         stdio: "pipe",
       });

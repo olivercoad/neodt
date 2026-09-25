@@ -1,5 +1,7 @@
+import { example as angularExample } from "./frameworks/angular/example.ts";
 import { example as reactExample } from "./frameworks/react/example.ts";
 import { example as solidExample } from "./frameworks/solid/example.ts";
+import { example as svelteExample } from "./frameworks/svelte/example.ts";
 import { example as vueExample } from "./frameworks/vue/example.ts";
 /** Metadata only. All generation, package and documentation matrices derive from this registry. */
 export const frameworks = [
@@ -50,6 +52,44 @@ export const frameworks = [
     jsxImportSource: "vue",
     jsx: "preserve",
     options: { api: "composition" },
+  },
+  {
+    id: "svelte",
+    example: svelteExample,
+    codeLanguage: "html",
+    sourceExtension: "ts",
+    outputExtension: "js",
+    label: "Svelte",
+    target: "svelte",
+    generator: "componentToSvelte",
+    extension: "svelte",
+    packages: ["svelte"],
+    typePackages: [],
+    jsxImportSource: "svelte",
+    jsx: "preserve",
+    options: {},
+  },
+  {
+    id: "angular",
+    example: angularExample,
+    codeLanguage: "typescript",
+    sourceExtension: "ts",
+    outputExtension: "js",
+    label: "Angular",
+    target: "angular",
+    generator: "componentToAngular",
+    extension: "ts",
+    packages: [
+      "@angular/core",
+      "@angular/common",
+      "@angular/compiler",
+      "@angular/platform-browser",
+      "rxjs",
+    ],
+    typePackages: [],
+    jsxImportSource: "angular",
+    jsx: "preserve",
+    options: { standalone: true, typescript: true },
   },
 ] as const;
 export type FrameworkId = (typeof frameworks)[number]["id"];

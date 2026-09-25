@@ -8,7 +8,7 @@ import "prismjs/components/prism-tsx";
 // Import only the extra grammars we use; no language autoloader or editor runtime.
 Prism.manual = true;
 
-export type CodeLanguage = "css" | "tsx" | "html";
+export type CodeLanguage = "css" | "tsx" | "html" | "typescript";
 
 export function highlight(code: string, language: CodeLanguage) {
   // Prism escapes source text before producing token markup, including reader-edited CSS.

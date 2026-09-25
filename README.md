@@ -1,6 +1,6 @@
 # neodt
 
-A locale-aware, keyboard-editable segmented date and time input for Solid, React, and Vue, generated from one Mitosis implementation.
+A locale-aware, keyboard-editable segmented date and time input.
 
 **Links**: [npm](https://www.npmjs.com/package/@olicoad/neodt) | [GitHub](https://github.com/olivercoad/neodt) | [Issues](https://github.com/olivercoad/neodt/issues) | [Demo](https://neodt.olisworld.com)
 
@@ -12,19 +12,9 @@ pnpm add @olicoad/neodt solid-js
 
 ## Frameworks
 
-Choose your frontend framework and datetime library independently:
+neodt uses Mitosis to support many frontend frameworks from one shared implementation. Choose your framework and datetime library independently, and install only the packages you use.
 
-```ts
-import SolidNeodt from "@olicoad/neodt/solid/luxon";
-import ReactNeodt from "@olicoad/neodt/react/luxon";
-import VueNeodt from "@olicoad/neodt/vue/luxon";
-```
-
-Install only the framework and datetime packages you use. Each framework root (`/solid`, `/react`, `/vue`) uses native Temporal; each `/generic` entry accepts a custom adapter. Framework-less component imports are not exported.
-
-The demo's **Framework** and **Library** dropdowns select the live control implementation and preserve your documentation section. See [Frameworks](https://neodt.olisworld.com/#/docs/frameworks) for React and Vue examples and native attributes.
-
-Solid accepts `classList`. React accepts `className`. Vue accepts native attributes; use `shallowRef` to retain datetime instances. All frameworks share editing behavior, built-in icons, CSS classes and theme variables. Use a stable reference time and an explicit locale for server rendering and hydration.
+See [Frameworks](https://neodt.olisworld.com/#/docs/frameworks) for supported frameworks, installation, and usage examples.
 
 ## Solid usage
 

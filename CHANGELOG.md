@@ -1,11 +1,13 @@
 ## [Unreleased]
 
-Another, even bigger change to Neodt! It is now fully framework agnostic, too, using a generic core and [mitosis](https://mitosis.builder.io) to
-help with generating glue code for each framework.
+Another, even bigger change to Neodt! It is now fully framework agnostic, too, using a generic core and [mitosis](https://mitosis.builder.io) to help with generating glue code for each framework.
 
 ### Added
 
-- React and Vue support
+- React
+- Vue
+- Angular
+- Svelte
 
 ### Changed
 

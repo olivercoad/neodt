@@ -9,8 +9,10 @@ export type ToolingMode = "development" | "client-test" | "server-test" | "consu
 export type FrameworkTooling = {
   plugins?: (context: { mode: ToolingMode; include: string[] }) => PluginOption[];
   build?: UserConfig;
+  transformGenerated?: (source: string) => string;
   consumer?: {
     compiler?: string;
+    compilerArgs?: (directory: string) => string[];
     extension?: string;
     render?: (generic: boolean, callback: string) => string;
     wrap?: (script: string) => string;
@@ -21,6 +23,7 @@ export type FrameworkTooling = {
 export async function loadFrameworkTooling(id: FrameworkId): Promise<{
   plugins: (mode: ToolingMode) => PluginOption[];
   build: UserConfig;
+  transformGenerated: (source: string) => string;
   consumer: Required<NonNullable<FrameworkTooling["consumer"]>>;
 }> {
   const framework = frameworks.find((framework) => framework.id === id)!;
@@ -28,6 +31,7 @@ export async function loadFrameworkTooling(id: FrameworkId): Promise<{
     path.resolve(import.meta.dirname, id, "tooling.ts")
   );
   return {
+    transformGenerated: tooling.transformGenerated ?? ((source) => source),
     plugins: (mode: ToolingMode) =>
       tooling.plugins?.({
         mode,
@@ -48,6 +52,7 @@ export async function loadFrameworkTooling(id: FrameworkId): Promise<{
     } satisfies UserConfig,
     consumer: {
       compiler: "tsc",
+      compilerArgs: (directory: string) => ["-p", directory],
       extension: framework.sourceExtension,
       render: (generic: boolean, callback: string) =>
         `export const control = <Neodt ${generic ? "adapter={adapter}" : ""} referenceTime={referenceTime} onValueChange={value => { ${callback}; }} />;

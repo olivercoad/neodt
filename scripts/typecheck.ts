@@ -8,3 +8,9 @@ for (const config of [
 ]) {
   execFileSync("node_modules/.bin/tsc", ["--noEmit", "-p", config], { stdio: "inherit" });
 }
+
+execFileSync(
+  "node_modules/.bin/svelte-check",
+  ["--tsconfig", "frameworks/svelte/tsconfig.json", "--threshold", "error"],
+  { stdio: "inherit" },
+);

@@ -27,7 +27,7 @@ export function hydrationFixture(): Plugin {
             value: referenceTime,
             locale: "en-GB",
           });
-          const page = `<!doctype html><html><head>${host.hydrationScript?.() ?? ""}<title>Hydration fixture</title></head><body><div id="root">${html}</div>
+          const page = `<!doctype html><html><head><title>Hydration fixture</title>${host.hydrationScript?.() ?? ""}</head>${host.hydrationMarker?.() ?? ""}<body><div id="root">${html}</div>
 <script type="module">
 import { mount } from "/@fs${server.config.root}/..${source}";
 import { adapter } from "/@fs${server.config.root}/../src/libraries/temporal-polyfill.ts";

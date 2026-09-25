@@ -27,10 +27,16 @@ Override only the pieces the framework needs:
 
 Keep this Node-only tooling separate from `frameworks.ts`: the metadata registry also runs in the documentation browser. Adding a framework requires no edits to Vite, Vitest, tsdown, or the package-check runner.
 
-The shared view uses stable primitive keys, preserving editable DOM nodes and focus in Solid, React, and Vue. The controller owns synchronous editing transitions and emits snapshots; framework state stores only the latest snapshot. Native DOM listeners handle keyboard, clipboard, input, and focus events consistently. Root click/mousedown handlers are composed with the consumer's native handlers at the binding boundary.
+The shared view uses stable primitive keys, preserving editable DOM nodes and focus in every registered framework. The controller owns synchronous editing transitions and emits snapshots; framework state stores only the latest snapshot. Native DOM listeners handle keyboard, clipboard, input, and focus events consistently. Root click/mousedown handlers are composed with the consumer's native handlers at the binding boundary.
 
 Mitosis 0.14 does not emit Solid unmount hooks, so the Solid binding explicitly disposes the controller. Shared `onUpdate` hooks include dependencies because that generator requires them. React uses correctly cased DOM properties (`readOnly`, `contentEditable`, etc.). Custom icons enter the shared view as component functions; bindings expose native JSX nodes or Vue slots.
 
-Vue's generic public call signature includes its typed template context so `vue-tsc` can infer callback values from custom adapters. Consumer checks compile both Vue templates and generated documentation examples. The Vue compiler uses a scoped TypeScript 6 override because vue-tsc needs the JavaScript compiler API, which TypeScript 7 does not supply. The project's ordinary type checker remains TypeScript 7.
+Vue's generic public call signature includes its typed template context so `vue-tsc` can infer callback values from custom adapters. Consumer checks compile both Vue templates and generated documentation examples. The Vue compiler uses a scoped TypeScript 6 dependency because vue-tsc needs the JavaScript compiler API, which TypeScript 7 does not supply. The project's ordinary type checker remains TypeScript 7.
 
 Support is intended for DOM-based frontend frameworks. A Mitosis target for a non-DOM platform would also require a platform-specific input, measurement, and accessibility design.
+
+Svelte uses a Svelte 5 rune-based binding and ships native `.svelte` files alongside shared controller modules. Its public generic declaration includes the isomorphic constructor signature required by Svelte template tooling. Svelte and Vue type checkers use TypeScript 6 through the scoped `.pnpmfile.cjs` dependency hook; the main project stays on TypeScript 7.
+
+Angular currently ships runtime-compiled standalone components with a single typed `props` input. Consumer examples use `NgComponentOutlet`, allowing an AOT application to instantiate the runtime component. The compiler is an optional peer for the package and required when using Angular entries. Angular SSR and hydration are covered by the native server and browser fixtures. The Angular generation hook corrects Mitosis DOM property bindings, attribute removal, dependency injection, and mount timing. Keep those corrections covered by browser and binding tests when upgrading Mitosis.
+
+Tooling may also supply `transformGenerated(source)` for target-specific generator corrections, additional `build.entry` modules needed by native assets, and `consumer.compilerArgs(directory)` for checkers with different CLI flags.

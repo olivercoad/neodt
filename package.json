@@ -4,6 +4,7 @@
   "private": false,
   "description": "A framework- and datetime-library-independent, locale-aware datetime input.",
   "keywords": [
+    "angular",
     "date",
     "date-time-picker",
     "datetime",
@@ -12,6 +13,7 @@
     "react",
     "solid",
     "solidjs",
+    "svelte",
     "time",
     "vue"
   ],
@@ -156,6 +158,86 @@
       "types": "./dist/vue/internationalized-date.d.ts",
       "default": "./dist/vue/internationalized-date.js"
     },
+    "./svelte": {
+      "types": "./dist/svelte/index.d.ts",
+      "default": "./dist/svelte/index.js"
+    },
+    "./svelte/generic": {
+      "types": "./dist/svelte/generic.d.ts",
+      "default": "./dist/svelte/generic.js"
+    },
+    "./svelte/temporal-polyfill": {
+      "types": "./dist/svelte/temporal-polyfill.d.ts",
+      "default": "./dist/svelte/temporal-polyfill.js"
+    },
+    "./svelte/js-temporal-polyfill": {
+      "types": "./dist/svelte/js-temporal-polyfill.d.ts",
+      "default": "./dist/svelte/js-temporal-polyfill.js"
+    },
+    "./svelte/luxon": {
+      "types": "./dist/svelte/luxon.d.ts",
+      "default": "./dist/svelte/luxon.js"
+    },
+    "./svelte/moment": {
+      "types": "./dist/svelte/moment.d.ts",
+      "default": "./dist/svelte/moment.js"
+    },
+    "./svelte/dayjs": {
+      "types": "./dist/svelte/dayjs.d.ts",
+      "default": "./dist/svelte/dayjs.js"
+    },
+    "./svelte/date-fns": {
+      "types": "./dist/svelte/date-fns.d.ts",
+      "default": "./dist/svelte/date-fns.js"
+    },
+    "./svelte/spacetime": {
+      "types": "./dist/svelte/spacetime.d.ts",
+      "default": "./dist/svelte/spacetime.js"
+    },
+    "./svelte/internationalized-date": {
+      "types": "./dist/svelte/internationalized-date.d.ts",
+      "default": "./dist/svelte/internationalized-date.js"
+    },
+    "./angular": {
+      "types": "./dist/angular/index.d.ts",
+      "default": "./dist/angular/index.js"
+    },
+    "./angular/generic": {
+      "types": "./dist/angular/generic.d.ts",
+      "default": "./dist/angular/generic.js"
+    },
+    "./angular/temporal-polyfill": {
+      "types": "./dist/angular/temporal-polyfill.d.ts",
+      "default": "./dist/angular/temporal-polyfill.js"
+    },
+    "./angular/js-temporal-polyfill": {
+      "types": "./dist/angular/js-temporal-polyfill.d.ts",
+      "default": "./dist/angular/js-temporal-polyfill.js"
+    },
+    "./angular/luxon": {
+      "types": "./dist/angular/luxon.d.ts",
+      "default": "./dist/angular/luxon.js"
+    },
+    "./angular/moment": {
+      "types": "./dist/angular/moment.d.ts",
+      "default": "./dist/angular/moment.js"
+    },
+    "./angular/dayjs": {
+      "types": "./dist/angular/dayjs.d.ts",
+      "default": "./dist/angular/dayjs.js"
+    },
+    "./angular/date-fns": {
+      "types": "./dist/angular/date-fns.d.ts",
+      "default": "./dist/angular/date-fns.js"
+    },
+    "./angular/spacetime": {
+      "types": "./dist/angular/spacetime.d.ts",
+      "default": "./dist/angular/spacetime.js"
+    },
+    "./angular/internationalized-date": {
+      "types": "./dist/angular/internationalized-date.d.ts",
+      "default": "./dist/angular/internationalized-date.js"
+    },
     "./package.json": "./package.json",
     "./style.css": "./dist/style.css"
   },
@@ -184,12 +266,18 @@
     "generate": "node scripts/generate.ts"
   },
   "devDependencies": {
+    "@angular/common": "^22.1.7",
+    "@angular/compiler": "^22.1.7",
+    "@angular/core": "^22.1.7",
+    "@angular/platform-browser": "^22.1.7",
+    "@angular/platform-server": "^22.1.7",
     "@builder.io/mitosis": "0.14.0",
     "@date-fns/tz": "^1.5.0",
     "@internationalized/date": "^3.12.4",
     "@js-temporal/polyfill": "^0.5.1",
     "@playwright/test": "^1.63.0",
     "@solid-primitives/storage": "^4.4.0",
+    "@sveltejs/vite-plugin-svelte": "^7.3.0",
     "@tsdown/css": "^0.22.14",
     "@types/luxon": "^3.7.4",
     "@types/node": "^26.2.0",
@@ -209,11 +297,15 @@
     "prismjs": "^1.30.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "rxjs": "^7.8.2",
     "solid-js": "^1.8.17",
     "spacetime": "^7.15.0",
+    "svelte": "^5.57.1",
+    "svelte-check": "^4.7.6",
     "temporal-polyfill": "^1.0.5",
     "tsdown": "^0.22.14",
     "typescript": "^7.0.2",
+    "typescript-api": "npm:typescript@6.0.3",
     "vite": "^8.2.2",
     "vite-plugin-solid": "^2.11.14",
     "vitest": "^4.1.11",
@@ -221,6 +313,10 @@
     "vue-tsc": "3.3.11"
   },
   "peerDependencies": {
+    "@angular/common": "^22.1.7",
+    "@angular/compiler": "^22.1.7",
+    "@angular/core": "^22.1.7",
+    "@angular/platform-browser": "^22.1.7",
     "@date-fns/tz": "^1.5.0",
     "@internationalized/date": "^3.12.4",
     "@js-temporal/polyfill": "^0.5.1",
@@ -230,8 +326,10 @@
     "moment": "^2.31.0",
     "react": "^18.0.0 || ^19.0.0",
     "react-dom": "^18.0.0 || ^19.0.0",
+    "rxjs": "^7.8.2",
     "solid-js": "^1.6.0",
     "spacetime": "^7.15.0",
+    "svelte": "^5.57.1",
     "temporal-polyfill": "^1.0.5",
     "vue": "^3.5.0"
   },
@@ -273,6 +371,24 @@
       "optional": true
     },
     "vue": {
+      "optional": true
+    },
+    "svelte": {
+      "optional": true
+    },
+    "@angular/core": {
+      "optional": true
+    },
+    "@angular/common": {
+      "optional": true
+    },
+    "@angular/compiler": {
+      "optional": true
+    },
+    "@angular/platform-browser": {
+      "optional": true
+    },
+    "rxjs": {
       "optional": true
     }
   },

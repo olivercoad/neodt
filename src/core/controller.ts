@@ -34,7 +34,19 @@ function createSignal<T = undefined>(
     },
   ];
 }
-const createMemo = <T>(read: () => T) => read;
+/** Cache derived values until their inputs change, independently of the rendering framework. */
+function createMemo<T>(read: () => T, dependencies: () => readonly unknown[]): () => T {
+  let previous: readonly unknown[] | undefined;
+  let current: T;
+  return () => {
+    const next = dependencies();
+    if (!previous || next.some((value, index) => !Object.is(value, previous![index]))) {
+      current = read();
+      previous = next;
+    }
+    return current;
+  };
+}
 
 type InternalProps = Omit<CoreProps<DateTime>, "adapter"> & {
   id: string;
@@ -49,12 +61,17 @@ function createEditor(initial: InternalProps) {
   let local = initial;
   const listeners = new Set<() => void>();
   let disposed = false;
-  const locale = () => local.locale ?? new Intl.DateTimeFormat().resolvedOptions().locale;
-  const hourFormat = createMemo(() =>
-    new Intl.DateTimeFormat(locale(), {
-      hour: "numeric",
-      ...local.formatOptions,
-    }).resolvedOptions(),
+  const locale = createMemo(
+    () => local.locale ?? new Intl.DateTimeFormat().resolvedOptions().locale,
+    () => [local.locale],
+  );
+  const hourFormat = createMemo(
+    () =>
+      new Intl.DateTimeFormat(locale(), {
+        hour: "numeric",
+        ...local.formatOptions,
+      }).resolvedOptions(),
+    () => [locale(), local.formatOptions],
   );
   const [uncontrolledValue, setUncontrolledValue] = createSignal<DateTime | undefined>(
     local.defaultValue,
@@ -67,10 +84,13 @@ function createEditor(initial: InternalProps) {
   const [naturalSuggestion, setNaturalSuggestion] = createSignal(0);
   const [naturalMode, setNaturalMode] = createSignal(false);
   const referenceDate = () => local.referenceTime;
-  const value = () =>
-    (local.value === undefined ? uncontrolledValue() : (local.value ?? undefined))?.inZoneOf(
-      referenceDate(),
-    );
+  const value = createMemo(
+    () =>
+      (local.value === undefined ? uncontrolledValue() : (local.value ?? undefined))?.inZoneOf(
+        referenceDate(),
+      ),
+    () => [local.value, uncontrolledValue(), referenceDate()],
+  );
   const [draftDate, setDraftDate] = createSignal(
     (value() ?? local.referenceTime).startOf("minute"),
   );
@@ -94,27 +114,28 @@ function createEditor(initial: InternalProps) {
     );
     setCleared(new Set<SegmentName>(controlledValue ? [] : segmentNames));
   };
-  const segments = createMemo(() =>
-    partsFor(
-      toLocalValue(cleared().size ? draftDate() : (value() ?? draftDate())),
-      referenceDate(),
-      locale(),
-      local.formatOptions,
-    ),
+  const displayDate = () => (cleared().size ? draftDate() : (value() ?? draftDate()));
+  const segments = createMemo(
+    () => partsFor(toLocalValue(displayDate()), referenceDate(), locale(), local.formatOptions),
+    () => [displayDate(), referenceDate(), locale(), local.formatOptions],
   );
-  const editableSegments = createMemo(() =>
-    segments().filter((part): part is Segment => part.editable),
+  const editableSegments = createMemo(
+    () => segments().filter((part): part is Segment => part.editable),
+    () => [segments()],
   );
-  const dayPeriodLabels = createMemo(() => {
-    const labelForHour = (hour: number) =>
-      partsFor(
-        `2001-02-03T${hour.toString().padStart(2, "0")}:05`,
-        referenceDate(),
-        locale(),
-        local.formatOptions,
-      ).find((part) => part.type === "dayPeriod")?.value;
-    return { morning: labelForHour(4), afternoon: labelForHour(16) };
-  });
+  const dayPeriodLabels = createMemo(
+    () => {
+      const labelForHour = (hour: number) =>
+        partsFor(
+          `2001-02-03T${hour.toString().padStart(2, "0")}:05`,
+          referenceDate(),
+          locale(),
+          local.formatOptions,
+        ).find((part) => part.type === "dayPeriod")?.value;
+      return { morning: labelForHour(4), afternoon: labelForHour(16) };
+    },
+    () => [referenceDate(), locale(), local.formatOptions],
+  );
   let root: HTMLSpanElement | undefined;
   const editor = () =>
     root?.querySelector<HTMLSpanElement>(".datetime-neo__content .datetime-neo__editor");
@@ -135,28 +156,50 @@ function createEditor(initial: InternalProps) {
     setNaturalPlaceholder(text);
     publish();
   });
-  const naturalDate = createMemo(() =>
-    parseInternalDate(naturalText(), {
-      referenceTime: local.referenceTime,
-      locale: locale(),
-    }),
+  const naturalDate = createMemo(
+    () =>
+      parseInternalDate(naturalText(), {
+        referenceTime: local.referenceTime,
+        locale: locale(),
+      }),
+    () => [naturalText(), referenceDate(), locale()],
   );
-  const naturalCompletions = createMemo(() => getNaturalDateCompletions(naturalText()));
-  const activeNaturalCompletion = createMemo(() => naturalCompletions()[naturalSuggestion()]);
-  const displayedParts = createMemo(() => splitDateAndTime(segments()));
+  const naturalCompletions = createMemo(
+    () => getNaturalDateCompletions(naturalText()),
+    () => [naturalText()],
+  );
+  const activeNaturalCompletion = () => naturalCompletions()[naturalSuggestion()];
+  const displayedParts = createMemo(
+    () => splitDateAndTime(segments()),
+    () => [segments()],
+  );
   // Day-period labels can be widest at midnight, midday, or late evening depending on the locale.
-  const widestParts = createMemo(() =>
-    [0, 12, 23].map((hour) =>
-      splitDateAndTime(
-        partsFor(
-          `2088-12-28T${hour.toString().padStart(2, "0")}:59`,
-          referenceDate(),
-          locale(),
-          local.formatOptions,
+  const widestParts = createMemo(
+    () =>
+      [0, 12, 23].map((hour) =>
+        splitDateAndTime(
+          partsFor(
+            `2088-12-28T${hour.toString().padStart(2, "0")}:59`,
+            referenceDate(),
+            locale(),
+            local.formatOptions,
+          ),
         ),
       ),
-    ),
+    () => [referenceDate(), locale(), local.formatOptions],
   );
+  const measurements = createMemo(
+    () => widestParts().map((parts) => [parts.first, parts.second]),
+    () => [widestParts()],
+  );
+  const rowKeys = createMemo(
+    () =>
+      [displayedParts().first, displayedParts().second].map((row) =>
+        row.map((part, position) => (part.editable ? part.type : `separator-${position}`)),
+      ),
+    () => [displayedParts()],
+  );
+  const rowIndexes = [0, 1];
 
   const updateEditorOverflow = () => {
     const element = editor();
@@ -648,6 +691,7 @@ function createEditor(initial: InternalProps) {
   const snapshot = () => {
     const parts = displayedParts();
     const date = naturalDate();
+    const rows = [parts.first.map(partView), parts.second.map(partView)];
     return {
       id: local.id,
       disabled: !!local.disabled,
@@ -662,15 +706,11 @@ function createEditor(initial: InternalProps) {
       labelledBy: local.labelledBy,
       describedBy: local.describedBy,
       invalid: local.invalid,
-      rowIndexes: [0, 1],
-      rowKeys: [parts.first.map(partView), parts.second.map(partView)].map((row) =>
-        row.map((part) => part.key),
-      ),
-      rows: [parts.first.map(partView), parts.second.map(partView)],
-      partRows: [parts.first.map(partView), parts.second.map(partView)].map((row) =>
-        Object.fromEntries(row.map((part) => [part.key, part])),
-      ),
-      measurements: widestParts().map((parts) => [parts.first, parts.second]),
+      rowIndexes,
+      rowKeys: rowKeys(),
+      rows,
+      partRows: rows.map((row) => Object.fromEntries(row.map((part) => [part.key, part]))),
+      measurements: measurements(),
       nativeValue: nativeValue(),
       naturalText: naturalText(),
       placeholder: naturalPlaceholder(),
@@ -754,11 +794,20 @@ function createEditor(initial: InternalProps) {
       if (placeholder) placeholders.set(segment, placeholder);
     }
   };
+  let actionDepth = 0;
   const run = (action: () => void) => {
-    action();
-    publish();
-    rememberPlaceholders();
-    afterRender();
+    actionDepth += 1;
+    try {
+      action();
+    } finally {
+      actionDepth -= 1;
+      // Focusing a segment dispatches focusout/focusin synchronously inside keydown.
+      if (actionDepth === 0) {
+        publish();
+        rememberPlaceholders();
+        afterRender();
+      }
+    }
   };
   const segmentInput = (event: InputEvent, index: number, segment: Segment) => {
     const input = event.target as HTMLElement;
@@ -936,15 +985,25 @@ export type ControllerProps<T, TZone> = CoreProps<T, TZone> &
   Pick<InternalProps, "id" | "label" | "labelledBy" | "describedBy" | "invalid">;
 
 export function createController<T, TZone>(props: ControllerProps<T, TZone>) {
+  let currentProps = props;
+  // Framework renders also call update; preserve date identities when native inputs are unchanged.
+  const referenceTime = createMemo(
+    () => calendarDate(currentProps.adapter, currentProps.referenceTime),
+    () => [currentProps.adapter, currentProps.referenceTime],
+  );
+  const value = createMemo(
+    () =>
+      currentProps.value === undefined
+        ? undefined
+        : currentProps.value === null
+          ? null
+          : calendarDate(currentProps.adapter, currentProps.value),
+    () => [currentProps.adapter, currentProps.value],
+  );
   const convert = (props: ControllerProps<T, TZone>, initial = false): InternalProps => ({
     ...props,
-    referenceTime: calendarDate(props.adapter, props.referenceTime),
-    value:
-      props.value === undefined
-        ? undefined
-        : props.value === null
-          ? null
-          : calendarDate(props.adapter, props.value),
+    referenceTime: referenceTime(),
+    value: value(),
     defaultValue:
       !initial || props.defaultValue === undefined
         ? undefined
@@ -962,6 +1021,9 @@ export function createController<T, TZone>(props: ControllerProps<T, TZone>) {
   const controller = createEditor(convert(props, true));
   return {
     ...controller,
-    update: (props: ControllerProps<T, TZone>) => controller.update(convert(props)),
+    update: (props: ControllerProps<T, TZone>) => {
+      currentProps = props;
+      controller.update(convert(props));
+    },
   };
 }

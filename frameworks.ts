@@ -3,9 +3,29 @@ import { example as litExample } from "./frameworks/lit/example.ts";
 import { example as reactExample } from "./frameworks/react/example.ts";
 import { example as solidExample } from "./frameworks/solid/example.ts";
 import { example as svelteExample } from "./frameworks/svelte/example.ts";
+import { example as vanillaExample } from "./frameworks/vanilla/example.ts";
 import { example as vueExample } from "./frameworks/vue/example.ts";
 /** Metadata only. All generation, package and documentation matrices derive from this registry. */
-export const frameworks = [
+const registrations = [
+  {
+    id: "vanilla",
+    entry: "",
+    description: "Plain JavaScript / TypeScript",
+    serverRendering: false,
+    example: vanillaExample,
+    codeLanguage: "typescript",
+    sourceExtension: "ts",
+    outputExtension: "js",
+    label: "Vanilla",
+    target: "lit",
+    generator: "componentToLit",
+    extension: "ts",
+    packages: [],
+    typePackages: [],
+    jsxImportSource: "",
+    jsx: "preserve",
+    options: {},
+  },
   {
     id: "solid",
     example: solidExample,
@@ -109,7 +129,15 @@ export const frameworks = [
     options: {},
   },
 ] as const;
+export const frameworks = registrations.map((framework) => ({
+  entry: `/${framework.id}`,
+  description: undefined as string | undefined,
+  serverRendering: true,
+  ...framework,
+}));
 export type FrameworkId = (typeof frameworks)[number]["id"];
+export const packageEntry = (framework: FrameworkId, suffix = "") =>
+  `@olicoad/neodt${frameworks.find(({ id }) => id === framework)!.entry}${suffix}`;
 export const frameworkPackages = [
   ...new Set(frameworks.flatMap((framework) => [...framework.packages])),
 ];

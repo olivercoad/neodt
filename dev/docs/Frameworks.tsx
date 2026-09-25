@@ -1,5 +1,6 @@
 import { For } from "solid-js";
 
+import { packageEntry } from "../../frameworks";
 import Code from "../code/Code";
 import { frameworks, currentFramework, demoPath } from "../framework";
 import { useLibrary } from "../library";
@@ -13,8 +14,8 @@ export default function Frameworks() {
       <p class={styles.eyebrow}>FRAMEWORKS</p>
       <h1>Choose your frontend framework.</h1>
       <p class={styles.intro}>
-        The same editor, generated from Mitosis for Solid, React, Vue, Svelte, Angular, and Lit.
-        Choose the framework and datetime library independently.
+        The same editor for Vanilla TypeScript, Solid, React, Vue, Svelte, Angular, and Lit. Choose
+        the framework and datetime library independently.
       </p>
       <p>
         The Framework dropdown beside Library switches the live controls throughout the lab and
@@ -45,10 +46,7 @@ export default function Frameworks() {
                     </code>
                   </td>
                   <td>
-                    <code>
-                      @olicoad/neodt/{framework.id}
-                      {library.entry}
-                    </code>
+                    <code>{packageEntry(framework.id, library.entry)}</code>
                   </td>
                 </tr>
               )}
@@ -65,6 +63,12 @@ export default function Frameworks() {
       </pre>
       <h2 id="shared-api">Shared behavior and native framework APIs</h2>
       <p>
+        Vanilla mounts into an ordinary DOM container: call the default export with the container
+        and options. It returns an element, update(partialOptions), and destroy(). Updates merge
+        options; pass undefined to remove an optional option. Call destroy() when removing the
+        owning UI. The renderer is bundled, so no framework installation or compiler is needed.
+      </p>
+      <p>
         Every framework exposes referenceTime, value, defaultValue, onValueChange, locale,
         formatOptions, readonly, disabled, and showTimeOffset. Use null for a controlled empty
         value. Every library preserves its own datetime and timezone types.
@@ -79,18 +83,20 @@ export default function Frameworks() {
         and exposes CSS parts for theming. All frameworks use the same built-in icons.
       </p>
       <p>
-        Import /generic under your framework to supply a custom adapter. The framework root uses
-        native Temporal. Existing framework-less component imports are not provided.
+        Import /generic under your framework to supply a custom adapter. Vanilla uses the package
+        root and /generic directly. The Library choice None uses native Temporal.
       </p>
       <p>
         Angular entries use runtime template compilation and require @angular/compiler. Use
         NgComponentOutlet or createComponent to render them in an AOT application. Server rendering
-        and hydration are tested for every framework.
+        and hydration are tested for the framework components. Vanilla mounts in the browser;
+        importing it and using its parser utilities is safe on the server.
       </p>
       <h2 id="rendering">Styles and server rendering</h2>
       <p>
-        All targets share the same CSS classes and theme variables. Component entries import their
-        stylesheet; an explicit @olicoad/neodt/style.css entry is also available. For hydration, use
+        All targets share the same CSS classes and theme variables. Vanilla installs its default
+        styles before application styles when mounted; framework components include their
+        stylesheet. An explicit @olicoad/neodt/style.css entry is also available. For hydration, use
         the same reference time, value, and explicit locale on the server and client. React
         components are client components when used in a React Server Components application.
       </p>

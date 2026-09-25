@@ -5,4 +5,4 @@ export const currentFramework = () =>
     ({ id }) =>
       id ===
       (typeof document === "undefined" ? "solid" : document.documentElement.dataset.framework),
-  ) ?? frameworks[0];
+  ) ?? frameworks.find(({ id }) => id === "solid")!;

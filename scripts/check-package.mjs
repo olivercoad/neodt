@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 import { build } from "vite";
 
-import { frameworks, frameworkPackages } from "../frameworks.ts";
+import { frameworks, frameworkPackages, packageEntry } from "../frameworks.ts";
 import { loadFrameworkTooling } from "../frameworks/tooling.ts";
 import { libraries, datetimePackages } from "../libraries.ts";
 
@@ -19,7 +19,7 @@ for (const name of [...datetimePackages, ...frameworkPackages]) {
   assert(!packageJson.dependencies?.[name], `${name} must not be a runtime dependency`);
   assert(packageJson.peerDependenciesMeta?.[name]?.optional, `${name} must be an optional peer`);
 }
-assert(!packageJson.exports["."], "Framework-less compatibility entries must not be published");
+assert(packageJson.exports["."], "The package root must provide Vanilla");
 try {
   for (const framework of frameworks) {
     const { consumer: host, plugins } = await loadFrameworkTooling(framework.id);
@@ -41,7 +41,23 @@ try {
         await symlink(await realpath(path.join(root, "node_modules", name)), target, "dir");
       }
       await writeFile(path.join(cwd, "package.json"), '{"name":"neodt-consumer","type":"module"}');
-      const entry = `@olicoad/neodt/${framework.id}${library.entry}`;
+      const entry = packageEntry(framework.id, library.entry);
+      if (!framework.serverRendering) {
+        // Browser mounting must not prevent plain Node consumers from importing utilities.
+        execFileSync(
+          process.execPath,
+          [
+            "--input-type=module",
+            "-e",
+            `
+          const entry = await import(${JSON.stringify(entry)});
+          if (typeof entry.default !== "function" || typeof entry.parseNaturalDate !== "function")
+            throw new Error("Missing browser mount or parser export");
+        `,
+          ],
+          { cwd, stdio: "pipe" },
+        );
+      }
       const filename = `consumer.${host.extension}`;
       const script = `import Neodt, { parseNaturalDate, type NeodtProps, type NaturalDateParseOptions } from "${entry}";
 ${library.imports}
@@ -56,7 +72,7 @@ const invalidProps: NeodtProps = { referenceTime, adapter: {} };
 ${host.render(false, library.callback)}
 `;
       await writeFile(path.join(cwd, filename), host.wrap(script));
-      const genericScript = `import Neodt, { parseNaturalDate, type NeodtProps } from "@olicoad/neodt/${framework.id}/generic";
+      const genericScript = `import Neodt, { parseNaturalDate, type NeodtProps } from "${packageEntry(framework.id, "/generic")}";
 import { ${library.factory} } from "${entry}";
 ${library.imports}
 const adapter = ${library.factory}(${library.implementation});

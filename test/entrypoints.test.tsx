@@ -79,7 +79,7 @@ it("covers every configured library export in the unit and browser matrices", ()
     .sort();
   for (const framework of frameworks) {
     for (const library of libraries)
-      expect(packageJson.exports).toHaveProperty(`./${framework.id}${library.entry}`);
+      expect(packageJson.exports).toHaveProperty(`.${framework.entry}${library.entry}`);
   }
   expect(builtInAdapters.map(({ name }) => name).sort()).toEqual(exports);
   expect(libraries.map(({ id }) => id).sort()).toEqual([...exports, "native-temporal"].sort());

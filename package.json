@@ -39,6 +39,46 @@
     "**/*.css"
   ],
   "exports": {
+    ".": {
+      "types": "./dist/vanilla/index.d.ts",
+      "default": "./dist/vanilla/index.js"
+    },
+    "./generic": {
+      "types": "./dist/vanilla/generic.d.ts",
+      "default": "./dist/vanilla/generic.js"
+    },
+    "./temporal-polyfill": {
+      "types": "./dist/vanilla/temporal-polyfill.d.ts",
+      "default": "./dist/vanilla/temporal-polyfill.js"
+    },
+    "./js-temporal-polyfill": {
+      "types": "./dist/vanilla/js-temporal-polyfill.d.ts",
+      "default": "./dist/vanilla/js-temporal-polyfill.js"
+    },
+    "./luxon": {
+      "types": "./dist/vanilla/luxon.d.ts",
+      "default": "./dist/vanilla/luxon.js"
+    },
+    "./moment": {
+      "types": "./dist/vanilla/moment.d.ts",
+      "default": "./dist/vanilla/moment.js"
+    },
+    "./dayjs": {
+      "types": "./dist/vanilla/dayjs.d.ts",
+      "default": "./dist/vanilla/dayjs.js"
+    },
+    "./date-fns": {
+      "types": "./dist/vanilla/date-fns.d.ts",
+      "default": "./dist/vanilla/date-fns.js"
+    },
+    "./spacetime": {
+      "types": "./dist/vanilla/spacetime.d.ts",
+      "default": "./dist/vanilla/spacetime.js"
+    },
+    "./internationalized-date": {
+      "types": "./dist/vanilla/internationalized-date.d.ts",
+      "default": "./dist/vanilla/internationalized-date.js"
+    },
     "./solid": {
       "types": "./dist/solid/index.d.ts",
       "default": "./dist/solid/index.jsx"
@@ -333,6 +373,7 @@
     "dayjs": "^1.11.23",
     "jsdom": "^30.0.1",
     "lit": "^3.3.3",
+    "lit-html": "^3.3.3",
     "luxon": "^3.7.2",
     "moment": "^2.31.0",
     "moment-timezone": "^0.6.4",

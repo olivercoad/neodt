@@ -24,7 +24,7 @@ For example, a single-package library's metadata can look like this:
 }
 ```
 
-Public imports take the form `@olicoad/neodt/<framework>/<library>`. The framework root uses native Temporal; `/generic` requires an explicit adapter. Generation combines each library's adapter with each framework's typed binding and supplies the configured `parseNaturalDate`, `NaturalDateParseOptions`, and shared public exports. Value and zone types are inferred from the adapter, so library files do not repeat parser types or public re-exports.
+Public imports take the form `@olicoad/neodt/<framework>/<library>`. Vanilla omits the framework segment, giving `@olicoad/neodt/<library>`. Root entries use native Temporal (the Library choice None); `/generic` requires an explicit adapter. Generation combines each library's adapter with each framework's typed binding and supplies the configured `parseNaturalDate`, `NaturalDateParseOptions`, and shared public exports. Value and zone types are inferred from the adapter, so library files do not repeat parser types or public re-exports.
 
 The custom Vite plugin runs generation before dependency scanning and derives its production pages and dependency-scan entries from the same registry. Both `pnpm dev` and `pnpm dev:build` work without a separate generation step. Registry edits restart Vite through its config dependencies; component edits regenerate the framework implementations.
 

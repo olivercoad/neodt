@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { frameworks, demoPath } from "../../frameworks";
+import { frameworks, demoPath, packageEntry } from "../../frameworks";
 import { libraries } from "../../libraries";
 for (const framework of frameworks) {
   test(`${framework.id}: framework dropdown preserves the library and documentation section`, async ({
@@ -16,12 +16,15 @@ for (const framework of frameworks) {
       await trigger.click();
       await page
         .getByRole("navigation", { name: "Main navigation" })
-        .getByRole("link", { name: target.label, exact: true })
+        .getByRole("link", {
+          name: [target.label, target.description].filter(Boolean).join(" "),
+          exact: true,
+        })
         .click();
       await expect(page).toHaveURL(`${demoPath(target.id, "luxon")}#/docs/frameworks`);
       await expect(page.locator("html")).toHaveAttribute("data-framework", target.id);
       await expect(page.getByLabel("Datetime library", { exact: true })).toContainText("Luxon");
-      await expect(page.locator("pre")).toContainText(`@olicoad/neodt/${target.id}/luxon`);
+      await expect(page.locator("pre")).toContainText(packageEntry(target.id, "/luxon"));
     }
   });
   test(`${framework.id}: framework picker supports keyboard and fits narrow screens`, async ({

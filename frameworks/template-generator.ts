@@ -1,8 +1,8 @@
 import type { MitosisComponent, MitosisNode } from "@builder.io/mitosis";
 
-// Render shared view components as template functions within one shadow root.
+// Render shared view components as keyed template functions for Lit and Vanilla.
 // Mitosis 0.14's Lit target loses classes and emits invalid spreads/class bindings.
-export function generateComponent(component: MitosisComponent) {
+export function generateComponent(component: MitosisComponent, runtime = "lit") {
   const expression = (code: string) => `\${${code}}`;
   const template = (nodes: MitosisNode[]) => `html\`${nodes.map(node).join("")}\``;
   function node(item: MitosisNode): string {
@@ -33,8 +33,7 @@ export function generateComponent(component: MitosisComponent) {
     for (const [key, binding] of Object.entries(item.bindings)) {
       if (!binding || ["key", "ref", "suppressContentEditableWarning"].includes(key)) continue;
       if (binding.type === "spread") {
-        // Native attributes belong to the custom-element host. Only root layout
-        // attributes are supplied by the binding, keeping template identity stable.
+        // Bindings apply other native attributes to their host or rendered root.
         attrs.push(
           `class=${expression(`${binding.code}.class`)}`,
           `style=${expression(`ifDefined(${binding.code}.style)`)}`,
@@ -62,10 +61,10 @@ export function generateComponent(component: MitosisComponent) {
         `import ${Object.keys(item.imports)[0]} from ${JSON.stringify(item.path.replace(".lite", ".ts"))};`,
     )
     .join("\n");
-  return `// @ts-nocheck\n// Generated from the shared Mitosis view; lifecycle belongs to the Lit binding.
-import { html, nothing } from "lit";
-import { ifDefined } from "lit/directives/if-defined.js";
-import { repeat } from "lit/directives/repeat.js";
+  return `// @ts-nocheck\n// Generated from the shared Mitosis view; lifecycle belongs to the binding.
+import { html, nothing } from "${runtime}";
+import { ifDefined } from "${runtime}/directives/if-defined.js";
+import { repeat } from "${runtime}/directives/repeat.js";
 ${imports}
 export default function ${component.name}(props) { return ${template(component.children)}; }
 `;

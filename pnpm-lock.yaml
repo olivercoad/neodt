@@ -88,6 +88,9 @@ importers:
       lit:
         specifier: ^3.3.3
         version: 3.3.3
+      lit-html:
+        specifier: ^3.3.3
+        version: 3.3.3
       luxon:
         specifier: ^3.7.2
         version: 3.7.2

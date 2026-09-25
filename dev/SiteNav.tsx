@@ -105,7 +105,12 @@ export default function SiteNav() {
                       if (item.id === framework.id) event.preventDefault();
                     }}
                   >
-                    <span>{item.label}</span>
+                    <span>
+                      <span>{item.label}</span>
+                      {item.description && (
+                        <small class={styles.description}>{item.description}</small>
+                      )}
+                    </span>
                     <span class={styles.check} aria-hidden="true">
                       {item.id === framework.id ? "✓" : ""}
                     </span>
@@ -152,7 +157,12 @@ export default function SiteNav() {
                       if (item.id === library.id) event.preventDefault();
                     }}
                   >
-                    <span>{item.label}</span>
+                    <span>
+                      <span>{item.label}</span>
+                      {item.description && (
+                        <small class={styles.description}>{item.description}</small>
+                      )}
+                    </span>
                     <span class={styles.check} aria-hidden="true">
                       {item.id === library.id ? "✓" : ""}
                     </span>

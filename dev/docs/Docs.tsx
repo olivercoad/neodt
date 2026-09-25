@@ -10,6 +10,7 @@ import {
   Switch,
 } from "solid-js";
 
+import { packageEntry } from "../../frameworks";
 import Code from "../code/Code";
 import { currentFramework } from "../framework";
 import { useLibrary } from "../library";
@@ -42,8 +43,8 @@ function GettingStarted() {
         without the guesswork.
       </h1>
       <p class={styles.intro}>
-        A segmented date and time input for Solid, React, and Vue, with locale-aware formatting and
-        your choice of datetime library.
+        A segmented date and time input for plain TypeScript and frontend frameworks, with
+        locale-aware formatting and your choice of datetime library.
       </p>
       <h2 id="install">Install</h2>
       <pre>
@@ -52,15 +53,16 @@ function GettingStarted() {
         </code>
       </pre>
       <p>
-        Use the Framework and Library dropdowns to choose your integration. Each framework entry
-        imports its own stylesheet. See the <a href="#/docs/frameworks">Frameworks guide</a> for
-        build requirements and native prop conventions.
+        Use the Framework and Library dropdowns to choose your integration. Styles are included
+        automatically. See the <a href="#/docs/frameworks">Frameworks guide</a> for build
+        requirements and native prop conventions.
       </p>
       <p>
-        Each framework’s root import uses native <code>Temporal.ZonedDateTime</code> values. Your
-        browser must provide Temporal. For a polyfill, another datetime library, or a custom
-        adapter, see <a href="#/docs/libraries">Datetime libraries</a>. TypeScript 6 or later
-        projects can enable Temporal types with <code>lib: ["ESNext", "DOM"]</code>.
+        The Library choice None uses native <code>Temporal.ZonedDateTime</code> values. Vanilla uses
+        the package root; framework components use their framework’s root import. Your browser must
+        provide Temporal. For a polyfill, another datetime library, or a custom adapter, see{" "}
+        <a href="#/docs/libraries">Datetime libraries</a>. TypeScript 6 or later projects can enable
+        Temporal types with <code>lib: ["ESNext", "DOM"]</code>.
       </p>
       <h2 id="a-controlled-field">A controlled field</h2>
       <pre>
@@ -93,14 +95,17 @@ function GettingStarted() {
         the <a href="#/docs/styling">styling gallery</a> for live examples.
       </p>
       <p>
-        Server rendering is supported, but editing and layout measurement require a browser. Use the
-        same explicit locale, reference time, and value on the server and client to keep hydration
-        predictable. Native picker availability and appearance depend on the browser.
+        Framework components support server rendering; Vanilla mounts in the browser. Editing and
+        layout measurement require a browser. Use the same explicit locale, reference time, and
+        value on the server and client to keep hydration predictable. Native picker availability and
+        appearance depend on the browser.
       </p>
     </>
   );
 }
 function Api() {
+  const library = useLibrary();
+  const framework = currentFramework();
   const props = [
     [
       "referenceTime",
@@ -195,22 +200,23 @@ function Api() {
       <h2 id="natural-language-parser">Natural-language parser</h2>
       <pre>
         <Code
-          language="tsx"
-          value={`import { parseNaturalDate, getNaturalDateCompletions } from "@olicoad/neodt/solid";
+          language="typescript"
+          value={`import { parseNaturalDate, getNaturalDateCompletions } from "${packageEntry(framework.id, library.entry)}";
+${library.imports}
 
+const referenceTime = ${library.nowExpression};
 const result = parseNaturalDate("tomorrow 9am", {
   referenceTime,
-  zone: referenceTime.timeZoneId,
   locale: "en-AU",
 });
 const suggestions = getNaturalDateCompletions("tom", 5);`}
         />
       </pre>
       <p>
-        <code>parseNaturalDate</code> returns a <code>Temporal.ZonedDateTime</code> or undefined
-        when the text cannot be parsed. The optional zone is a timezone identifier and defaults to
-        the reference’s zone. <code>getNaturalDateCompletions</code> returns labels and replacement
-        text. The associated types are <code>NaturalDateParseOptions</code> and{" "}
+        <code>parseNaturalDate</code> returns a <code>{library.type}</code> or undefined when the
+        text cannot be parsed. The optional zone uses the selected adapter’s timezone type and
+        defaults to the reference’s zone. <code>getNaturalDateCompletions</code> returns labels and
+        replacement text. The associated types are <code>NaturalDateParseOptions</code> and{" "}
         <code>NaturalDateCompletion</code>.
       </p>
       <h2 id="controlled-updates">Controlled updates</h2>

@@ -6,7 +6,8 @@ const registrations = [
     implementation: "Temporal",
     callback: "value?.toInstant()",
 
-    label: "Native Temporal",
+    label: "None",
+    description: "native Temporal",
     entry: "",
     imports: "",
     now: "Temporal.Now.zonedDateTimeISO()",
@@ -120,6 +121,7 @@ export const libraries = registrations.map((library) => {
     typePackages: [] as readonly string[],
     demoPackages: [] as readonly string[],
     homepage: undefined as string | undefined,
+    description: undefined as string | undefined,
     ...library,
     packages,
     dependencies: packages ? packages.split(" ") : [],

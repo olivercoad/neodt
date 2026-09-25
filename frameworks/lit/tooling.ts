@@ -1,24 +1,10 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
-
+import { inlineStyles } from "../inline-styles.ts";
+import { generateComponent } from "../template-generator.ts";
 import type { FrameworkTooling } from "../tooling.ts";
-import { generateComponent } from "./generate.ts";
 export default {
   generateComponent,
   build: {
-    plugins: [
-      {
-        name: "lit-shadow-styles",
-        resolveId(id, importer) {
-          if (id.endsWith(".css?inline") && importer)
-            return path.resolve(path.dirname(importer), id);
-        },
-        async load(id) {
-          if (id.endsWith(".css?inline"))
-            return `export default ${JSON.stringify(await readFile(id.slice(0, -7), "utf8"))};`;
-        },
-      },
-    ],
+    plugins: [inlineStyles()],
   },
   consumer: {
     extension: "ts",

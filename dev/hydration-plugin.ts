@@ -10,7 +10,10 @@ export function hydrationFixture(): Plugin {
     configureServer(server) {
       server.middlewares.use(async (request, response, next) => {
         const url = new URL(request.url ?? "/", "http://fixture");
-        const framework = frameworks.find(({ id }) => url.pathname === `/@neodt/hydration/${id}`);
+        const framework = frameworks.find(
+          ({ id, serverRendering }) =>
+            serverRendering && url.pathname === `/@neodt/hydration/${id}`,
+        );
         if (!framework) return next();
         try {
           const source = `/frameworks/${framework.id}/test.${framework.sourceExtension}`;

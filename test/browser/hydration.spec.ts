@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { frameworks } from "../../frameworks";
-for (const framework of frameworks) {
+for (const framework of frameworks.filter(({ serverRendering }) => serverRendering)) {
   test(`${framework.id}: hydrates server markup without replacing segments or emitting changes`, async ({
     page,
   }) => {

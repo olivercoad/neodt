@@ -11,8 +11,8 @@ export default function Libraries() {
       <p class={styles.eyebrow}>DATETIME LIBRARIES</p>
       <h1>Choose your datetime library.</h1>
       <p class={styles.intro}>
-        The import path selects the adapter for the component. Native Temporal is the default;
-        install another library only when you choose its entry.
+        The import path selects the adapter for the component. None (native Temporal) is the default
+        for root imports; install another library only when you choose its entry.
       </p>
       <p>
         Use the <strong>Library</strong> dropdown in the top navigation to try the lab and styling
@@ -22,9 +22,11 @@ export default function Libraries() {
       </p>
       <p>
         The examples below use Solid syntax. See <a href="#/docs/frameworks">Frameworks</a> for the
-        selected framework’s example and replace /solid with your framework in utility imports.
+        selected framework’s example and replace /solid with your framework in utility imports. For
+        Vanilla, omit the framework segment entirely: use @olicoad/neodt, @olicoad/neodt/luxon, or
+        any other library entry directly.
       </p>
-      <h2 id="native-temporal">Native Temporal</h2>
+      <h2 id="native-temporal">None (native Temporal)</h2>
       <pre>
         <Code
           language="tsx"

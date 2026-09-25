@@ -11,7 +11,7 @@ export const adapter = createTemporalAdapter<Temporal.ZonedDateTime>({
     fromEpochMilliseconds(milliseconds) {
       if (typeof Temporal === "undefined") {
         throw new Error(
-          "Native Temporal is unavailable. Import the temporal-polyfill or js-temporal-polyfill entry under your framework instead.",
+          "Native Temporal is unavailable. Select the temporal-polyfill or js-temporal-polyfill entry instead (at the package root for Vanilla, or under your framework).",
         );
       }
       return Temporal.Instant.fromEpochMilliseconds(milliseconds);

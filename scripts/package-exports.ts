@@ -13,7 +13,7 @@ pkg.exports = Object.fromEntries(
         .filter((library) => library.entry)
         .map((library) => [library.entry, library.entry.slice(1)]),
     ].map(([suffix, name]) => [
-      `./${framework.id}${suffix}`,
+      `.${framework.entry}${suffix}`,
       {
         types: `./dist/${framework.id}/${name}.d.ts`,
         default: `./dist/${framework.id}/${name}.${framework.outputExtension}`,

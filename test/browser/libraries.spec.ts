@@ -73,7 +73,10 @@ for (const library of libraries) {
     await page.getByLabel("Datetime library", { exact: true }).click();
     await page
       .getByRole("navigation", { name: "Main navigation" })
-      .getByRole("link", { name: library.label, exact: true })
+      .getByRole("link", {
+        name: [library.label, library.description].filter(Boolean).join(" "),
+        exact: true,
+      })
       .click();
     await expect(page).toHaveURL(new RegExp(`/${library.id}/#/docs/libraries/temporal-polyfills$`));
     await expect(page.locator("html")).toHaveAttribute("data-adapter", library.id);

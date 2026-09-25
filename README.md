@@ -7,7 +7,7 @@ A locale-aware, keyboard-editable segmented date and time input.
 ## Install
 
 ```bash
-pnpm add @olicoad/neodt solid-js
+pnpm add @olicoad/neodt
 ```
 
 ## Frameworks
@@ -16,7 +16,32 @@ neodt uses Mitosis to support many frontend frameworks from one shared implement
 
 See [Frameworks](https://neodt.olisworld.com/#/docs/frameworks) for supported frameworks, installation, and usage examples.
 
+## Vanilla TypeScript usage
+
+The package root provides a plain DOM API with a bundled renderer. No framework or JSX setup is required. The Library choice **None** means **native Temporal**; your runtime must provide it.
+
+```ts
+import createNeodt from "@olicoad/neodt";
+
+const picker = createNeodt(document.querySelector<HTMLElement>("#date")!, {
+  referenceTime: Temporal.Now.zonedDateTimeISO("Australia/Sydney"),
+  onValueChange: (value) => console.log(value), // Temporal.ZonedDateTime | null
+});
+
+picker.update({ disabled: true });
+// When removing the owning UI:
+picker.destroy();
+```
+
+Every registered datetime library is available directly under the package: `@olicoad/neodt/luxon`, `@olicoad/neodt/spacetime`, `@olicoad/neodt/temporal-polyfill`, and the other library entries. Install only your chosen datetime package. Use `@olicoad/neodt/generic` for a custom adapter. Values and callbacks retain the selected library's types.
+
+The returned handle exposes `element`, `update(partialOptions)`, and `destroy()`. Updates merge options; pass `undefined` to remove an optional option. Omit `value` for uncontrolled editing, or pass `value` and call `picker.update({ value })` from `onValueChange` for controlled editing. A container can hold multiple controls and other content; destroying one control removes only its own nodes and releases its listeners and observers. Calling `destroy()` again is harmless; updating a destroyed control throws.
+
+Vanilla uses ordinary DOM and the shared stylesheet. It mounts in the browser; imports and parser utilities are safe on the server. The framework components provide server rendering and hydration. The demo landing page defaults to Solid with temporal-polyfill for browser compatibility; select Vanilla to try the DOM API.
+
 ## Solid usage
+
+Install `solid-js` alongside neodt for the Solid component.
 
 Each framework root uses native Temporal. Your runtime must provide Temporal; see [Datetime libraries](https://neodt.olisworld.com/#/docs/libraries) for polyfills and other libraries.
 
@@ -114,7 +139,7 @@ The control supports mouse, touch, and keyboard editing: Arrow Left/Right move b
 
 ## Styles
 
-Lit includes its styles inside its shadow root. Other component entries import the component CSS, so Vite and standard Solid build setups need no extra configuration. For applications that exclude dependency side effects, or that centralize stylesheet imports, import the public stylesheet explicitly:
+Vanilla installs its default styles before application styles when mounted. Lit includes its styles inside its shadow root. Other component entries import the component CSS, so Vite and standard Solid build setups need no extra configuration. For applications that exclude dependency side effects, or that centralize stylesheet imports, import the public stylesheet explicitly:
 
 ```tsx
 import "@olicoad/neodt/style.css";

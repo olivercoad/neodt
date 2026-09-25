@@ -1,5 +1,15 @@
 import { expect, test } from "@playwright/test";
 
+test("the bare landing page defaults to Solid and temporal-polyfill", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByLabel("Frontend framework", { exact: true })).toContainText("Solid");
+  await expect(page.getByLabel("Datetime library", { exact: true })).toContainText(
+    "temporal-polyfill",
+  );
+  await expect(page.locator("html")).toHaveAttribute("data-framework", "solid");
+  await expect(page.locator("html")).toHaveAttribute("data-adapter", "temporal-polyfill");
+});
+
 test("library panel works with keyboard, dismisses, and fits narrow screens", async ({ page }) => {
   await page.goto("/internationalized-date/#/docs/styling");
   const trigger = page.getByLabel("Datetime library", { exact: true });
@@ -8,7 +18,7 @@ test("library panel works with keyboard, dismisses, and fits narrow screens", as
   const selected = page.getByRole("link", { name: "@internationalized/date", exact: true });
   await expect(selected).toHaveAttribute("aria-current", "true");
   await page.keyboard.press("Tab");
-  await expect(page.getByRole("link", { name: "Native Temporal", exact: true })).toBeFocused();
+  await expect(page.getByRole("link", { name: "None native Temporal", exact: true })).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(trigger).toBeFocused();
   await expect(selected).toBeHidden();

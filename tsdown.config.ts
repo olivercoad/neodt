@@ -23,7 +23,7 @@ export default defineConfig(
         tsconfig: "tsconfig.build.json",
         plugins: [libraryEntries(), integration.plugins],
         platform: "neutral" as const,
-        deps: { neverBundle: [...datetimePackages, ...frameworkPackages] },
+        deps: { ...integration.deps, neverBundle: [...datetimePackages, ...frameworkPackages] },
         css: { inject: true },
         exports: false,
         dts: { compilerOptions: { rootDir: process.cwd() } },

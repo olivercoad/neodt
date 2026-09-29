@@ -3,8 +3,8 @@ import path from "node:path";
 
 import type { Plugin } from "vite";
 
-import { frameworks } from "../frameworks";
-import { libraries } from "../libraries";
+import { frameworks } from "../frameworks.ts";
+import { libraries } from "../libraries.ts";
 
 /** One HTML template and a virtual startup module for each registered library. */
 export function libraryPages(): Plugin {

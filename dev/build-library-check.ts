@@ -1,7 +1,7 @@
 import type { Plugin } from "vite";
 
-import { frameworks } from "../frameworks";
-import { libraries } from "./libraries";
+import { frameworks } from "../frameworks.ts";
+import { libraries } from "./libraries.ts";
 
 const packages = Object.fromEntries(
   libraries.map((library) => [library.id, [...library.dependencies, ...library.demoPackages]]),

@@ -1,4 +1,4 @@
-import { frameworks, demoPath, type FrameworkId } from "../frameworks";
+import { frameworks, demoPath, type FrameworkId } from "../frameworks.ts";
 export { frameworks, demoPath, type FrameworkId };
 export const currentFramework = () =>
   frameworks.find(

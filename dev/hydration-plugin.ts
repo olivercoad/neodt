@@ -2,7 +2,7 @@ import path from "node:path";
 
 import type { Plugin } from "vite";
 
-import { frameworks } from "../frameworks";
+import { frameworks } from "../frameworks.ts";
 /** Development-only fixture: hydrate markup produced by each framework's actual server renderer. */
 export function hydrationFixture(): Plugin {
   return {

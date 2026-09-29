@@ -1,19 +1,24 @@
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-29
+
 Another, even bigger change to Neodt! It is now fully framework agnostic, too, using a generic core and [mitosis](https://mitosis.builder.io) to help with generating glue code for each framework.
 
 ### Added
 
 - React
 - Vue
-- Angular
 - Svelte
+- Angular
+- Lit
+- Vanilla (bundled Lit)
 
 ### Changed
 
 - **Breaking:** The calendarIcon and magicIcon props are removed to simplify things
 - **Breaking:** Solidjs users should adjust your import from `@olicoad/neodt/luxon` to `@olicoad/neodt/solid/luxon`
 - Docs site library now defaults to None (Native Temporal) using a global polyfill
+- Better tree-shaking
 
 ## [0.3.1] - 2026-09-24
 

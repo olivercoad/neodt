@@ -36,7 +36,18 @@ export function libraryPages(): Plugin {
           entries: [
             path.join(root, "start.tsx"),
             ...libraries.map(({ source }) => path.resolve(root, "..", source)),
+            // Virtual demo modules are invisible to the initial dependency scan.
+            ...frameworks.map(({ id, sourceExtension }) =>
+              path.resolve(
+                root,
+                "../frameworks",
+                id,
+                id === "solid" ? `generic.${sourceExtension}` : "demo.ts",
+              ),
+            ),
           ],
+          // Imports added by the virtual startup module and JSX transform.
+          include: ["temporal-polyfill/global", "react/jsx-dev-runtime"],
         },
         build: {
           rollupOptions: {

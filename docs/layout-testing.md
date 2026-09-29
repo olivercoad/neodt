@@ -40,6 +40,8 @@ Unit suites share `test/helpers/adapters.ts`; configured entry-point tests and S
 
 `test/browser/docs.spec.ts` checks navigation, live CSS isolation, copying and its fallback, reset, and mobile overflow. Unit tests cover parsing, keyboard editing, controlled state, and DOM structure.
 
+`test/browser/dev-startup.spec.ts` starts an isolated Vite server with an empty dependency cache and visits every framework, datetime library, and hydration entry point while keeping a documentation tab open. It rejects failed requests and unexpected reloads. Keep virtual demo and middleware hydration imports in the dependency scan so first visits cannot invalidate modules used by other tests or open tabs.
+
 On failure, Playwright saves a screenshot and trace in `test-results/`. Open `pnpm exec playwright show-report` or use `pnpm exec playwright show-trace <trace.zip>` to inspect the failing layout. These artifacts are uploaded by CI.
 
 The suite uses geometry contracts and small painted-glyph bounds checks instead of golden pixel snapshots tied to one operating system and font rasteriser. The glyph checks use lining digits to distinguish visible centering from an equal-height line box. Add a regression assertion for the user-visible failure when fixing layout. For visual-only changes, inspect the fixture and styling gallery as well. Native OS picker surfaces, physical touch devices, and screen-reader output still need manual checks.

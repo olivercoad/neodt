@@ -7,6 +7,18 @@ import { frameworks } from "../frameworks";
 export function hydrationFixture(): Plugin {
   return {
     name: "hydration-fixture",
+    config() {
+      return {
+        optimizeDeps: {
+          // These browser imports are emitted by middleware, outside Vite's HTML scan.
+          entries: frameworks
+            .filter(({ serverRendering }) => serverRendering)
+            .map(({ id, sourceExtension }) =>
+              path.resolve(import.meta.dirname, `../frameworks/${id}/test.${sourceExtension}`),
+            ),
+        },
+      };
+    },
     configureServer(server) {
       server.middlewares.use(async (request, response, next) => {
         const url = new URL(request.url ?? "/", "http://fixture");

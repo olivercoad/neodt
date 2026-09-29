@@ -253,3 +253,9 @@ Support configurable precision and step size:
 - Milliseconds
 - Date-only values
 - Step size
+
+## Todo
+
+- fix all failing tests make them not flaky
+- update landing page hero section
+- make sure tree-shaking works and that bundle size when using a framework is, I would hope, <10kb

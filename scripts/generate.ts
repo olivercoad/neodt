@@ -50,9 +50,9 @@ type Value = typeof adapter extends DateAdapter<infer T, infer _Z> ? T : never;
 type Zone = typeof adapter extends DateAdapter<infer _T, infer Z> ? Z : never;
 export type NeodtProps = Omit<GenericProps<Value, Zone>, "adapter">;
 export type NaturalDateParseOptions = ConfiguredNaturalDateParseOptions<Value, Zone>;
-export const { parseNaturalDate } = configureDate(adapter);
+export const { parseNaturalDate } = /* @__PURE__ */ configureDate(adapter);
 export * from "../../src/public";
-export const Neodt = configureNeodt(adapter);
+export const Neodt = /* @__PURE__ */ configureNeodt(adapter);
 export default Neodt;
 export * from "../../${library.source.replace(/\.ts$/, "")}";
 `,

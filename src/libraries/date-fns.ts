@@ -14,7 +14,7 @@ import { systemZone, type AdapterOptions, type DateAdapter, type DateFields } fr
 import { createIntlFormatter } from "../adapters/intl-format";
 import { defineIntegration } from "../integration";
 
-export const adapter = createDateFnsAdapter(toDate);
+export const adapter = /* @__PURE__ */ createDateFnsAdapter(toDate);
 
 /** date-fns owns calendar operations; @date-fns/tz supplies named-zone Date operations. */
 export function createDateFnsAdapter<T extends Date = Date>(

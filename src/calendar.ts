@@ -4,59 +4,57 @@ import { formatterFor } from "./formatter-cache";
 
 export type { DurationUnit } from "./adapter";
 
-type Operations = {
-  fields: DateFields;
-  milliseconds: number;
-  offset: number;
-  isOffsetFixed: boolean;
-  weekday: number;
-  daysInMonth: number;
-  fromFields(fields: DateFields): CalendarDate;
-  atMilliseconds(ms: number): CalendarDate;
-  set(fields: Partial<DateFields>): CalendarDate;
-  plus(duration: DateDuration): CalendarDate;
-  startOf(unit: DateBoundary): CalendarDate;
-  setZoneId(zone: string): CalendarDate;
-  format(
-    locale: Intl.LocalesArgument | undefined,
-    options: Intl.DateTimeFormatOptions,
-  ): Intl.DateTimeFormatPart[];
-};
+// Expose only calendar operations; native value and opaque zone types stay private.
+export type CalendarDate = Pick<AdapterDate<never, never>, keyof AdapterDate<never, never>>;
 
 /** A view over adapter operations, with no calendar arithmetic or timezone resolution. */
-export class CalendarDate {
-  constructor(private readonly operations: Operations) {
-    if (!Number.isFinite(operations.milliseconds)) throw new RangeError("Invalid datetime value");
+class AdapterDate<T, TZone> {
+  private readonly zone: TZone;
+  readonly milliseconds: number;
+
+  constructor(
+    private readonly adapter: DateAdapter<T, TZone>,
+    private readonly value: T,
+  ) {
+    this.zone = adapter.getZone(value);
+    this.milliseconds = adapter.toEpochMilliseconds(value);
+    if (!Number.isFinite(this.milliseconds)) throw new RangeError("Invalid datetime value");
+  }
+  private wrap(value: T): CalendarDate {
+    return calendarDate(this.adapter, value);
+  }
+  private fromFields(fields: DateFields): CalendarDate {
+    return this.wrap(this.adapter.fromFields(fields, this.zone));
+  }
+  atMilliseconds(milliseconds: number): CalendarDate {
+    return this.wrap(this.adapter.fromEpochMilliseconds(milliseconds, this.zone));
   }
   get year() {
-    return this.operations.fields.year;
+    return this.adapter.getFields(this.value).year;
   }
   get month() {
-    return this.operations.fields.month;
+    return this.adapter.getFields(this.value).month;
   }
   get day() {
-    return this.operations.fields.day;
+    return this.adapter.getFields(this.value).day;
   }
   get hour() {
-    return this.operations.fields.hour;
+    return this.adapter.getFields(this.value).hour;
   }
   get minute() {
-    return this.operations.fields.minute;
-  }
-  get milliseconds() {
-    return this.operations.milliseconds;
+    return this.adapter.getFields(this.value).minute;
   }
   get isOffsetFixed() {
-    return this.operations.isOffsetFixed;
+    return this.adapter.isOffsetFixed?.(this.value) ?? false;
   }
   get offset() {
-    return this.operations.offset;
+    return this.adapter.getOffset(this.value);
   }
   get weekday() {
-    return this.operations.weekday;
+    return this.adapter.getWeekday(this.value);
   }
   get daysInMonth() {
-    return this.operations.daysInMonth;
+    return this.adapter.getDaysInMonth(this.value);
   }
   valueOf() {
     return this.milliseconds;
@@ -68,27 +66,29 @@ export class CalendarDate {
       this.offset === other.offset
     );
   }
-  inZoneOf(reference: CalendarDate) {
-    return reference.operations.atMilliseconds(this.milliseconds);
+  inZoneOf(reference: CalendarDate): CalendarDate {
+    return reference.atMilliseconds(this.milliseconds);
   }
-  setZoneId(zone: string) {
-    return this.operations.setZoneId(zone);
+  setZoneId(zone: string): CalendarDate {
+    return this.wrap(this.adapter.setZoneId(this.value, zone));
   }
-  set(fields: Partial<DateFields>) {
-    return this.operations.set(fields);
+  set(fields: Partial<DateFields>): CalendarDate {
+    return this.wrap(this.adapter.setFields(this.value, fields));
   }
-  startOf(unit: DateBoundary) {
-    return this.operations.startOf(unit);
+  startOf(unit: DateBoundary): CalendarDate {
+    return this.wrap(this.adapter.startOf(this.value, unit));
   }
-  plus(duration: Partial<Record<DurationUnit | `${DurationUnit}s`, number>>) {
+  plus(duration: Partial<Record<DurationUnit | `${DurationUnit}s`, number>>): CalendarDate {
     const normalized: DateDuration = {};
     for (const unit of ["year", "month", "week", "day", "hour", "minute"] as const) {
       const amount = (duration[unit] ?? 0) + (duration[`${unit}s`] ?? 0);
       if (amount) normalized[`${unit}s`] = amount;
     }
-    return Object.keys(normalized).length ? this.operations.plus(normalized) : this;
+    return Object.keys(normalized).length
+      ? this.wrap(this.adapter.add(this.value, normalized))
+      : this;
   }
-  fromObject(fields: Partial<DateFields>) {
+  fromObject(fields: Partial<DateFields>): CalendarDate {
     const complete = { year: 2001, month: 1, day: 1, hour: 0, minute: 0, second: 0, ...fields };
     // Validate editor input without relying on libraries that silently constrain it.
     // Month length is queried from the selected library, never calculated here.
@@ -108,9 +108,9 @@ export class CalendarDate {
       complete.second > 59
     )
       throw new RangeError("Invalid calendar date");
-    const first = this.operations.fromFields({ ...complete, day: 1, hour: 12 });
+    const first = this.fromFields({ ...complete, day: 1, hour: 12 });
     if (complete.day > first.daysInMonth) throw new RangeError("Invalid calendar date");
-    return this.operations.fromFields(complete);
+    return this.fromFields(complete);
   }
   fromISO(value: string): CalendarDate | undefined {
     const match = value.match(
@@ -145,37 +145,13 @@ export class CalendarDate {
     return `${this.toLocalValue()}${this.offset === 0 ? "Z" : offsetZone(this.offset)}`;
   }
   toLocaleParts(locale: Intl.LocalesArgument | undefined, options: Intl.DateTimeFormatOptions) {
-    return this.operations.format(locale, options);
+    return formatterFor(this.adapter, this.zone, locale, options).formatToParts(this.value);
   }
 }
 
-/** Bind native values through closures, retaining opaque zones without type erasure. */
+export const CalendarDate = AdapterDate;
+
+/** Retain native values and opaque zones without allocating an operations closure per method. */
 export function calendarDate<T, TZone>(adapter: DateAdapter<T, TZone>, value: T): CalendarDate {
-  const zone = adapter.getZone(value);
-  const wrap = (next: T): CalendarDate => calendarDate(adapter, next);
-  return new CalendarDate({
-    get fields() {
-      return adapter.getFields(value);
-    },
-    milliseconds: adapter.toEpochMilliseconds(value),
-    get isOffsetFixed() {
-      return adapter.isOffsetFixed?.(value) ?? false;
-    },
-    get offset() {
-      return adapter.getOffset(value);
-    },
-    get weekday() {
-      return adapter.getWeekday(value);
-    },
-    get daysInMonth() {
-      return adapter.getDaysInMonth(value);
-    },
-    fromFields: (fields) => wrap(adapter.fromFields(fields, zone)),
-    atMilliseconds: (ms) => wrap(adapter.fromEpochMilliseconds(ms, zone)),
-    set: (fields) => wrap(adapter.setFields(value, fields)),
-    plus: (duration) => wrap(adapter.add(value, duration)),
-    startOf: (unit) => wrap(adapter.startOf(value, unit)),
-    setZoneId: (id) => wrap(adapter.setZoneId(value, id)),
-    format: (locale, options) => formatterFor(adapter, zone, locale, options).formatToParts(value),
-  });
+  return new AdapterDate(adapter, value);
 }

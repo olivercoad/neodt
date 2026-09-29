@@ -112,6 +112,9 @@ importers:
       moment-timezone:
         specifier: ^0.6.4
         version: 0.6.4
+      neodt-v02:
+        specifier: npm:@olicoad/neodt@0.2.0
+        version: '@olicoad/neodt@0.2.0(solid-js@1.8.17)'
       oxfmt:
         specifier: ^0.64.0
         version: 0.64.0(svelte@5.57.1)
@@ -762,6 +765,12 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
+  '@olicoad/neodt@0.2.0':
+    resolution: {integrity: sha512-5GxBlpnCXKT5/D0Fdc3RxxSPyNzoyF25FQfTrFpmeJ2z2a+taRf9LKFCxgKwvPaeh7bBgmCBPxxROR8ssBRxSA==}
+    engines: {node: '>=24', pnpm: '>=11.0.0'}
+    peerDependencies:
+      solid-js: ^1.6.0
+
   '@oxc-project/types@0.146.0':
     resolution: {integrity: sha512-XC0QsnnhVe7sLIWmYmdPw7x5P0h4W8vUU3Nv1ySgWXtvCz8NizoAEpGXA0sOYoJQV2Rl13LgURAHQ5cI5ILCSA==}
 
@@ -1118,6 +1127,26 @@ packages:
 
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
+
+  '@solid-primitives/event-listener@2.4.6':
+    resolution: {integrity: sha512-5I0YJcTVYIWoMmgBSROBZGcz+ymhew/pGTg2dHW74BUjFKsV8Li4bOZYl0YAGP4mHw5o4UBd9/BEesqBci3wxw==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
+  '@solid-primitives/resize-observer@2.2.0':
+    resolution: {integrity: sha512-9Fuu/EWBeGj+atGHRJp70HKhdfalmpjwxY8a32NZixdLNmfCJ45AfhLQNr6uOzETbbiMx4iCKlTrJ8KZCHC2Ww==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
+  '@solid-primitives/rootless@1.5.4':
+    resolution: {integrity: sha512-TOIZa1VUfVJ+9nkCcRajw3U4t9vBOP1HxX1WHNTbXq32mXwlqTvUnC4CRIilohcryBkT9u2ZkhUDSHRTaGp55g==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
+  '@solid-primitives/static-store@0.1.4':
+    resolution: {integrity: sha512-LgtVaVBtB7EbmS4+M0b8xY5Iq6pUWXBsIC4VgtrFKDGDdyCaDt88sHk0fUlx1Enxm/XZnZyLXJABRoa39RjJqA==}
+    peerDependencies:
+      solid-js: ^1.6.12
 
   '@solid-primitives/storage@4.4.0':
     resolution: {integrity: sha512-+u0dpTqrUG7h+IMfmGLCx7vx2Q0Eon6paBgzcWhEP/dauElpGU3ElpZZOZgw8YKR1+J4X4ENiAL0na3VH8RWMg==}
@@ -3521,6 +3550,16 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.3
 
+  '@olicoad/neodt@0.2.0(solid-js@1.8.17)':
+    dependencies:
+      '@solid-primitives/resize-observer': 2.2.0(solid-js@1.8.17)
+      '@solid-primitives/storage': 4.4.0(solid-js@1.8.17)
+      luxon: 3.7.2
+      solid-js: 1.8.17
+    transitivePeerDependencies:
+      - '@tauri-apps/plugin-store'
+      - solid-start
+
   '@oxc-project/types@0.146.0': {}
 
   '@oxfmt/binding-android-arm-eabi@0.64.0':
@@ -3695,6 +3734,29 @@ snapshots:
     optional: true
 
   '@rolldown/pluginutils@1.0.1': {}
+
+  '@solid-primitives/event-listener@2.4.6(solid-js@1.8.17)':
+    dependencies:
+      '@solid-primitives/utils': 6.4.1(solid-js@1.8.17)
+      solid-js: 1.8.17
+
+  '@solid-primitives/resize-observer@2.2.0(solid-js@1.8.17)':
+    dependencies:
+      '@solid-primitives/event-listener': 2.4.6(solid-js@1.8.17)
+      '@solid-primitives/rootless': 1.5.4(solid-js@1.8.17)
+      '@solid-primitives/static-store': 0.1.4(solid-js@1.8.17)
+      '@solid-primitives/utils': 6.4.1(solid-js@1.8.17)
+      solid-js: 1.8.17
+
+  '@solid-primitives/rootless@1.5.4(solid-js@1.8.17)':
+    dependencies:
+      '@solid-primitives/utils': 6.4.1(solid-js@1.8.17)
+      solid-js: 1.8.17
+
+  '@solid-primitives/static-store@0.1.4(solid-js@1.8.17)':
+    dependencies:
+      '@solid-primitives/utils': 6.4.1(solid-js@1.8.17)
+      solid-js: 1.8.17
 
   '@solid-primitives/storage@4.4.0(solid-js@1.8.17)':
     dependencies:

@@ -6,7 +6,7 @@ import { createLibraryZoneFormatter } from "../adapters/intl-format";
 import { fixedOffset } from "../format";
 import { defineIntegration } from "../integration";
 
-export const adapter = createSpacetimeAdapter(spacetime);
+export const adapter = /* @__PURE__ */ createSpacetimeAdapter(spacetime);
 
 export function createSpacetimeAdapter(spacetime: SpacetimeConstructor): DateAdapter<Spacetime> {
   const zones = new WeakMap<Spacetime, string>();

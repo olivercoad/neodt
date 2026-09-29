@@ -1,4 +1,4 @@
-import { CalendarDate as DateTime, calendarDate } from "../calendar";
+import { type CalendarDate as DateTime, calendarDate } from "../calendar";
 import {
   closestYear,
   digitLimit,
@@ -23,17 +23,6 @@ import { parseInternalDate } from "../natural-parser";
 import { createNaturalPlaceholder } from "../natural-placeholder";
 import type { CoreProps } from "./props";
 
-function createSignal<T = undefined>(
-  initial?: T,
-): [() => T, (next: T | ((previous: T) => T)) => void] {
-  let current = initial as T;
-  return [
-    () => current,
-    (next) => {
-      current = typeof next === "function" ? (next as (previous: T) => T)(current) : next;
-    },
-  ];
-}
 /** Cache derived values until their inputs change, independently of the rendering framework. */
 function createMemo<T>(read: () => T, dependencies: () => readonly unknown[]): () => T {
   let previous: readonly unknown[] | undefined;
@@ -73,31 +62,25 @@ function createEditor(initial: InternalProps) {
       }).resolvedOptions(),
     () => [locale(), local.formatOptions],
   );
-  const [uncontrolledValue, setUncontrolledValue] = createSignal<DateTime | undefined>(
-    local.defaultValue,
-  );
-  const [selected, setSelected] = createSignal(0);
-  const [allSegmentsSelected, setAllSegmentsSelected] = createSignal(false);
-  const [typed, setTyped] = createSignal<{ index: number; digits: string } | undefined>();
-  const [naturalText, setNaturalText] = createSignal("");
-  const [naturalPlaceholder, setNaturalPlaceholder] = createSignal("");
-  const [naturalSuggestion, setNaturalSuggestion] = createSignal(0);
-  const [naturalMode, setNaturalMode] = createSignal(false);
+  let uncontrolledValue: DateTime | undefined = local.defaultValue;
+  let selected = 0;
+  let allSegmentsSelected = false;
+  let typed: { index: number; digits: string } | undefined;
+  let naturalText = "";
+  let naturalPlaceholder = "";
+  let naturalSuggestion = 0;
+  let naturalMode = false;
   const referenceDate = () => local.referenceTime;
   const value = createMemo(
     () =>
-      (local.value === undefined ? uncontrolledValue() : (local.value ?? undefined))?.inZoneOf(
+      (local.value === undefined ? uncontrolledValue : (local.value ?? undefined))?.inZoneOf(
         referenceDate(),
       ),
-    () => [local.value, uncontrolledValue(), referenceDate()],
+    () => [local.value, uncontrolledValue, referenceDate()],
   );
-  const [draftDate, setDraftDate] = createSignal(
-    (value() ?? local.referenceTime).startOf("minute"),
-  );
-  const nativeValue = () => toLocalValue(value() ?? draftDate());
-  const [cleared, setCleared] = createSignal<Set<SegmentName>>(
-    new Set(value() ? [] : segmentNames),
-  );
+  let draftDate = (value() ?? local.referenceTime).startOf("minute");
+  const nativeValue = () => toLocalValue(value() ?? draftDate);
+  let cleared: Set<SegmentName> = new Set(value() ? [] : segmentNames);
   let previousControlledValue = local.value;
   let emittedValue: DateTime | null | undefined;
   const reconcile = () => {
@@ -107,14 +90,14 @@ function createEditor(initial: InternalProps) {
     const isEcho = sameDateValue(controlledValue, emittedValue);
     emittedValue = undefined;
     if (controlledValue === undefined || isEcho) return;
-    setTyped(undefined);
-    setAllSegmentsSelected(false);
-    setDraftDate(
-      (controlledValue ?? local.referenceTime).inZoneOf(referenceDate()).startOf("minute"),
-    );
-    setCleared(new Set<SegmentName>(controlledValue ? [] : segmentNames));
+    typed = undefined;
+    allSegmentsSelected = false;
+    draftDate = (controlledValue ?? local.referenceTime)
+      .inZoneOf(referenceDate())
+      .startOf("minute");
+    cleared = new Set<SegmentName>(controlledValue ? [] : segmentNames);
   };
-  const displayDate = () => (cleared().size ? draftDate() : (value() ?? draftDate()));
+  const displayDate = () => (cleared.size ? draftDate : (value() ?? draftDate));
   const segments = createMemo(
     () => partsFor(toLocalValue(displayDate()), referenceDate(), locale(), local.formatOptions),
     () => [displayDate(), referenceDate(), locale(), local.formatOptions],
@@ -147,28 +130,28 @@ function createEditor(initial: InternalProps) {
   ];
   const naturalInput = () => root?.querySelector<HTMLInputElement>(".datetime-neo__natural-input");
   const nativeInput = () => root?.querySelector<HTMLInputElement>(".datetime-neo__native-input");
-  const [activeItem, setActiveItem] = createSignal(0);
-  const [editorHasHiddenEnd, setEditorHasHiddenEnd] = createSignal(false);
-  const [wrap, setWrap] = createSignal(false);
-  const [layoutChanging, setLayoutChanging] = createSignal(true);
+  let activeItem = 0;
+  let editorHasHiddenEnd = false;
+  let wrap = false;
+  let layoutChanging = true;
   let hasOpenedNaturalInput = false;
   const naturalPlaceholderAnimation = createNaturalPlaceholder((text) => {
-    setNaturalPlaceholder(text);
+    naturalPlaceholder = text;
     publish();
   });
   const naturalDate = createMemo(
     () =>
-      parseInternalDate(naturalText(), {
+      parseInternalDate(naturalText, {
         referenceTime: local.referenceTime,
         locale: locale(),
       }),
-    () => [naturalText(), referenceDate(), locale()],
+    () => [naturalText, referenceDate(), locale()],
   );
   const naturalCompletions = createMemo(
-    () => getNaturalDateCompletions(naturalText()),
-    () => [naturalText()],
+    () => getNaturalDateCompletions(naturalText),
+    () => [naturalText],
   );
-  const activeNaturalCompletion = () => naturalCompletions()[naturalSuggestion()];
+  const activeNaturalCompletion = () => naturalCompletions()[naturalSuggestion];
   const displayedParts = createMemo(
     () => splitDateAndTime(segments()),
     () => [segments()],
@@ -204,7 +187,7 @@ function createEditor(initial: InternalProps) {
   const updateEditorOverflow = () => {
     const element = editor();
     if (!element) return;
-    setEditorHasHiddenEnd(element.scrollLeft + element.clientWidth < element.scrollWidth - 1);
+    editorHasHiddenEnd = element.scrollLeft + element.clientWidth < element.scrollWidth - 1;
   };
 
   const revealSegment = (index: number) => {
@@ -228,54 +211,54 @@ function createEditor(initial: InternalProps) {
   };
 
   const emitValue = (next: DateTime | undefined) => {
-    if (local.value === undefined) setUncontrolledValue(next);
+    if (local.value === undefined) uncontrolledValue = next;
     emittedValue = next ?? null;
     local.onValueChange?.(next ?? null);
   };
 
-  const isCleared = (segment: SegmentName) => cleared().has(segment);
+  const isCleared = (segment: SegmentName) => cleared.has(segment);
   const displaySegmentValue = (index: number, segment: Segment) => {
-    const pending = typed();
+    const pending = typed;
     return segment.type === "year" && pending?.index === index ? pending.digits : segment.value;
   };
-  const hasClearedSegment = (segmentsToCheck = cleared()) =>
+  const hasClearedSegment = (segmentsToCheck = cleared) =>
     editableSegments().some((segment) => segmentsToCheck.has(segment.type));
 
   const completeSegments = (date: DateTime, completed: readonly SegmentName[]) => {
-    if (cleared().size === 0) {
+    if (cleared.size === 0) {
       emitValue(date);
       return;
     }
-    const nextCleared = new Set(cleared());
+    const nextCleared = new Set(cleared);
     for (const segment of completed) nextCleared.delete(segment);
-    setCleared(nextCleared);
+    cleared = nextCleared;
     emitValue(hasClearedSegment(nextCleared) ? undefined : date);
   };
 
   const commitTypedYear = () => {
-    const pending = typed();
+    const pending = typed;
     if (pending?.digits.length === 2 && editableSegments()[pending.index]?.type === "year") {
       setSegment("year", `${closestYear(pending.digits, local.referenceTime)}`);
     }
-    setTyped(undefined);
+    typed = undefined;
   };
 
   const clearSegments = (segments: readonly SegmentName[]) => {
     if (local.disabled || local.readonly) return;
-    setTyped(undefined);
-    if (value()) setDraftDate(value()!.startOf("minute"));
-    setCleared((previous) => new Set([...previous, ...segments]));
+    typed = undefined;
+    if (value()) draftDate = value()!.startOf("minute");
+    cleared = new Set([...cleared, ...segments]);
     emitValue(undefined);
   };
 
   const selectSegment = (index: number, focus = false) => {
     if (local.disabled || local.readonly) return;
-    setAllSegmentsSelected(false);
+    allSegmentsSelected = false;
     const next = Math.max(0, Math.min(index, editableSegments().length - 1));
-    const pending = typed();
+    const pending = typed;
     if (pending?.index !== next) commitTypedYear();
-    setSelected(next);
-    setActiveItem(next);
+    selected = next;
+    activeItem = next;
     revealSegment(next);
     if (focus) segmentButtons()[next]?.focus();
   };
@@ -287,8 +270,8 @@ function createEditor(initial: InternalProps) {
       selectSegment(next, focus);
       return;
     }
-    setTyped(undefined);
-    setActiveItem(next);
+    typed = undefined;
+    activeItem = next;
     if (focus) actionButtons()[next - segmentCount]?.focus();
   };
 
@@ -317,7 +300,7 @@ function createEditor(initial: InternalProps) {
 
   const changeSegment = (segment: SegmentName, amount: number) => {
     if (local.disabled || local.readonly) return;
-    let date = (value() ?? draftDate()).startOf("minute");
+    let date = (value() ?? draftDate).startOf("minute");
     switch (segment) {
       case "year":
         date = date.plus({ years: amount });
@@ -347,13 +330,13 @@ function createEditor(initial: InternalProps) {
         date = date.plus({ hours: date.hour < 12 ? 12 : -12 });
         break;
     }
-    setDraftDate(date);
+    draftDate = date;
     completeSegments(date, [segment]);
   };
 
   const setDayPeriod = (morning: boolean) => {
     if (local.disabled || local.readonly) return;
-    const date = (value() ?? draftDate()).startOf("minute");
+    const date = (value() ?? draftDate).startOf("minute");
     if (date.hour < 12 !== morning) {
       changeSegment("dayPeriod", 1);
       return;
@@ -382,7 +365,7 @@ function createEditor(initial: InternalProps) {
     if (local.disabled || local.readonly || segment === "dayPeriod") return;
     const number = Number(digits);
     if (!Number.isFinite(number)) return;
-    let date = (value() ?? draftDate()).startOf("minute");
+    let date = (value() ?? draftDate).startOf("minute");
     let setDayPeriodToPm = false;
     if (segment === "year" && number >= 1) date = date.set({ year: number });
     if (segment === "month" && number >= 1 && number <= 12) date = date.set({ month: number });
@@ -404,7 +387,7 @@ function createEditor(initial: InternalProps) {
       if (!hour12 && number >= 0 && number <= 23) date = date.set({ hour: number });
     }
     if (segment === "minute" && number >= 0 && number <= 59) date = date.set({ minute: number });
-    setDraftDate(date);
+    draftDate = date;
     completeSegments(date, setDayPeriodToPm ? [segment, "dayPeriod"] : [segment]);
   };
 
@@ -415,9 +398,9 @@ function createEditor(initial: InternalProps) {
 
   const openNaturalInput = () => {
     if (local.disabled || local.readonly) return;
-    setNaturalText("");
-    setNaturalSuggestion(0);
-    setNaturalMode(true);
+    naturalText = "";
+    naturalSuggestion = 0;
+    naturalMode = true;
     if (hasOpenedNaturalInput) naturalPlaceholderAnimation.startNext();
     else naturalPlaceholderAnimation.start();
     hasOpenedNaturalInput = true;
@@ -426,26 +409,26 @@ function createEditor(initial: InternalProps) {
 
   const exitNaturalInput = () => {
     naturalPlaceholderAnimation.stop();
-    setNaturalText("");
-    setNaturalSuggestion(0);
-    setNaturalMode(false);
+    naturalText = "";
+    naturalSuggestion = 0;
+    naturalMode = false;
     queueMicrotask(() => selectSegment(0, true));
   };
 
   const confirmNaturalInput = () => {
     const date = naturalDate();
     if (!date || local.disabled || local.readonly) return;
-    setDraftDate(date);
-    setCleared(new Set<SegmentName>());
-    setTyped(undefined);
+    draftDate = date;
+    cleared = new Set<SegmentName>();
+    typed = undefined;
     emitValue(date);
     exitNaturalInput();
   };
 
   const updateNaturalText = (next: string) => {
-    const hadText = Boolean(naturalText());
-    setNaturalText(next);
-    setNaturalSuggestion(0);
+    const hadText = Boolean(naturalText);
+    naturalText = next;
+    naturalSuggestion = 0;
     if (next) naturalPlaceholderAnimation.stop();
     else if (hadText) naturalPlaceholderAnimation.startNext();
   };
@@ -464,9 +447,7 @@ function createEditor(initial: InternalProps) {
   const cycleNaturalCompletion = (direction: 1 | -1) => {
     const completions = naturalCompletions();
     if (!completions.length) return;
-    setNaturalSuggestion(
-      (current) => (current + direction + completions.length) % completions.length,
-    );
+    naturalSuggestion = (naturalSuggestion + direction + completions.length) % completions.length;
   };
 
   const updateFromNativeInput = (next: string) => {
@@ -474,46 +455,46 @@ function createEditor(initial: InternalProps) {
     if (
       next
         ? !hasClearedSegment() && value() && next === toLocalValue(value()!)
-        : cleared().size === segmentNames.length
+        : cleared.size === segmentNames.length
     )
       return;
     if (!next) {
-      setCleared(new Set<SegmentName>(segmentNames));
-      setTyped(undefined);
+      cleared = new Set<SegmentName>(segmentNames);
+      typed = undefined;
       emitValue(undefined);
       return;
     }
     const date = parseLocal(next, referenceDate());
     if (!date) return;
-    setDraftDate(date.startOf("minute"));
+    draftDate = date.startOf("minute");
     emitValue(date);
-    setCleared(new Set<SegmentName>());
-    setTyped(undefined);
+    cleared = new Set<SegmentName>();
+    typed = undefined;
   };
 
   const pasteDateTime = (event: ClipboardEvent) => {
-    if (naturalMode() || local.disabled || local.readonly) return;
+    if (naturalMode || local.disabled || local.readonly) return;
     const date = parseInternalDate(event.clipboardData?.getData("text") ?? "", {
       referenceTime: local.referenceTime,
       locale: locale(),
     });
     if (!date) return;
     event.preventDefault();
-    setAllSegmentsSelected(false);
-    setDraftDate(date);
-    setCleared(new Set<SegmentName>());
-    setTyped(undefined);
+    allSegmentsSelected = false;
+    draftDate = date;
+    cleared = new Set<SegmentName>();
+    typed = undefined;
     emitValue(date);
   };
 
   const copyDateTime = (event: ClipboardEvent) => {
-    if (naturalMode()) return;
+    if (naturalMode) return;
     const editor = event.currentTarget as HTMLSpanElement;
     const displayedValue = editor.querySelector(".datetime-neo__value");
     if (!displayedValue) return;
-    const copiedValue = allSegmentsSelected()
+    const copiedValue = allSegmentsSelected
       ? (displayedValue.textContent ?? "")
-      : ((cleared().size ? draftDate() : (value() ?? draftDate())).toISO() ?? "");
+      : ((cleared.size ? draftDate : (value() ?? draftDate)).toISO() ?? "");
     event.clipboardData?.setData("text/plain", copiedValue);
     event.preventDefault();
   };
@@ -533,9 +514,9 @@ function createEditor(initial: InternalProps) {
   };
 
   const enterSegmentDigit = (index: number, segment: Segment, digit: string) => {
-    const previous = typed()?.index === index ? (typed()?.digits ?? "") : "";
+    const previous = typed?.index === index ? (typed?.digits ?? "") : "";
     const digits = `${previous}${digit}`.slice(-digitLimit(segment.type));
-    setTyped({ index, digits });
+    typed = { index, digits };
     setSegment(segment.type, digits);
     const hour12 = hourFormat().hour12 ?? false;
     if (isCompleteSegment(segment.type, digits, hour12)) selectSegment(index + 1, true);
@@ -546,13 +527,13 @@ function createEditor(initial: InternalProps) {
     // Let the segmented editor support select-all without selecting the whole page.
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "a") {
       event.preventDefault();
-      setAllSegmentsSelected(true);
+      allSegmentsSelected = true;
       return;
     }
     if (event.key === "Backspace" || event.key === "Delete") {
       event.preventDefault();
       const backspaceEmptySegment = event.key === "Backspace" && isCleared(segment.type);
-      if (allSegmentsSelected() || (backspaceEmptySegment && index === 0)) {
+      if (allSegmentsSelected || (backspaceEmptySegment && index === 0)) {
         clearSegments(segmentNames);
         selectSegment(0, true);
       } else if (backspaceEmptySegment) {
@@ -564,7 +545,7 @@ function createEditor(initial: InternalProps) {
       return;
     }
     if (event.ctrlKey || event.metaKey || event.altKey) return;
-    setAllSegmentsSelected(false);
+    allSegmentsSelected = false;
     if (event.key === " ") {
       event.preventDefault();
       openPicker();
@@ -580,7 +561,7 @@ function createEditor(initial: InternalProps) {
     if (event.key === "ArrowUp" || event.key === "ArrowDown") {
       event.preventDefault();
       if (isCleared(segment.type)) {
-        completeSegments(draftDate(), [segment.type]);
+        completeSegments(draftDate, [segment.type]);
       } else {
         changeSegment(segment.type, event.key === "ArrowUp" ? 1 : -1);
       }
@@ -624,7 +605,7 @@ function createEditor(initial: InternalProps) {
   };
 
   const focusEditor = (event: MouseEvent & { target: Element }) => {
-    if (naturalMode()) {
+    if (naturalMode) {
       naturalInput()?.focus();
       return;
     }
@@ -666,9 +647,9 @@ function createEditor(initial: InternalProps) {
       return { key: `separator-${position}`, editable: false as const, text: part.value };
     const index = editableSegments().findIndex((candidate) => candidate.type === part.type);
     const aria = segmentAria(
-      cleared().size ? draftDate() : (value() ?? draftDate()),
+      cleared.size ? draftDate : (value() ?? draftDate),
       part.type,
-      cleared(),
+      cleared,
       hourFormat().hourCycle,
     );
     const empty = isCleared(part.type);
@@ -679,9 +660,9 @@ function createEditor(initial: InternalProps) {
       type: part.type,
       empty,
       text: empty ? placeholderFor(part.type) : displaySegmentValue(index, part),
-      selected: selected() === index,
-      allSelected: allSegmentsSelected(),
-      tabIndex: local.disabled || local.readonly ? undefined : activeItem() === index ? 0 : -1,
+      selected: selected === index,
+      allSelected: allSegmentsSelected,
+      tabIndex: local.disabled || local.readonly ? undefined : activeItem === index ? 0 : -1,
       min: aria.min,
       max: aria.max,
       now: empty ? undefined : aria.value,
@@ -697,10 +678,10 @@ function createEditor(initial: InternalProps) {
       disabled: !!local.disabled,
       readonly: !!local.readonly,
       empty: !value(),
-      natural: naturalMode(),
-      wrapped: wrap(),
-      overflowing: editorHasHiddenEnd(),
-      layoutChanging: layoutChanging(),
+      natural: naturalMode,
+      wrapped: wrap,
+      overflowing: editorHasHiddenEnd,
+      layoutChanging: layoutChanging,
       showTimeOffset: !!local.showTimeOffset,
       label: local.label ?? (local.labelledBy ? undefined : "Date and time"),
       labelledBy: local.labelledBy,
@@ -712,19 +693,19 @@ function createEditor(initial: InternalProps) {
       partRows: rows.map((row) => Object.fromEntries(row.map((part) => [part.key, part]))),
       measurements: measurements(),
       nativeValue: nativeValue(),
-      naturalText: naturalText(),
-      placeholder: naturalPlaceholder(),
-      completion: activeNaturalCompletion()?.insertText.slice(naturalText().length) ?? "",
+      naturalText: naturalText,
+      placeholder: naturalPlaceholder,
+      completion: activeNaturalCompletion()?.insertText.slice(naturalText.length) ?? "",
       preview: date ? naturalPreview(date, locale(), local.formatOptions) : "",
       canConfirm: !!date,
-      activeItem: activeItem(),
+      activeItem: activeItem,
       segmentCount: editableSegments().length,
       offset: timeOffset(
-        naturalMode()
+        naturalMode
           ? (date ?? local.referenceTime)
-          : cleared().size
-            ? draftDate()
-            : (value() ?? draftDate()),
+          : cleared.size
+            ? draftDate
+            : (value() ?? draftDate),
       ),
       measuredOffset: local.referenceTime.isOffsetFixed
         ? timeOffset(local.referenceTime)
@@ -744,7 +725,7 @@ function createEditor(initial: InternalProps) {
   const cleanups: (() => void)[] = [];
   const measure = () => {
     if (!root) return;
-    const beforeOverflow = editorHasHiddenEnd();
+    const beforeOverflow = editorHasHiddenEnd;
     const focusedIndex = segmentButtons().indexOf(
       (root.getRootNode() as Document | ShadowRoot).activeElement as HTMLElement,
     );
@@ -766,21 +747,21 @@ function createEditor(initial: InternalProps) {
       ),
     );
     const nextWrap = width > 0 && required > width;
-    const layoutChanged = nextWrap !== wrap() || lastActionsWidth !== actionsWidth;
+    const layoutChanged = nextWrap !== wrap || lastActionsWidth !== actionsWidth;
     if (layoutChanged) {
-      setWrap(nextWrap);
+      wrap = nextWrap;
       lastActionsWidth = actionsWidth;
-      setLayoutChanging(true);
+      layoutChanging = true;
       if (settleFrame !== undefined) cancelAnimationFrame(settleFrame);
       settleFrame = requestAnimationFrame(() => {
         settleFrame = requestAnimationFrame(() => {
           settleFrame = undefined;
-          setLayoutChanging(false);
+          layoutChanging = false;
           publish();
         });
       });
     }
-    if (layoutChanged || beforeOverflow !== editorHasHiddenEnd()) publish();
+    if (layoutChanged || beforeOverflow !== editorHasHiddenEnd) publish();
   };
   const afterRender = () => {
     rememberSegmentContent();
@@ -850,7 +831,7 @@ function createEditor(initial: InternalProps) {
       if (segment) selectSegment(index);
       else {
         const action = target.closest<HTMLElement>(".datetime-neo__trigger");
-        if (action) setActiveItem(editableSegments().length + actionButtons().indexOf(action));
+        if (action) activeItem = editableSegments().length + actionButtons().indexOf(action);
       }
     } else if (event.type === "focusout" && segment) commitTypedYear();
     else if (event.type === "keydown") {
@@ -862,7 +843,7 @@ function createEditor(initial: InternalProps) {
         } else if (
           key.key === "Tab" &&
           !key.shiftKey &&
-          naturalInput()?.selectionStart === naturalText().length &&
+          naturalInput()?.selectionStart === naturalText.length &&
           acceptNaturalCompletion()
         )
           key.preventDefault();
@@ -878,10 +859,10 @@ function createEditor(initial: InternalProps) {
         if (target.tagName === "LABEL" && (key.key === " " || key.key === "Enter")) {
           key.preventDefault();
           openPicker();
-        } else navigateControl(key, activeItem());
-      } else if (!naturalMode() && (key.ctrlKey || key.metaKey) && key.key.toLowerCase() === "a") {
+        } else navigateControl(key, activeItem);
+      } else if (!naturalMode && (key.ctrlKey || key.metaKey) && key.key.toLowerCase() === "a") {
         key.preventDefault();
-        setAllSegmentsSelected(true);
+        allSegmentsSelected = true;
       }
     } else if (event.type === "input" || event.type === "change") {
       if (target === nativeInput()) updateFromNativeInput((target as HTMLInputElement).value);
@@ -976,7 +957,7 @@ function createEditor(initial: InternalProps) {
         const action = target.closest(".datetime-neo__trigger");
         if (action?.tagName === "LABEL") openPicker();
         else if (action) {
-          if (naturalMode()) {
+          if (naturalMode) {
             if (naturalDate()) confirmNaturalInput();
             else exitNaturalInput();
           } else openNaturalInput();

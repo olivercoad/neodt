@@ -5,7 +5,7 @@ import type { DateAdapter } from "../adapter";
 import { fixedOffset } from "../format";
 import { defineIntegration } from "../integration";
 
-export const adapter = createLuxonAdapter(DateTime);
+export const adapter = /* @__PURE__ */ createLuxonAdapter(DateTime);
 
 export type LuxonZone = string | Zone;
 

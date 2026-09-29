@@ -343,7 +343,9 @@
     "test:browser": "playwright test",
     "format:check": "oxfmt --check .",
     "check:release": "pnpm check && pnpm test:browser && pnpm build",
-    "test:package": "pnpm build && node scripts/check-package.mjs",
+    "test:package": "pnpm build && node scripts/check-package.mjs && node scripts/check-bundle.mjs",
+    "test:bundle": "pnpm build && node scripts/check-bundle.mjs",
+    "bench:core": "node --expose-gc scripts/bench-core.mjs",
     "generate": "node scripts/generate.ts"
   },
   "devDependencies": {
@@ -381,6 +383,7 @@
     "luxon": "^3.7.2",
     "moment": "^2.31.0",
     "moment-timezone": "^0.6.4",
+    "neodt-v02": "npm:@olicoad/neodt@0.2.0",
     "oxfmt": "^0.64.0",
     "oxlint": "^1.79.0",
     "prism-svelte": "^0.5.0",

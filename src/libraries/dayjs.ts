@@ -6,7 +6,7 @@ import { createIntlFormatter } from "../adapters/intl-format";
 import { fixedOffset, offsetZone } from "../format";
 import { defineIntegration } from "../integration";
 
-export const adapter = createDayjsAdapter(dayjs);
+export const adapter = /* @__PURE__ */ createDayjsAdapter(dayjs);
 
 type DayjsFactory = ((input?: ConfigType) => Dayjs) & {
   utc?: (input?: ConfigType) => Dayjs;

@@ -1,7 +1,7 @@
 import { createTemporalAdapter } from "../adapters/temporal";
 import { defineIntegration } from "../integration";
 
-export const adapter = createTemporalAdapter<Temporal.ZonedDateTime>({
+export const adapter = /* @__PURE__ */ createTemporalAdapter<Temporal.ZonedDateTime>({
   ZonedDateTime: {
     from(fields, options) {
       return Temporal.ZonedDateTime.from(fields, options);

@@ -3,7 +3,7 @@ import { Temporal } from "temporal-polyfill";
 import { createTemporalAdapter } from "../adapters/temporal";
 import { defineIntegration } from "../integration";
 
-export const adapter = createTemporalAdapter(Temporal);
+export const adapter = /* @__PURE__ */ createTemporalAdapter(Temporal);
 export { createTemporalAdapter } from "../adapters/temporal";
 export type { TemporalImplementation, TemporalZonedValue } from "../adapters/temporal";
 

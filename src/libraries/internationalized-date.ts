@@ -10,7 +10,7 @@ import type { DateAdapter } from "../adapter";
 import { createIntlFormatter } from "../adapters/intl-format";
 import { defineIntegration } from "../integration";
 
-export const adapter = createInternationalizedDateAdapter(fromAbsolute);
+export const adapter = /* @__PURE__ */ createInternationalizedDateAdapter(fromAbsolute);
 
 export function createInternationalizedDateAdapter(
   fromAbsolute: typeof import("@internationalized/date").fromAbsolute,

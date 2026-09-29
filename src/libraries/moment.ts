@@ -6,7 +6,7 @@ import { createLibraryZoneFormatter } from "../adapters/intl-format";
 import { fixedOffset, offsetZone } from "../format";
 import { defineIntegration } from "../integration";
 
-export const adapter = createMomentAdapter(moment);
+export const adapter = /* @__PURE__ */ createMomentAdapter(moment);
 
 type MomentFactory = ((input?: MomentInput) => Moment) & {
   tz?: ((input: MomentInput, zone: string) => Moment) & { zone?(zone: string): unknown };

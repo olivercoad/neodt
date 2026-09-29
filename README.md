@@ -239,6 +239,9 @@ The `Publish npm package` workflow verifies the tag/version match, validates the
 
 ## Further Development
 
+See the [bundle size and runtime investigation](docs/bundle-size.md) for the
+Solid + Luxon comparison with 0.2.0, tree-shaking checks, and reproduction commands.
+
 Some features that could be interesting to explore:
 
 ### Min/Max Datetimes
@@ -258,4 +261,4 @@ Support configurable precision and step size:
 
 - fix all failing tests make them not flaky
 - update landing page hero section
-- make sure tree-shaking works and that bundle size when using a framework is, I would hope, <10kb
+- reduce the full control's bundle contribution toward <10 KiB while preserving runtime performance

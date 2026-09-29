@@ -27,3 +27,9 @@ const next = JSON.stringify(pkg, null, 2) + "\n";
 if (original !== next) await writeFile("package.json", next);
 await mkdir("dist", { recursive: true });
 await cp("src/styles.css", "dist/style.css");
+for (const framework of frameworks) {
+  await cp("src/styles.css", `dist/${framework.id}/style.css`);
+  // The declarations preserve the side-effect import; strict TS consumers need
+  // its module declaration even when they do not provide ambient CSS types.
+  await writeFile(`dist/${framework.id}/style.css.d.ts`, "export {};\n");
+}

@@ -94,9 +94,9 @@ const registrations = [
     homepage: "https://spacetime.how/",
 
     label: "Spacetime",
-    imports: 'import spacetime from "spacetime";',
+    imports: 'import spacetime, { type Spacetime } from "spacetime";',
     now: "spacetime.now()",
-    type: "ReturnType<typeof spacetime>",
+    type: "Spacetime",
   },
   {
     id: "internationalized-date",

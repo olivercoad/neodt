@@ -99,15 +99,13 @@ p {
   font-weight: 700;
   margin: 3rem 0 0.55rem;
 }
-.compareInput {
-  &,
-  &::part(root) {
-    --datetime-neo-background: white;
-    --datetime-neo-border: #aeb8c0;
-    --datetime-neo-focus: var(--blue);
-    min-width: 0;
-    width: 100%;
-  }
+.compareInput:global(.datetime-neo),
+.compareInput::part(root) {
+  --datetime-neo-background: white;
+  --datetime-neo-border: #aeb8c0;
+  --datetime-neo-focus: var(--blue);
+  min-width: 0;
+  width: 100%;
 }
 .nativeCard input {
   background: white;
@@ -279,14 +277,12 @@ p {
   padding: 0.62rem;
   width: 100%;
 }
-.previewInput {
-  &,
-  &::part(root) {
-    --datetime-neo-background: white;
-    --datetime-neo-border: #9db5ce;
-    --datetime-neo-focus: var(--blue);
-    width: 100%;
-  }
+.previewInput:global(.datetime-neo),
+.previewInput::part(root) {
+  --datetime-neo-background: white;
+  --datetime-neo-border: #9db5ce;
+  --datetime-neo-focus: var(--blue);
+  width: 100%;
 }
 .twoFields {
   display: grid;

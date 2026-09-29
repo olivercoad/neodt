@@ -1,10 +1,9 @@
 import { makePersisted, type PersistenceOptions } from "@solid-primitives/storage";
 import { createMemo, createSignal, For, onCleanup, onMount, type Component } from "solid-js";
 
-import packageJson from "../package.json";
-import Code from "./code/Code";
 import CodeExample from "./code/CodeExample";
 import { currentFramework } from "./framework";
+import HeroCopy from "./HeroCopy";
 import { useLibrary, type DemoValue } from "./library";
 import { locales } from "./locales";
 import ResizablePreview from "./ResizablePreview";
@@ -127,27 +126,8 @@ const App: Component = () => {
     <main class={styles.page}>
       <SiteNav />
 
-      <section class={styles.hero}>
-        <div class={styles.heroCopy}>
-          <p class={styles.kicker}>A DATETIME INPUT FOR SOLID</p>
-          <h1>
-            Feels native.
-            <br />
-            Works <i>your way.</i>
-          </h1>
-          <p class={styles.lede}>
-            neodt is a familiar, timezone-aware datetime input for {framework.label}. It speaks your
-            users' language, works naturally with a keyboard, and gives your app a robust{" "}
-            <code>{library.type}</code> instead of a string to untangle.
-          </p>
-          <div class={styles.install}>
-            <Code value="pnpm add @olicoad/neodt" language="bash" />
-            <span>{framework.label}</span>
-            <a href="https://www.npmjs.com/package/@olicoad/neodt" target="_blank" rel="noreferrer">
-              v{packageJson.version} on npm ↗
-            </a>
-          </div>
-        </div>
+      <section class={styles.hero} aria-labelledby="hero-title">
+        <HeroCopy />
         <div id="comparison" class={styles.compareGrid}>
           <article class={styles.compareCard}>
             <div class={styles.cardHead}>

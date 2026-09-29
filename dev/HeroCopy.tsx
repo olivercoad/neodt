@@ -18,6 +18,9 @@ import styles from "./HeroCopy.module.css";
 
 const frameworks = frameworkRegistry.map((item) => item.id);
 const libraries = libraryRegistry.map((item) => item.id);
+const rotatingLibraryIndexes = libraryRegistry.flatMap((item, index) =>
+  item.id.endsWith("-polyfill") ? [] : [index],
+);
 type OptionPresentation = { label: string; description?: string; sentence: string };
 const frameworkPresentation = Object.fromEntries(
   frameworkRegistry.map((item) => [
@@ -422,7 +425,9 @@ export default function HeroCopy() {
       if (p++ % 2 === 0) {
         setFrameworkIndex((i) => (i + 1) % frameworks.length);
       } else {
-        setLibraryIndex((i) => (i + 1) % libraries.length);
+        setLibraryIndex(
+          (i) => rotatingLibraryIndexes.find((index) => index > i) ?? rotatingLibraryIndexes[0]!,
+        );
       }
     }, 2000);
     onCleanup(() => {

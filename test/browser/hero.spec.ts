@@ -40,7 +40,7 @@ test("landing words rotate and pause for hover, keyboard focus, and manual selec
   await expect(framework(page)).toHaveText("Solid");
   await settled(page);
   await page.clock.fastForward(2000);
-  await expect(library(page)).toHaveText("temporal-polyfill");
+  await expect(library(page)).toHaveText("Luxon");
   await framework(page).hover();
   await page.clock.fastForward(8000);
   await expect(framework(page)).toHaveText("Solid");

@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-24
+
 ### Added
 
 - js-joda with `ZonedDateTime` values and `ZoneId` objects. Load `@js-joda/timezone` for named IANA timezone support.

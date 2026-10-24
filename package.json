@@ -59,6 +59,10 @@
       "types": "./dist/vanilla/luxon.d.ts",
       "default": "./dist/vanilla/luxon.js"
     },
+    "./js-joda": {
+      "types": "./dist/vanilla/js-joda.d.ts",
+      "default": "./dist/vanilla/js-joda.js"
+    },
     "./moment": {
       "types": "./dist/vanilla/moment.d.ts",
       "default": "./dist/vanilla/moment.js"
@@ -98,6 +102,10 @@
     "./solid/luxon": {
       "types": "./dist/solid/luxon.d.ts",
       "default": "./dist/solid/luxon.jsx"
+    },
+    "./solid/js-joda": {
+      "types": "./dist/solid/js-joda.d.ts",
+      "default": "./dist/solid/js-joda.jsx"
     },
     "./solid/moment": {
       "types": "./dist/solid/moment.d.ts",
@@ -139,6 +147,10 @@
       "types": "./dist/react/luxon.d.ts",
       "default": "./dist/react/luxon.js"
     },
+    "./react/js-joda": {
+      "types": "./dist/react/js-joda.d.ts",
+      "default": "./dist/react/js-joda.js"
+    },
     "./react/moment": {
       "types": "./dist/react/moment.d.ts",
       "default": "./dist/react/moment.js"
@@ -178,6 +190,10 @@
     "./vue/luxon": {
       "types": "./dist/vue/luxon.d.ts",
       "default": "./dist/vue/luxon.js"
+    },
+    "./vue/js-joda": {
+      "types": "./dist/vue/js-joda.d.ts",
+      "default": "./dist/vue/js-joda.js"
     },
     "./vue/moment": {
       "types": "./dist/vue/moment.d.ts",
@@ -219,6 +235,10 @@
       "types": "./dist/svelte/luxon.d.ts",
       "default": "./dist/svelte/luxon.js"
     },
+    "./svelte/js-joda": {
+      "types": "./dist/svelte/js-joda.d.ts",
+      "default": "./dist/svelte/js-joda.js"
+    },
     "./svelte/moment": {
       "types": "./dist/svelte/moment.d.ts",
       "default": "./dist/svelte/moment.js"
@@ -259,6 +279,10 @@
       "types": "./dist/angular/luxon.d.ts",
       "default": "./dist/angular/luxon.js"
     },
+    "./angular/js-joda": {
+      "types": "./dist/angular/js-joda.d.ts",
+      "default": "./dist/angular/js-joda.js"
+    },
     "./angular/moment": {
       "types": "./dist/angular/moment.d.ts",
       "default": "./dist/angular/moment.js"
@@ -298,6 +322,10 @@
     "./lit/luxon": {
       "types": "./dist/lit/luxon.d.ts",
       "default": "./dist/lit/luxon.js"
+    },
+    "./lit/js-joda": {
+      "types": "./dist/lit/js-joda.d.ts",
+      "default": "./dist/lit/js-joda.js"
     },
     "./lit/moment": {
       "types": "./dist/lit/moment.d.ts",
@@ -362,6 +390,8 @@
     "@fontsource/roboto-flex": "^5.3.0",
     "@fontsource/tinos": "^5.3.0",
     "@internationalized/date": "^3.12.4",
+    "@js-joda/core": "^6.3.0",
+    "@js-joda/timezone": "^3.1.0",
     "@js-temporal/polyfill": "^0.5.1",
     "@lit-labs/ssr": "^4.1.0",
     "@lit-labs/ssr-client": "^1.1.8",
@@ -413,6 +443,7 @@
     "@angular/platform-browser": "^22.1.7",
     "@date-fns/tz": "^1.5.0",
     "@internationalized/date": "^3.12.4",
+    "@js-joda/core": "^6.3.0",
     "@js-temporal/polyfill": "^0.5.1",
     "date-fns": "^4.4.0",
     "dayjs": "^1.11.23",
@@ -487,6 +518,9 @@
       "optional": true
     },
     "lit": {
+      "optional": true
+    },
+    "@js-joda/core": {
       "optional": true
     }
   },

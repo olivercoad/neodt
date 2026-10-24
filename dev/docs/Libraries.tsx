@@ -146,12 +146,20 @@ const [value, setValue] = createSignal<DateTime | null>(null);
       </p>
       <h2 id="timezone-configuration">Timezone configuration</h2>
       <p>
-        Temporal, Luxon, Spacetime, and @internationalized/date carry a timezone in each value. Set
-        the zone on <code>referenceTime</code> and neodt uses it for display, editing, and returned
-        values.{" "}
+        Temporal, Luxon, js-joda, Spacetime, and @internationalized/date carry a timezone in each
+        value. Set the zone on <code>referenceTime</code> and neodt uses it for display, editing,
+        and returned values.{" "}
         <span class={styles.justWorks}>
           It just works<sup>™</sup>
         </span>
+      </p>
+      <p>
+        For <b>js-joda</b>, you can optionally install and import{" "}
+        <a href="https://www.npmjs.com/package/@js-joda/timezone">
+          <code>@js-joda/timezone</code>
+        </a>
+        . System zone and fixed offsets work without it, but you need the side-effect import to use
+        named zones.
       </p>
       <p>
         For the libraries below, the default entry works in the system timezone. To choose another

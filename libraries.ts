@@ -50,6 +50,20 @@ const registrations = [
     type: "DateTime",
   },
   {
+    id: "js-joda",
+    factory: "createJsJodaAdapter",
+    implementation: "ZonedDateTime",
+    callback: "value?.toInstant()",
+    homepage: "https://js-joda.github.io/js-joda/",
+    demoPackages: ["@js-joda/timezone"],
+
+    label: "js-joda",
+    imports: 'import { ZonedDateTime } from "@js-joda/core";',
+    now: "ZonedDateTime.now()",
+    type: "ZonedDateTime",
+    packages: "@js-joda/core",
+  },
+  {
     id: "moment",
     factory: "createMomentAdapter",
     implementation: "moment",

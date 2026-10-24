@@ -4,6 +4,7 @@ import {
   CalendarDateTime,
   type ZonedDateTime,
 } from "@internationalized/date";
+import { ZoneId, ZonedDateTime as JodaZonedDateTime, LocalDateTime } from "@js-joda/core";
 import { Temporal } from "@js-temporal/polyfill";
 import { toDate } from "date-fns/toDate";
 import dayjs, { type Dayjs } from "dayjs";
@@ -15,17 +16,35 @@ import { Temporal as Ponyfill } from "temporal-polyfill";
 import { expectTypeOf } from "vitest";
 
 import Neodt, { parseNaturalDate, type NeodtProps } from "../frameworks/solid/generic";
+import type { NaturalDateParseOptions as JodaParseOptions } from "../generated/solid/js-joda";
 import type { NaturalDateParseOptions as LuxonParseOptions } from "../generated/solid/luxon";
 import type { NaturalDateParseOptions as TemporalParseOptions } from "../generated/solid/temporal-polyfill";
 import { createDateFnsAdapter } from "../src/libraries/date-fns";
 import { createDayjsAdapter } from "../src/libraries/dayjs";
 import { createInternationalizedDateAdapter } from "../src/libraries/internationalized-date";
+import { createJsJodaAdapter } from "../src/libraries/js-joda";
 import { createLuxonAdapter, type LuxonZone } from "../src/libraries/luxon";
 import { createMomentAdapter } from "../src/libraries/moment";
 import { createTemporalAdapter } from "../src/libraries/native-temporal";
 import { createSpacetimeAdapter } from "../src/libraries/spacetime";
 
 export function checkAdapterTypes() {
+  expectTypeOf<JodaParseOptions["referenceTime"]>().toEqualTypeOf<JodaZonedDateTime>();
+  expectTypeOf<JodaParseOptions["zone"]>().toEqualTypeOf<ZoneId | undefined>();
+  const joda = createJsJodaAdapter(JodaZonedDateTime);
+  const jodaReference = JodaZonedDateTime.now();
+  expectTypeOf(
+    parseNaturalDate("tomorrow", { adapter: joda, referenceTime: jodaReference, zone: ZoneId.UTC }),
+  ).toEqualTypeOf<JodaZonedDateTime | undefined>();
+  <Neodt
+    adapter={joda}
+    referenceTime={jodaReference}
+    onValueChange={(value) => expectTypeOf(value).toEqualTypeOf<JodaZonedDateTime | null>()}
+  />;
+  // @ts-expect-error A local datetime has no timezone or instant.
+  <Neodt adapter={joda} referenceTime={LocalDateTime.now()} />;
+  // @ts-expect-error js-joda parser zones must be native ZoneId objects.
+  parseNaturalDate("now", { adapter: joda, referenceTime: jodaReference, zone: "UTC" });
   // Generated parser options retain native value/zone pairs without handwritten aliases.
   expectTypeOf<LuxonParseOptions["referenceTime"]>().toEqualTypeOf<DateTime>();
   const configuredLuxon: LuxonParseOptions = {

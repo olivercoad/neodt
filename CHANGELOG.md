@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Added
+
+- js-joda with `ZonedDateTime` values and `ZoneId` objects. Load `@js-joda/timezone` for named IANA timezone support.
+
 ## [0.4.0] - 2026-09-29
 
 Another, even bigger change to Neodt! It is now fully framework agnostic, too, using a generic core and [mitosis](https://mitosis.builder.io) to help with generating glue code for each framework.

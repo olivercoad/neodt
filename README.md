@@ -114,7 +114,7 @@ Zones may be strings or opaque objects. Custom Temporal implementations must pro
 
 Calendar arithmetic, month lengths, UTC offsets, and timezone resolution belong to the selected library. Every adapter follows its library's semantics for calendar-day versus elapsed-hour arithmetic, month/year overflow, and ambiguous or nonexistent local times.
 
-neodt parses input syntax and checks field ranges using the library's month length; it does not implement timezone transitions or Gregorian arithmetic. Native JavaScript `Date` access is confined to adapters whose library APIs require it (date-fns and `@internationalized/date`). Luxon supplies its own format parts. Temporal, date-fns, Day.js, and `@internationalized/date` format the actual instant and zone with Intl. Moment and Spacetime retain their own timezone offsets when formatting because their timezone databases can differ from Intl. The shared core does not construct or manipulate native dates. Offsetless ISO input is interpreted in the reference zone.
+neodt parses input syntax and checks field ranges using the library's month length; it does not implement timezone transitions or Gregorian arithmetic. Native JavaScript `Date` access is confined to adapters whose library APIs require it (date-fns and `@internationalized/date`). Luxon supplies its own format parts. Temporal, date-fns, Day.js, and `@internationalized/date` format the actual instant and zone with Intl. Moment, Spacetime, and js-joda retain their own timezone offsets when formatting because their timezone databases can differ from Intl. The shared core does not construct or manipulate native dates. Offsetless ISO input is interpreted in the reference zone.
 
 ## Documentation
 

@@ -16,7 +16,7 @@ export function createIntlFormatter<T>(
   return { formatToParts: (value: T) => formatter.formatToParts(milliseconds(value)) };
 }
 
-/** Moment and Spacetime own timezone data that can differ from Intl's database.
+/** Moment, Spacetime, and js-joda own timezone data that can differ from Intl's database.
  * Preserve their offsets for the fields, and use Intl only to localize zone names.
  */
 export function createLibraryZoneFormatter<T>(

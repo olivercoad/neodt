@@ -46,6 +46,12 @@ importers:
       '@internationalized/date':
         specifier: ^3.12.4
         version: 3.12.4
+      '@js-joda/core':
+        specifier: ^6.3.0
+        version: 6.3.0
+      '@js-joda/timezone':
+        specifier: ^3.1.0
+        version: 3.1.0(@js-joda/core@6.3.0)
       '@js-temporal/polyfill':
         specifier: ^0.5.1
         version: 0.5.1
@@ -730,6 +736,14 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@js-joda/core@6.3.0':
+    resolution: {integrity: sha512-mdmjc6lJkTCORsHlMxBT9XM1yLqgtsNZmv/Hwme2v/HIb15D2XcmklZKTnynqBgsSizA9SkFvzpuksfIXhDV/w==}
+
+  '@js-joda/timezone@3.1.0':
+    resolution: {integrity: sha512-6bCJgw/LqUHoXrZ8xJ+CLdiqfiFJ4I+imjb69+6q6YHmSOxB2pZbsd0BctMMhi0qMmCohAyyZsh29fDKnHuEYA==}
+    peerDependencies:
+      '@js-joda/core': '>=5.7.0'
 
   '@js-temporal/polyfill@0.5.1':
     resolution: {integrity: sha512-hloP58zRVCRSpgDxmqCWJNlizAlUgJFqG2ypq79DCvyv9tHjRYMDOcPFjzfl/A1/YxDvRCZz8wvZvmapQnKwFQ==}
@@ -3506,6 +3520,12 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  '@js-joda/core@6.3.0': {}
+
+  '@js-joda/timezone@3.1.0(@js-joda/core@6.3.0)':
+    dependencies:
+      '@js-joda/core': 6.3.0
 
   '@js-temporal/polyfill@0.5.1':
     dependencies:

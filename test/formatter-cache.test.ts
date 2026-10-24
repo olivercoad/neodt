@@ -25,7 +25,13 @@ for (const implementation of builtInAdapters)
           "2026-11-01T01:30-04:00",
           "2026-11-01T01:30-05:00",
           "2026-12-01T10:15-05:00",
-        ].map((text) => calendarDate(adapter, date(text, "America/New_York")));
+        ].map((text) =>
+          calendarDate(
+            adapter,
+            // Native zone objects are keyed by identity; reuse the same zone for every value.
+            adapter.fromEpochMilliseconds(Temporal.Instant.from(text).epochMilliseconds, zone),
+          ),
+        );
         const construct = vi.spyOn(adapter, "createFormatter");
         try {
           const parts = values.map((value) => value.toLocaleParts("en-US", options));
